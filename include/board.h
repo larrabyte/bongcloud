@@ -31,8 +31,8 @@ class Board {
         // Board constructor.
         Board(std::size_t);
 
-        // Load a FEN string onto the board.
-        void loadfen(const char*);
+        // Load a FEN string onto the board. Returns boolean depending on success.
+        bool loadfen(const char*);
 
         // Get the index of a given position.
         std::size_t square(const char *location);

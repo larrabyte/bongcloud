@@ -5,13 +5,20 @@ void Piece::set(Colour colour, Type type) {
     this->type = type;
 }
 
-void Board::loadfen(const char *location) {
+bool Board::loadfen(const char *location) {
     // FEN strings start from the A1 square.
     std::size_t cursor = this->square("a1");
     std::size_t rank = cursor;
 
+    // If the string is empty, parsing is "done".
+    bool parsed = *location == '\0' ? true : false;
+
     for(char c = *location; c != '\0'; c = *++location) {
         Piece &piece = this->square(cursor);
+        bool invalid = cursor > rank + this->squares || cursor > this->elements;
+
+        // Break out if we're done or something went wrong.
+        if(parsed || invalid) break;
 
         switch(c) {
             // Lowercase letters represent white pieces.
@@ -42,10 +49,14 @@ void Board::loadfen(const char *location) {
                 rank = cursor;
                 break;
 
-            // Unknown character, just finish parsing.
-            default: return;
+            // Unknown character, done.
+            default: parsed = true; break;
         }
     }
+
+    // To ensure all control-paths are covered, we break out of the for-loop
+    // with the flag we wish to return set in parsed.
+    return parsed;
 }
 
 std::size_t Board::square(const char *location) {
