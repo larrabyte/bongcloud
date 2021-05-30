@@ -48,7 +48,7 @@ int main(void) {
                     } else {
                         piece.set(storePiece.colour, storePiece.type);
                         storePiece.set(Piece::Colour::white, Piece::Type::empty);
-                        renderer.lastmove(storeOrigin, location);
+                        if(storeOrigin != location) renderer.lastmove(storeOrigin, location);
                     }
 
                     break;
