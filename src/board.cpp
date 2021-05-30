@@ -8,6 +8,7 @@ void Piece::set(Colour colour, Type type) {
 void Board::loadfen(const char *location) {
     // FEN strings start from the A1 square.
     std::size_t cursor = this->square("a1");
+    std::size_t rank = cursor;
 
     for(char c = *location; c != '\0'; c = *++location) {
         Piece &piece = this->square(cursor);
@@ -29,14 +30,20 @@ void Board::loadfen(const char *location) {
             case 'K': piece.set(Piece::Colour::black, Piece::Type::king); cursor++; break;
             case 'P': piece.set(Piece::Colour::black, Piece::Type::pawn); cursor++; break;
 
-            // A slash moves a cursor to the next rank.
-            case '/': cursor -= 2 * this->squares; break;
+            // Numbers represent squares to skip.
+            case '1': case '2': case '3':
+            case '4': case '5': case '6':
+            case '7': case '8': case '9':
+                cursor += c - '0';
+                break;
 
-            // Can't parse anything else, so just return if we encounter it.
-            case ' ': return;
+            case '/': // A slash moves the cursor to the next rank.
+                cursor = rank - this->squares;
+                rank = cursor;
+                break;
 
-            // Move across a certain number of squares.
-            default: cursor += c - '0'; break;
+            // Unknown character, just finish parsing.
+            default: return;
         }
     }
 }
