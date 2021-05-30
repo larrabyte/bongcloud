@@ -1,6 +1,6 @@
-# --------------------------------------------------
-# Makefile for chess, made by the larrabyte himself.
-# --------------------------------------------------
+# ------------------------------------------------------
+# Makefile for bongcloud, made by the larrabyte himself.
+# ------------------------------------------------------
 SRCFILES := $(wildcard src/*.cpp)
 OBJFILES := $(SRCFILES:src/%.cpp=obj/%.o)
 DEPFILES := $(SRCFILES:src/%.cpp=obj/%.d)
@@ -13,13 +13,13 @@ SDL2LIB  := $(shell sdl2-config --libs)
 CFLAGS := $(WARNINGS) $(INCLUDES) $(SDL2INC) -MD -MP -std=c++20 -O2
 LFLAGS := $(SDL2LIB)
 
-all: chess
+all: bongcloud
 -include $(DEPFILES)
 
-chess: $(OBJFILES)
-	@$(CXX) $(CFLAGS) $(OBJFILES) -o bin/chess $(LFLAGS)
+bongcloud: $(OBJFILES)
+	@$(CXX) $(CFLAGS) $(OBJFILES) -o bin/bongcloud $(LFLAGS)
 	@printf "[linking] binary created.\n"
-	@./bin/chess
+	@./bin/bongcloud
 
 clean:
 	@rm -f obj/*
