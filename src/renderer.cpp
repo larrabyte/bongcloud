@@ -65,9 +65,8 @@ void Renderer::draw(Board &board) {
         // must not be equal AND one must match to a valid board index.
         bool highlight = (this->origin != this->dest) && (i == this->origin || i == this->dest);
 
-        // Checkboard pattern: paint a dark square if it's
-        // on an even rank or even file, but not both.
-        bool dark = ((i / this->squares) % 2 == 0) ^ (i % 2 == 0);
+        // Checkboard pattern: even no. of squares => dark evens, odd no. of squares => dark odds.
+        bool dark = (this->squares % 2 == 0) ? ((i / this->squares) + i) % 2 == 0 : i % 2 == 0;
 
         if(highlight) this->brush(dark ? colours::lastMoveDark : colours::lastMoveLight);
         else this->brush(dark ? colours::regularDark : colours::regularLight);
