@@ -25,8 +25,8 @@ int main(void) {
     // const char *fenstring = "rrnnbbqqkkbbnnrr/pppppppppppppppp/97/97/97/97/97/97/97/97/97/97/97/97/PPPPPPPPPPPPPPPP/RRNNBBQQKKBBNNRR w KQkq - 0 1";
 
     if(!board.loadfen(fenstring)) {
-        const char *title = "FEN String Overshoot";
-        const char *content = "The currently loaded FEN string has overshot the boundaries of the board.";
+        const char *title = "Invalid FEN String";
+        const char *content = "The FEN string loaded could not be parsed properly.";
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, title, content, nullptr);
     }
 
