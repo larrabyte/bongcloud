@@ -47,8 +47,8 @@ void Renderer::lift(Piece &piece) {
         int length = this->pixels * this->scale;
         SDL_Rect graphic = {0, 0, length, length};
         SDL_GetMouseState(&graphic.x, &graphic.y);
-        graphic.x = graphic.x * this->scale - this->pixels;
-        graphic.y = graphic.y * this->scale - this->pixels;
+        graphic.x = (graphic.x * this->scale) - (length / 2);
+        graphic.y = (graphic.y * this->scale) - (length / 2);
         SDL_RenderCopy(this->renderer, tex, NULL, &graphic);
     }
 }
