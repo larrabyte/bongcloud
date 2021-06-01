@@ -20,6 +20,7 @@ int main(void) {
     std::size_t storeOrigin = 0;
 
     // Your choice of a variety of FEN strings for different board sizes.
+    // const char *fenstring = "rbqkbr/pppppp/6/6/PPPPPP/RBQKBR w KQkq - 0 1";
     const char *fenstring = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     // const char *fenstring = "rrnnbbqqkkbbnnrr/pppppppppppppppp/97/97/97/97/97/97/97/97/97/97/97/97/PPPPPPPPPPPPPPPP/RRNNBBQQKKBBNNRR w KQkq - 0 1";
 

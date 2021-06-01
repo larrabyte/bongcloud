@@ -5,20 +5,19 @@ void Piece::set(Colour colour, Type type) {
     this->type = type;
 }
 
-bool Board::loadfen(const char *location) {
+bool Board::loadfen(const char *position) {
     // FEN strings start from the A1 square.
     std::size_t cursor = this->square("a1");
     std::size_t rank = cursor;
+    bool invalid = false;
+    bool parsed = false;
 
-    // If the string is empty, parsing is "done".
-    bool parsed = *location == '\0' ? true : false;
-
-    for(char c = *location; c != '\0'; c = *++location) {
+    while(!parsed && !invalid) {
         Piece &piece = this->square(cursor);
-        bool invalid = cursor > rank + this->squares || cursor > this->elements;
+        char c = *position++;
 
-        // Break out if we're done or something went wrong.
-        if(parsed || invalid) break;
+        // Make sure that the cursor hasn't escaped the bounds of the board.
+        invalid = cursor > rank + this->squares || cursor > this->elements;
 
         switch(c) {
             // Lowercase letters represent white pieces.
@@ -37,7 +36,7 @@ bool Board::loadfen(const char *location) {
             case 'K': piece.set(Piece::Colour::black, Piece::Type::king); cursor++; break;
             case 'P': piece.set(Piece::Colour::black, Piece::Type::pawn); cursor++; break;
 
-            // Numbers represent squares to skip.
+            // Numbers signify the no. of squares to skip.
             case '1': case '2': case '3':
             case '4': case '5': case '6':
             case '7': case '8': case '9':
@@ -49,13 +48,16 @@ bool Board::loadfen(const char *location) {
                 rank = cursor;
                 break;
 
-            // Unknown character, done.
-            default: parsed = true; break;
+            case ' ': case '\0': // End of string, FEN string parsed.
+                parsed = true;
+                break;
+
+            default: // Unknown character, abort!
+                invalid = true;
+                break;
         }
     }
 
-    // To ensure all control-paths are covered, we break out of the for-loop
-    // with the flag we wish to return set in parsed.
     return parsed;
 }
 
