@@ -63,13 +63,12 @@ void Renderer::draw(Board &board) {
 
         // For move highlighting to be possible, origin and destination 
         // must not be equal AND one must match to a valid board index.
-        bool highlight = (this->origin != this->dest) && (i == this->origin || i == this->dest);
+        bool lastmove = (this->origin != this->dest) && (i == this->origin || i == this->dest);
+        bool colour = (this->squares % 2 == 0) ? ((i / this->squares) + i) % 2 == 0 : i % 2 == 0;
 
-        // Checkboard pattern: even no. of squares => dark evens, odd no. of squares => dark odds.
-        bool dark = (this->squares % 2 == 0) ? ((i / this->squares) + i) % 2 == 0 : i % 2 == 0;
-
-        if(highlight) this->brush(dark ? colours::lastMoveDark : colours::lastMoveLight);
-        else this->brush(dark ? colours::regularDark : colours::regularLight);
+        // Create a checkerboard pattern for any number of squares or highlight last move.
+        if(lastmove) this->brush(colour ? colours::lastMoveLight : colours::lastMoveDark);
+        else this->brush(colour ? colours::regularLight : colours::regularDark);
         SDL_RenderFillRect(this->renderer, &graphic);
 
         SDL_Texture *tex = this->gettex(piece);
@@ -107,7 +106,7 @@ Renderer::Renderer(std::size_t squares, std::size_t pixels) {
     SDL_GetRendererOutputSize(this->renderer, &scaledResolution, nullptr);
     this->scale = scaledResolution / resolution;
 
-    // The value of these doesn't matter: only that they are
+    // The value of these doesn't matter, only that they are
     // equal to each other to disable move highlighting.
     this->origin = this->dest;
 
