@@ -1,10 +1,5 @@
 #include "board.h"
 
-void Piece::set(Colour colour, Type type) {
-    this->colour = colour;
-    this->type = type;
-}
-
 bool Board::loadfen(const char *position) {
     // FEN strings start from the A1 square.
     std::size_t cursor = this->square("a1");

@@ -1,5 +1,6 @@
 #include "renderer.h"
 #include "board.h"
+#include "piece.h"
 
 namespace colours {
     constexpr int lastMoveLight = 0xCED287;

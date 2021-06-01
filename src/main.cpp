@@ -2,6 +2,7 @@
 
 #include "renderer.h"
 #include "board.h"
+#include "piece.h"
 
 int main(void) {
     // Size of the actual and graphical board.
