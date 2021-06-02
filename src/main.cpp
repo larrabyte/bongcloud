@@ -40,7 +40,9 @@ int main(void) {
                 }
 
                 case SDL_MOUSEBUTTONDOWN: {
-                    std::size_t location = renderer.square(event.button.x, event.button.y);
+                    std::size_t x = static_cast<std::size_t>(event.button.x);
+                    std::size_t y = static_cast<std::size_t>(event.button.y);
+                    std::size_t location = renderer.square(x, y);
                     Piece &piece = board.square(location);
 
                     if(storePiece.type == Piece::Type::empty) {

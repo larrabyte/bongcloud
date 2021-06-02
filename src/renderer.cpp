@@ -3,33 +3,14 @@
 #include "piece.h"
 
 namespace colours {
-    constexpr int lastMoveLight = 0xCED287;
-    constexpr int lastMoveDark = 0xA9A356;
-    constexpr int regularLight = 0xECDBB9;
-    constexpr int regularDark = 0xAE8968;
+    constexpr std::uint32_t lastMoveLight = 0xCED287;
+    constexpr std::uint32_t lastMoveDark = 0xA9A356;
+    constexpr std::uint32_t regularLight = 0xECDBB9;
+    constexpr std::uint32_t regularDark = 0xAE8968;
 }
 
 std::size_t Renderer::texoffset(Piece::Colour c, Piece::Type t) {
     return (c << 3) | t;
-}
-
-void Renderer::loadtex(Piece::Colour c, Piece::Type t, const char *file) {
-    SDL_Surface *surface = SDL_LoadBMP(file);
-    SDL_Texture *tex = SDL_CreateTextureFromSurface(this->renderer, surface);
-    if(surface != NULL) SDL_FreeSurface(surface);
-    this->textures[this->texoffset(c, t)] = tex;
-}
-
-SDL_Texture *Renderer::gettex(Piece &piece) {
-    std::size_t offset = this->texoffset(piece.colour, piece.type);
-    return this->textures[offset];
-}
-
-void Renderer::brush(int hex) {
-    std::uint8_t red = (hex >> 16) & 0xFF;
-    std::uint8_t green = (hex >> 8) & 0xFF;
-    std::uint8_t blue = hex & 0xFF;
-    SDL_SetRenderDrawColor(this->renderer, red, green, blue, 255);  
 }
 
 void Renderer::clear(void) {
@@ -41,31 +22,50 @@ void Renderer::finish(void) {
     SDL_RenderPresent(this->renderer);
 }
 
+void Renderer::loadtex(Piece::Colour c, Piece::Type t, const char *file) {
+    SDL_Surface *surface = SDL_LoadBMP(file);
+    SDL_Texture *tex = SDL_CreateTextureFromSurface(this->renderer, surface);
+    if(surface != nullptr) SDL_FreeSurface(surface);
+    this->textures[this->texoffset(c, t)] = tex;
+}
+
+SDL_Texture *Renderer::gettex(Piece &piece) {
+    std::size_t offset = this->texoffset(piece.colour, piece.type);
+    return this->textures[offset];
+}
+
+void Renderer::brush(std::uint32_t hex) {
+    std::uint8_t red = (hex >> 16) & 0xFF;
+    std::uint8_t green = (hex >> 8) & 0xFF;
+    std::uint8_t blue = hex & 0xFF;
+    SDL_SetRenderDrawColor(this->renderer, red, green, blue, 255);  
+}
+
 void Renderer::lift(Piece &piece) {
     SDL_Texture *tex = this->gettex(piece);
+    int length = static_cast<int>(this->pixels * this->scale);
 
     if(tex != nullptr) {
-        int length = this->pixels * this->scale;
         SDL_Rect graphic = {0, 0, length, length};
         SDL_GetMouseState(&graphic.x, &graphic.y);
+
         graphic.x = (graphic.x * this->scale) - (length / 2);
         graphic.y = (graphic.y * this->scale) - (length / 2);
-        SDL_RenderCopy(this->renderer, tex, NULL, &graphic);
+        SDL_RenderCopy(this->renderer, tex, nullptr, &graphic);
     }
 }
 
 void Renderer::draw(Board &board) {
     std::size_t i = 0;
-    int x = 0, y = 0;
 
-    for(auto piece : board) {
-        int length = this->pixels * this->scale;
+    for(int x = 0, y = 0; auto &piece : board) {
+        int length = static_cast<int>(this->pixels * this->scale);
         SDL_Rect graphic = {x, y, length, length};
 
         // For move highlighting to be possible, origin and destination 
         // must not be equal AND one must match to a valid board index.
         bool lastmove = (this->origin != this->dest) && (i == this->origin || i == this->dest);
-        bool colour = (this->squares % 2 == 0) ? ((i / this->squares) + i) % 2 == 0 : i % 2 == 0;
+        bool colour = (this->stride % 2 == 0) ? ((i / this->stride) + i) % 2 == 0 : i % 2 == 0;
 
         // Create a checkerboard pattern for any number of squares or highlight last move.
         if(lastmove) this->brush(colour ? colours::lastMoveLight : colours::lastMoveDark);
@@ -75,8 +75,8 @@ void Renderer::draw(Board &board) {
         SDL_Texture *tex = this->gettex(piece);
         if(tex != nullptr) SDL_RenderCopy(this->renderer, tex, nullptr, &graphic);
 
-        y = (++i % this->squares == 0) ? y + length : y;
-        x = (i % this->squares == 0) ? 0 : x + length;
+        y = (++i % this->stride == 0) ? y + length : y;
+        x = (i % this->stride == 0) ? 0 : x + length;
     }
 }
 
@@ -85,9 +85,10 @@ void Renderer::lastmove(std::size_t a, std::size_t b) {
     this->dest = b;
 }
 
-std::size_t Renderer::square(std::int32_t x, std::int32_t y) {
+std::size_t Renderer::square(std::size_t x, std::size_t y) {
     // Get an appropriate board index by dividing by the pixel size of the square.
-    std::size_t rank = (y / this->pixels) * this->squares;
+    // Mouse coordinates in SDL2 are given in the non-scaled form.
+    std::size_t rank = (y / this->pixels) * this->stride;
     std::size_t file = x / this->pixels;
     return rank + file;
 }
@@ -105,14 +106,12 @@ Renderer::Renderer(std::size_t squares, std::size_t pixels) {
 
     int scaledResolution; // Get the actual resolution that the OS has decided to use.
     SDL_GetRendererOutputSize(this->renderer, &scaledResolution, nullptr);
-    this->scale = scaledResolution / resolution;
+    this->scale = static_cast<std::size_t>(scaledResolution / resolution);
 
     // The value of these doesn't matter, only that they are
     // equal to each other to disable move highlighting.
     this->origin = this->dest;
-
-    // Set remaining class members.
-    this->squares = squares;
+    this->stride = squares;
     this->pixels = pixels;
 
     // Load piece textures into an array.

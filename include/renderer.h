@@ -24,10 +24,10 @@ class Renderer {
         void draw(Board&);
 
         // Update the last move highlighting.
-        void lastmove(std::size_t begin, std::size_t end);
+        void lastmove(std::size_t, std::size_t);
 
         // Get the index of the square at the given x and y mouse coordinates.
-        std::size_t square(std::int32_t, std::int32_t);
+        std::size_t square(std::size_t, std::size_t);
 
     private:
         // Get the offset of a texture in the texture array.
@@ -40,14 +40,15 @@ class Renderer {
         SDL_Texture *gettex(Piece&);
 
         // Set the renderer's brush given a hex colour.
-        void brush(int);
+        void brush(std::uint32_t);
 
         SDL_Texture *textures[16] = { nullptr };
         SDL_Renderer *renderer = nullptr;
         SDL_Window *window = nullptr;
+
         std::size_t pixels;
         std::size_t scale;
-        std::size_t squares;
+        std::size_t stride;
         std::size_t origin;
         std::size_t dest;
 };
