@@ -18,7 +18,7 @@ class Renderer {
         std::size_t square(std::size_t, std::size_t);
 
         // Temporary piece storage.
-        std::size_t tempidx;
+        std::size_t prev;
         std::size_t origin;
         std::size_t dest;
         Piece store;

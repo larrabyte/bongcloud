@@ -60,18 +60,20 @@ void Renderer::draw(Board& board) {
     for(std::size_t i = 0, x = 0, y = 0; auto& piece : board) {
         SDL_Rect graphic = this->rect(x, y, length, length);
 
-        // For move highlighting to be possible, origin and destination 
-        // must not be equal AND one must match to a valid board index.
+        // Perform move highlighting if origin and destination are not equal and on the board.
         bool lastmove = this->origin != this->dest && (i == this->origin || i == this->dest);
         bool colour = this->stride % 2 == 0 ? ((i / this->stride) + i) % 2 == 0 : i % 2 == 0;
 
-        // Create a checkerboard pattern for any number of squares or highlight last move.
+        // Create a checkerboard pattern for any number of squares, or highlight the last move.
         if(lastmove) this->brush(colour ? colours::lastMoveLight : colours::lastMoveDark);
         else this->brush(colour ? colours::regularLight : colours::regularDark);
         SDL_RenderFillRect(this->renderer, &graphic);
 
+        bool invisible = i == this->prev && this->store.type != Piece::Type::empty;
         SDL_Texture *tex = this->readtex(piece);
-        if(tex != nullptr) SDL_RenderCopy(this->renderer, tex, nullptr, &graphic);
+        if(tex != nullptr && !invisible) {
+            SDL_RenderCopy(this->renderer, tex, nullptr, &graphic);
+        }
 
         if(++i % this->stride == 0) {
             y += length; x = 0;
@@ -118,10 +120,9 @@ Renderer::Renderer(std::size_t squares, std::size_t pixels) {
 
     // The value of these doesn't matter, only that they are
     // equal to each other to disable move highlighting.
-    this->origin = this->dest;
+    this->origin = this->dest = this->prev;
     this->stride = squares;
     this->pixels = pixels;
-    this->tempidx = 0;
 
     // Load piece textures into an array.
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");

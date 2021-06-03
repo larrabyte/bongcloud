@@ -39,14 +39,16 @@ int main(void) {
                     Piece &piece = board.square(index);
 
                     if(renderer.store.type == Piece::Type::empty) {
-                        renderer.tempidx = index;
-                        renderer.store.swap(piece);
+                        renderer.prev = index;
+                        renderer.store.copy(piece);
                     } else {
+                        Piece& previous = board.square(renderer.prev);
+                        previous.set(Piece::Colour::white, Piece::Type::empty);
                         piece.copy(renderer.store);
                         renderer.store.set(Piece::Colour::white, Piece::Type::empty);
 
-                        if(renderer.tempidx != index) {
-                            renderer.origin = renderer.tempidx;
+                        if(renderer.prev != index) {
+                            renderer.origin = renderer.prev;
                             renderer.dest = index;
                         }
                     }
