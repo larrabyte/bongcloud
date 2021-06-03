@@ -20,6 +20,9 @@ class Piece {
         // Set a piece to a certain colour/type.
         void set(Colour, Type);
 
+        // Swap data between pieces.
+        void swap(Piece&);
+
         Colour colour;
         Type type;
 };
