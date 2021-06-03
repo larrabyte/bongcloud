@@ -20,6 +20,9 @@ class Piece {
         // Set a piece to a certain colour/type.
         void set(Colour, Type);
 
+        // Copy another piece's data.
+        void copy(Piece&);
+
         // Swap data between pieces.
         void swap(Piece&);
 

@@ -40,10 +40,9 @@ int main(void) {
 
                     if(renderer.store.type == Piece::Type::empty) {
                         renderer.tempidx = index;
-                        renderer.store.set(piece.colour, piece.type);
-                        piece.set(Piece::Colour::white, Piece::Type::empty);
+                        renderer.store.swap(piece);
                     } else {
-                        piece.set(renderer.store.colour, renderer.store.type);
+                        piece.copy(renderer.store);
                         renderer.store.set(Piece::Colour::white, Piece::Type::empty);
 
                         if(renderer.tempidx != index) {

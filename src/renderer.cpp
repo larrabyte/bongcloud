@@ -104,30 +104,31 @@ std::size_t Renderer::square(std::size_t x, std::size_t y) {
 Renderer::Renderer(std::size_t squares, std::size_t pixels) {
     // Attempt to initialise SDL, exit if unable.
     if(SDL_Init(SDL_INIT_VIDEO) < 0) exit(-1);
-
+    std::uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
     int resolution = static_cast<int>(squares * pixels);
-    constexpr std::uint32_t flags = SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
-    SDL_CreateWindowAndRenderer(resolution, resolution, flags, &this->window, &this->renderer);
+    int scaledres;
 
     // If the SDL window or renderer couldn't initialise, exit.
+    SDL_CreateWindowAndRenderer(resolution, resolution, flags, &this->window, &this->renderer);
     if(this->window == nullptr || this->renderer == nullptr) exit(-1);
 
-    int scaledResolution; // Get the actual resolution that the OS has decided to use.
-    SDL_GetRendererOutputSize(this->renderer, &scaledResolution, nullptr);
-    this->scale = static_cast<std::size_t>(scaledResolution / resolution);
+    // Get the actual resolution that the OS has decided to use.
+    SDL_GetRendererOutputSize(this->renderer, &scaledres, nullptr);
+    this->scale = static_cast<std::size_t>(scaledres / resolution);
 
     // The value of these doesn't matter, only that they are
     // equal to each other to disable move highlighting.
     this->origin = this->dest;
     this->stride = squares;
     this->pixels = pixels;
+    this->tempidx = 0;
 
     // Load piece textures into an array.
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
     for(auto texture : this->textures) {
         texture = nullptr;
     }
 
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
     this->loadtex(Piece::Colour::white, Piece::Type::empty, "data/we.bmp");
     this->loadtex(Piece::Colour::white, Piece::Type::pawn, "data/wp.bmp");
     this->loadtex(Piece::Colour::white, Piece::Type::knight, "data/wn.bmp");

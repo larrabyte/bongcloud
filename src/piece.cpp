@@ -5,6 +5,10 @@ void Piece::set(Colour colour, Type type) {
     this->type = type;
 }
 
+void Piece::copy(Piece& other) {
+    this->set(other.colour, other.type);
+}
+
 void Piece::swap(Piece& other) {
     Piece store;
     store.set(other.colour, other.type);
