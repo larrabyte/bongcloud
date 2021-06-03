@@ -36,20 +36,25 @@ int main(void) {
                     std::size_t x = static_cast<std::size_t>(event.button.x);
                     std::size_t y = static_cast<std::size_t>(event.button.y);
                     std::size_t index = renderer.square(x, y);
-                    Piece &piece = board.square(index);
+                    Piece& piece = board.square(index);
 
                     if(renderer.store.type == Piece::Type::empty) {
-                        renderer.prev = index;
-                        renderer.store.copy(piece);
-                    } else {
+                        if(board.current() == piece.colour) {
+                            renderer.prev = index;
+                            renderer.store.copy(piece);
+                        }
+                    }
+
+                    else if(board.islegal(renderer.prev, index)) {
                         Piece& previous = board.square(renderer.prev);
                         previous.set(Piece::Colour::white, Piece::Type::empty);
-                        piece.copy(renderer.store);
+                        piece.set(renderer.store.colour, renderer.store.type);
                         renderer.store.set(Piece::Colour::white, Piece::Type::empty);
 
                         if(renderer.prev != index) {
                             renderer.origin = renderer.prev;
                             renderer.dest = index;
+                            board.advance();
                         }
                     }
 

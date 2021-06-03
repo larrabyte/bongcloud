@@ -56,6 +56,30 @@ bool Board::loadfen(const char* position) {
     return parsed;
 }
 
+bool Board::islegal(std::size_t a, std::size_t b) {
+    Piece& ap = this->square(a);
+    Piece& bp = this->square(b);
+
+    // Special case: we're just moving the piece back.
+    if(a == b) return true;
+
+    // The correct player's piece is moving.
+    if(this->player == ap.colour) {
+        bool colour = ap.colour != bp.colour;
+        bool type = bp.type == Piece::Type::empty;
+        if(colour || type) return true;
+    }
+
+    return false;
+}
+
+void Board::advance(void) {
+    switch(this->player) {
+        case Piece::Colour::white: this->player = Piece::Colour::black; break;
+        case Piece::Colour::black: this->player = Piece::Colour::white; break;
+    }
+}
+
 std::size_t Board::square(const char* location) {
     // Find the second-last rank by multiplying board length: (k - 1) * k.
     std::size_t base = (this->squares - 1) * this->squares;
@@ -63,6 +87,10 @@ std::size_t Board::square(const char* location) {
     std::size_t rank = base - (location[1] - '1') * this->squares;
     std::size_t file = (location[0] - 'a');
     return rank + file;
+}
+
+Piece::Colour Board::current(void) {
+    return this->player;
 }
 
 Piece& Board::square(std::size_t index) {
@@ -78,9 +106,10 @@ Piece* Board::end(void) {
 }
 
 Board::Board(std::size_t squares) {
+    this->squares = squares;
     this->elements = squares * squares;
     this->array = new Piece[this->elements];
-    this->squares = squares;
+    this->player = Piece::Colour::white;
 
     for(auto& piece : *this) {
         // Ensure that each piece is set to a valid value as
