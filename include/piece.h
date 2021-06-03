@@ -23,6 +23,6 @@ class Piece {
         // Swap data between pieces.
         void swap(Piece&);
 
-        Colour colour;
-        Type type;
+        Colour colour = Colour::white;
+        Type type = Type::empty;
 };

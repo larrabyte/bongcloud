@@ -9,19 +9,15 @@ namespace colours {
     constexpr std::uint32_t regularDark = 0xAE8968;
 }
 
+SDL_Texture *Renderer::readtex(Piece& piece) {
+    std::size_t offset = this->texoffset(piece.colour, piece.type);
+    return this->textures[offset];
+}
+
 std::size_t Renderer::texoffset(Piece::Colour c, Piece::Type t) {
     std::uint32_t cb = static_cast<std::uint32_t>(c);
     std::uint32_t tb = static_cast<std::uint32_t>(t);
     return (cb << 3) | tb;
-}
-
-void Renderer::clear(void) {
-    this->brush(0x000000);
-    SDL_RenderClear(this->renderer);
-}
-
-void Renderer::finish(void) {
-    SDL_RenderPresent(this->renderer);
 }
 
 void Renderer::loadtex(Piece::Colour c, Piece::Type t, const char* file) {
@@ -31,11 +27,6 @@ void Renderer::loadtex(Piece::Colour c, Piece::Type t, const char* file) {
     this->textures[this->texoffset(c, t)] = tex;
 }
 
-SDL_Texture *Renderer::readtex(Piece& piece) {
-    std::size_t offset = this->texoffset(piece.colour, piece.type);
-    return this->textures[offset];
-}
-
 void Renderer::brush(std::uint32_t hex) {
     std::uint8_t red = (hex >> 16) & 0xFF;
     std::uint8_t green = (hex >> 8) & 0xFF;
@@ -43,31 +34,36 @@ void Renderer::brush(std::uint32_t hex) {
     SDL_SetRenderDrawColor(this->renderer, red, green, blue, 255);  
 }
 
-void Renderer::lift(Piece& piece) {
-    SDL_Texture *tex = this->readtex(piece);
-    int length = static_cast<int>(this->pixels * this->scale);
+SDL_Rect Renderer::rect(std::size_t x, std::size_t y, std::size_t w, std::size_t l) {
+    // The renderer works using std::size_t types. SDL uses machine-wide integers,
+    // so we perform a static cast to make it happy. If something breaks because
+    // of overflow, expect the problem to be around here.
+    SDL_Rect rect = {
+        static_cast<int>(x),
+        static_cast<int>(y),
+        static_cast<int>(w),
+        static_cast<int>(l)
+    };
 
-    if(tex != nullptr) {
-        SDL_Rect graphic = {0, 0, length, length};
-        SDL_GetMouseState(&graphic.x, &graphic.y);
-
-        graphic.x = (graphic.x * this->scale) - (length / 2);
-        graphic.y = (graphic.y * this->scale) - (length / 2);
-        SDL_RenderCopy(this->renderer, tex, nullptr, &graphic);
-    }
+    return rect;
 }
 
 void Renderer::draw(Board& board) {
-    std::size_t i = 0;
+    std::size_t length = this->pixels * this->scale;
+    SDL_Texture *storetex = this->readtex(this->store);
 
-    for(int x = 0, y = 0; auto& piece : board) {
-        int length = static_cast<int>(this->pixels * this->scale);
-        SDL_Rect graphic = {x, y, length, length};
+    // Clear the screen.
+    this->brush(0x000000);
+    SDL_RenderClear(this->renderer);
+
+    // Render the board along with its pieces.
+    for(std::size_t i = 0, x = 0, y = 0; auto& piece : board) {
+        SDL_Rect graphic = this->rect(x, y, length, length);
 
         // For move highlighting to be possible, origin and destination 
         // must not be equal AND one must match to a valid board index.
-        bool lastmove = (this->origin != this->dest) && (i == this->origin || i == this->dest);
-        bool colour = (this->stride % 2 == 0) ? ((i / this->stride) + i) % 2 == 0 : i % 2 == 0;
+        bool lastmove = this->origin != this->dest && (i == this->origin || i == this->dest);
+        bool colour = this->stride % 2 == 0 ? ((i / this->stride) + i) % 2 == 0 : i % 2 == 0;
 
         // Create a checkerboard pattern for any number of squares or highlight last move.
         if(lastmove) this->brush(colour ? colours::lastMoveLight : colours::lastMoveDark);
@@ -77,14 +73,24 @@ void Renderer::draw(Board& board) {
         SDL_Texture *tex = this->readtex(piece);
         if(tex != nullptr) SDL_RenderCopy(this->renderer, tex, nullptr, &graphic);
 
-        y = (++i % this->stride == 0) ? y + length : y;
-        x = (i % this->stride == 0) ? 0 : x + length;
+        if(++i % this->stride == 0) {
+            y += length; x = 0;
+        } else {
+            x += length;
+        }
     }
-}
 
-void Renderer::lastmove(std::size_t a, std::size_t b) {
-    this->origin = a;
-    this->dest = b;
+    // Render the store piece onto the cursor.
+    if(storetex != nullptr) {
+        SDL_Rect mouse = this->rect(0, 0, length, length);
+        SDL_GetMouseState(&mouse.x, &mouse.y);
+        mouse.x = (mouse.x * this->scale) - (length / 2);
+        mouse.y = (mouse.y * this->scale) - (length / 2);
+        SDL_RenderCopy(this->renderer, storetex, nullptr, &mouse);
+    }
+
+    // Finish rendering and present to screen.
+    SDL_RenderPresent(this->renderer);
 }
 
 std::size_t Renderer::square(std::size_t x, std::size_t y) {
