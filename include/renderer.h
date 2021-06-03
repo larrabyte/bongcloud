@@ -37,14 +37,14 @@ class Renderer {
         void loadtex(Piece::Colour, Piece::Type, const char*);
 
         // Get the texture of a piece.
-        SDL_Texture *gettex(Piece&);
+        SDL_Texture* readtex(Piece&);
 
         // Set the renderer's brush given a hex colour.
         void brush(std::uint32_t);
 
-        SDL_Texture *textures[16] = { nullptr };
-        SDL_Renderer *renderer = nullptr;
-        SDL_Window *window = nullptr;
+        SDL_Texture* textures[16];
+        SDL_Renderer* renderer;
+        SDL_Window* window;
 
         std::size_t pixels;
         std::size_t scale;

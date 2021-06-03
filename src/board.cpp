@@ -1,6 +1,6 @@
 #include "board.h"
 
-bool Board::loadfen(const char *position) {
+bool Board::loadfen(const char* position) {
     // FEN strings start from the A1 square.
     std::size_t cursor = this->square("a1");
     std::size_t rank = cursor;
@@ -56,7 +56,7 @@ bool Board::loadfen(const char *position) {
     return parsed;
 }
 
-std::size_t Board::square(const char *location) {
+std::size_t Board::square(const char* location) {
     // Find the second-last rank by multiplying board length: (k - 1) * k.
     std::size_t base = (this->squares - 1) * this->squares;
 
@@ -65,15 +65,15 @@ std::size_t Board::square(const char *location) {
     return rank + file;
 }
 
-Piece &Board::square(std::size_t index) {
+Piece& Board::square(std::size_t index) {
     return this->array[index];
 }
 
-Piece *Board::begin(void) {
+Piece* Board::begin(void) {
     return this->array;
 }
 
-Piece *Board::end(void) {
+Piece* Board::end(void) {
     return this->array + this->elements;
 }
 
@@ -82,7 +82,7 @@ Board::Board(std::size_t squares) {
     this->array = new Piece[this->elements];
     this->squares = squares;
 
-    for(auto &piece : *this) {
+    for(auto& piece : *this) {
         // Ensure that each piece is set to a valid value as
         // this data is coming from the heap (segfaults galore).
         piece.set(Piece::Colour::white, Piece::Type::empty);

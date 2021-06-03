@@ -12,19 +12,19 @@ class Board {
         bool loadfen(const char*);
 
         // Get the index of a given position.
-        std::size_t square(const char *location);
+        std::size_t square(const char*);
 
         // Get the piece at a given index.
-        Piece &square(std::size_t);
+        Piece& square(std::size_t);
 
         // Get a pointer to the beginning of the board.
-        Piece *begin(void);
+        Piece* begin(void);
 
         // Get a pointer to the end of the board (invalid address).
-        Piece *end(void);
+        Piece* end(void);
 
     private:
         std::size_t elements;
         std::size_t squares;
-        Piece *array;
+        Piece* array;
 };

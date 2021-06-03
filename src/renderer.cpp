@@ -10,7 +10,9 @@ namespace colours {
 }
 
 std::size_t Renderer::texoffset(Piece::Colour c, Piece::Type t) {
-    return (c << 3) | t;
+    std::uint32_t cb = static_cast<std::uint32_t>(c);
+    std::uint32_t tb = static_cast<std::uint32_t>(t);
+    return (cb << 3) | tb;
 }
 
 void Renderer::clear(void) {
@@ -22,14 +24,14 @@ void Renderer::finish(void) {
     SDL_RenderPresent(this->renderer);
 }
 
-void Renderer::loadtex(Piece::Colour c, Piece::Type t, const char *file) {
+void Renderer::loadtex(Piece::Colour c, Piece::Type t, const char* file) {
     SDL_Surface *surface = SDL_LoadBMP(file);
     SDL_Texture *tex = SDL_CreateTextureFromSurface(this->renderer, surface);
     if(surface != nullptr) SDL_FreeSurface(surface);
     this->textures[this->texoffset(c, t)] = tex;
 }
 
-SDL_Texture *Renderer::gettex(Piece &piece) {
+SDL_Texture *Renderer::readtex(Piece& piece) {
     std::size_t offset = this->texoffset(piece.colour, piece.type);
     return this->textures[offset];
 }
@@ -41,8 +43,8 @@ void Renderer::brush(std::uint32_t hex) {
     SDL_SetRenderDrawColor(this->renderer, red, green, blue, 255);  
 }
 
-void Renderer::lift(Piece &piece) {
-    SDL_Texture *tex = this->gettex(piece);
+void Renderer::lift(Piece& piece) {
+    SDL_Texture *tex = this->readtex(piece);
     int length = static_cast<int>(this->pixels * this->scale);
 
     if(tex != nullptr) {
@@ -55,10 +57,10 @@ void Renderer::lift(Piece &piece) {
     }
 }
 
-void Renderer::draw(Board &board) {
+void Renderer::draw(Board& board) {
     std::size_t i = 0;
 
-    for(int x = 0, y = 0; auto &piece : board) {
+    for(int x = 0, y = 0; auto& piece : board) {
         int length = static_cast<int>(this->pixels * this->scale);
         SDL_Rect graphic = {x, y, length, length};
 
@@ -72,7 +74,7 @@ void Renderer::draw(Board &board) {
         else this->brush(colour ? colours::regularLight : colours::regularDark);
         SDL_RenderFillRect(this->renderer, &graphic);
 
-        SDL_Texture *tex = this->gettex(piece);
+        SDL_Texture *tex = this->readtex(piece);
         if(tex != nullptr) SDL_RenderCopy(this->renderer, tex, nullptr, &graphic);
 
         y = (++i % this->stride == 0) ? y + length : y;
@@ -115,6 +117,10 @@ Renderer::Renderer(std::size_t squares, std::size_t pixels) {
     this->pixels = pixels;
 
     // Load piece textures into an array.
+    for(auto texture : this->textures) {
+        texture = nullptr;
+    }
+
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
     this->loadtex(Piece::Colour::white, Piece::Type::empty, "data/we.bmp");
     this->loadtex(Piece::Colour::white, Piece::Type::pawn, "data/wp.bmp");
