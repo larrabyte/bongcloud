@@ -63,14 +63,44 @@ bool Board::islegal(std::size_t a, std::size_t b) {
     // Special case: we're just moving the piece back.
     if(a == b) return true;
 
-    // The correct player's piece is moving.
-    if(this->player == ap.colour) {
-        bool colour = ap.colour != bp.colour;
-        bool type = bp.type == Piece::Type::empty;
-        if(colour || type) return true;
+    // Otherwise, check our standard cases.
+    bool player = true; // this->player == ap.colour;
+    bool other = ap.colour != bp.colour || bp.type == Piece::Type::empty;
+    bool movable = false;
+
+    switch(ap.type) {
+        // Empty pieces don't move.
+        case Piece::Type::empty: {
+            break;
+        }
+
+        // Pawns can move two squares on their first move, otherwise one square.
+        case Piece::Type::pawn: {
+            if(this->player == Piece::Colour::white) {
+                bool twosquare = this->onrank('2', a) ? (a - 2 * this->squares) == b : false;
+                bool onesquare = a - this->squares == b;
+                bool obstacle = onesquare && bp.type != Piece::Type::empty;
+                bool adjacent = bp.type != Piece::Type::empty && (b == a - this->squares + 1 || b == a - this->squares - 1);
+                movable = (twosquare || onesquare || adjacent) && !obstacle;
+            } else if(this->player == Piece::Colour::black) {
+                bool twosquare = this->onrank('7', a) ? (a + 2 * this->squares) == b : false;
+                bool onesquare = a + this->squares == b;
+                bool obstacle = onesquare && bp.type != Piece::Type::empty;
+                bool adjacent = bp.type != Piece::Type::empty && (b == a + this->squares + 1 || b == a + this->squares - 1);
+                movable = (twosquare || onesquare || adjacent) && !obstacle;
+            }
+
+            break;
+        }
+
+        // ?????
+        default: {
+            movable = true;
+            break;
+        }
     }
 
-    return false;
+    return player && other && movable;
 }
 
 void Board::advance(void) {
@@ -80,12 +110,23 @@ void Board::advance(void) {
     }
 }
 
+bool Board::onrank(const char rank, std::size_t index) {
+    std::size_t rankidx = rank - '0';
+    std::size_t current = 8 - (index / this->squares);
+    return current == rankidx;
+}
+
+bool Board::onfile(const char file, std::size_t index) {
+    std::size_t fileidx = file - 'a';
+    return index % fileidx == 0;
+}
+
 std::size_t Board::square(const char* location) {
     // Find the second-last rank by multiplying board length: (k - 1) * k.
     std::size_t base = (this->squares - 1) * this->squares;
 
     std::size_t rank = base - (location[1] - '1') * this->squares;
-    std::size_t file = (location[0] - 'a');
+    std::size_t file = location[0] - 'a';
     return rank + file;
 }
 
