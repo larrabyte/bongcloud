@@ -85,18 +85,18 @@ bool Board::loadfen(const char* string) {
 
         switch(*string++) {
             // Lowercase letters represent white pieces, uppercase represent black pieces.
-            case 'r': piece.set(Piece::Colour::white, Piece::Type::rook); cursor++; break;
-            case 'n': piece.set(Piece::Colour::white, Piece::Type::knight); cursor++; break;
-            case 'b': piece.set(Piece::Colour::white, Piece::Type::bishop); cursor++; break;
-            case 'q': piece.set(Piece::Colour::white, Piece::Type::queen); cursor++; break;
-            case 'k': piece.set(Piece::Colour::white, Piece::Type::king); cursor++; break;
-            case 'p': piece.set(Piece::Colour::white, Piece::Type::pawn); cursor++; break;
-            case 'R': piece.set(Piece::Colour::black, Piece::Type::rook); cursor++; break;
-            case 'N': piece.set(Piece::Colour::black, Piece::Type::knight); cursor++; break;
-            case 'B': piece.set(Piece::Colour::black, Piece::Type::bishop); cursor++; break;
-            case 'Q': piece.set(Piece::Colour::black, Piece::Type::queen); cursor++; break;
-            case 'K': piece.set(Piece::Colour::black, Piece::Type::king); cursor++; break;
-            case 'P': piece.set(Piece::Colour::black, Piece::Type::pawn); cursor++; break;
+            case 'r': piece.set(Piece::Colour::white, Piece::Type::rook, 0); cursor++; break;
+            case 'n': piece.set(Piece::Colour::white, Piece::Type::knight, 0); cursor++; break;
+            case 'b': piece.set(Piece::Colour::white, Piece::Type::bishop, 0); cursor++; break;
+            case 'q': piece.set(Piece::Colour::white, Piece::Type::queen, 0); cursor++; break;
+            case 'k': piece.set(Piece::Colour::white, Piece::Type::king, 0); cursor++; break;
+            case 'p': piece.set(Piece::Colour::white, Piece::Type::pawn, 0); cursor++; break;
+            case 'R': piece.set(Piece::Colour::black, Piece::Type::rook, 0); cursor++; break;
+            case 'N': piece.set(Piece::Colour::black, Piece::Type::knight, 0); cursor++; break;
+            case 'B': piece.set(Piece::Colour::black, Piece::Type::bishop, 0); cursor++; break;
+            case 'Q': piece.set(Piece::Colour::black, Piece::Type::queen, 0); cursor++; break;
+            case 'K': piece.set(Piece::Colour::black, Piece::Type::king, 0); cursor++; break;
+            case 'P': piece.set(Piece::Colour::black, Piece::Type::pawn, 0); cursor++; break;
 
             // Numbers signify the no. of squares to skip.
             case '1': case '2': case '3':
@@ -150,11 +150,9 @@ bool Board::islegal(std::size_t a, std::size_t b) {
 
         // Pawns can move two squares on their first move, otherwise one square.
         case Piece::Type::pawn: {
-            std::size_t north = this->square(Direction::north, a, 1);
-            Piece& np = this->square(north);
-            bool doubles = b == this->square(Direction::north, a, 2);
-            bool clear = np.type == Piece::Type::empty;
-            bool single = b == north;
+            bool doubles = ap.movecnt == 0 && b == this->square(Direction::north, a, 2);
+            bool single = b == this->square(Direction::north, a, 1);
+            bool clear = bp.type == Piece::Type::empty;
 
             std::size_t ladj = this->square(Direction::northwest, a, 1);
             std::size_t radj = this->square(Direction::northeast, a, 1);
@@ -211,6 +209,6 @@ Board::Board(std::size_t squares) {
     for(auto& piece : *this) {
         // Ensure that each piece is set to a valid value as
         // this data is coming from the heap (segfaults galore).
-        piece.set(Piece::Colour::white, Piece::Type::empty);
+        piece.clear();
     }
 }

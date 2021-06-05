@@ -45,13 +45,14 @@ int main(void) {
 
                     else if(board.islegal(renderer.prev, index)) {
                         Piece& previous = board.square(renderer.prev);
-                        previous.set(Piece::Colour::white, Piece::Type::empty);
-                        piece.set(renderer.store.colour, renderer.store.type);
-                        renderer.store.set(Piece::Colour::white, Piece::Type::empty);
+                        previous.clear();
+                        piece.copy(renderer.store);
+                        renderer.store.clear();
 
                         if(renderer.prev != index) {
                             renderer.origin = renderer.prev;
                             renderer.dest = index;
+                            piece.movecnt++;
                             board.advance();
                         }
                     }

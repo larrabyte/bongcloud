@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 class Piece {
     public:
         enum class Colour {
@@ -18,7 +20,10 @@ class Piece {
         };
 
         // Set a piece to a certain colour/type.
-        void set(Colour, Type);
+        void set(Colour, Type, std::size_t);
+
+        // Set to an empty piece.
+        void clear(void);
 
         // Copy another piece's data.
         void copy(Piece&);
@@ -28,4 +33,5 @@ class Piece {
 
         Colour colour = Colour::white;
         Type type = Type::empty;
+        std::size_t movecnt = 0;
 };
