@@ -11,11 +11,8 @@ class Board {
         // Load a FEN string onto the board. Returns boolean depending on success.
         bool loadfen(const char*);
 
-        // Return a boolean depending on the legality of a move.
-        bool islegal(std::size_t, std::size_t);
-
-        // Move to the next player.
-        void advance(void);
+        // Move pieces and return a boolean depending on success.
+        bool move(std::size_t, std::size_t);
 
         // Get the index of a given position.
         std::size_t square(const char*);
@@ -46,6 +43,10 @@ class Board {
         // Return a boolean depending on whether the index is on the specified file.
         bool onfile(std::size_t, std::size_t);
 
+        // Advance the board state.
+        void advance(Piece&, Piece&, std::size_t);
+
+        std::size_t lastmove;
         Piece::Colour player;
         std::size_t elements;
         std::size_t squares;

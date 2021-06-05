@@ -71,6 +71,23 @@ std::size_t Board::square(Direction direction, std::size_t origin, std::size_t d
     return dest;
 }
 
+void Board::advance(Piece& a, Piece& b, std::size_t prev) {
+    // Overwrite piece data (a replaces b).
+    b.copy(a);
+    a.clear();
+
+    // Set the board's previous move and update piece move count.
+    this->lastmove = prev;
+    b.movecnt++;
+
+    // Advance to the next colour.
+    switch(this->player) {
+        case Piece::Colour::white: this->player = Piece::Colour::black; break;
+        case Piece::Colour::black: this->player = Piece::Colour::white; break;
+        default: break;
+    }
+}
+
 bool Board::loadfen(const char* string) {
     // FEN strings start from the A1 square.
     std::size_t cursor = this->square("a1");
@@ -130,7 +147,7 @@ bool Board::loadfen(const char* string) {
     return pieces && !invalid;
 }
 
-bool Board::islegal(std::size_t a, std::size_t b) {
+bool Board::move(std::size_t a, std::size_t b) {
     Piece& ap = this->square(a);
     Piece& bp = this->square(b);
 
@@ -153,12 +170,23 @@ bool Board::islegal(std::size_t a, std::size_t b) {
             bool doubles = ap.movecnt == 0 && b == this->square(Direction::north, a, 2);
             bool single = b == this->square(Direction::north, a, 1);
             bool clear = bp.type == Piece::Type::empty;
+            bool standard = (doubles || single) && clear;
 
-            std::size_t ladj = this->square(Direction::northwest, a, 1);
-            std::size_t radj = this->square(Direction::northeast, a, 1);
-            bool adjacent = (b == ladj || b == radj) && bp.type != Piece::Type::empty;
+            std::size_t frontl = this->square(Direction::northwest, a, 1);
+            std::size_t frontr = this->square(Direction::northeast, a, 1);
+            bool infront = b == frontl || b == frontr;
+            bool pieceahead = infront && bp.type != Piece::Type::empty;
 
-            movable = ((doubles || single) && clear) || adjacent;
+            // EN PASSANT HON HON
+            Piece& holyhell = this->square(this->square(Direction::south, b, 1));
+            bool previous = this->lastmove == this->square(Direction::north, b, 1);
+            bool passant = infront && previous && holyhell.type == Piece::Type::pawn;
+
+            // Because en passant is special and is the only capture where the piece
+            // does not end up on the capture square, we perform the capture here.
+            if(passant) holyhell.clear();
+
+            movable = standard || pieceahead || passant;
             break;
         }
 
@@ -169,14 +197,10 @@ bool Board::islegal(std::size_t a, std::size_t b) {
         }
     }
 
-    return player && other && movable;
-}
-
-void Board::advance(void) {
-    switch(this->player) {
-        case Piece::Colour::white: this->player = Piece::Colour::black; break;
-        case Piece::Colour::black: this->player = Piece::Colour::white; break;
-    }
+    // If the move is possible, replace pieces.
+    bool success = player && other && movable;
+    if(success) this->advance(ap, bp, a);
+    return success;
 }
 
 std::size_t Board::square(const char* location) {
@@ -205,6 +229,9 @@ Board::Board(std::size_t squares) {
     this->elements = squares * squares;
     this->array = new Piece[this->elements];
     this->player = Piece::Colour::white;
+
+    // Set the initial last move to an impossible index.
+    this->lastmove = this->elements + 1;
 
     for(auto& piece : *this) {
         // Ensure that each piece is set to a valid value as

@@ -43,17 +43,12 @@ int main(void) {
                         renderer.store.copy(piece);
                     }
 
-                    else if(board.islegal(renderer.prev, index)) {
-                        Piece& previous = board.square(renderer.prev);
-                        previous.clear();
-                        piece.copy(renderer.store);
+                    else if(board.move(renderer.prev, index)) {
                         renderer.store.clear();
 
                         if(renderer.prev != index) {
                             renderer.origin = renderer.prev;
                             renderer.dest = index;
-                            piece.movecnt++;
-                            board.advance();
                         }
                     }
 
