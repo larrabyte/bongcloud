@@ -1,29 +1,25 @@
 #include "board.h"
 
-bool Board::loadfen(const char* position) {
+bool Board::loadfen(const char* string) {
     // FEN strings start from the A1 square.
     std::size_t cursor = this->square("a1");
     std::size_t rank = cursor;
     bool invalid = false;
-    bool parsed = false;
+    bool pieces = false;
 
-    while(!parsed && !invalid) {
-        Piece &piece = this->square(cursor);
-        char c = *position++;
-
-        // Make sure that the cursor hasn't escaped the bounds of the board.
+    // Start placing pieces on the board.
+    while(!pieces && !invalid) {
+        Piece& piece = this->square(cursor);
         invalid = cursor > rank + this->squares || cursor > this->elements;
 
-        switch(c) {
-            // Lowercase letters represent white pieces.
+        switch(*string++) {
+            // Lowercase letters represent white pieces, uppercase represent black pieces.
             case 'r': piece.set(Piece::Colour::white, Piece::Type::rook); cursor++; break;
             case 'n': piece.set(Piece::Colour::white, Piece::Type::knight); cursor++; break;
             case 'b': piece.set(Piece::Colour::white, Piece::Type::bishop); cursor++; break;
             case 'q': piece.set(Piece::Colour::white, Piece::Type::queen); cursor++; break;
             case 'k': piece.set(Piece::Colour::white, Piece::Type::king); cursor++; break;
             case 'p': piece.set(Piece::Colour::white, Piece::Type::pawn); cursor++; break;
-
-            // Uppercase letters represent black pieces.
             case 'R': piece.set(Piece::Colour::black, Piece::Type::rook); cursor++; break;
             case 'N': piece.set(Piece::Colour::black, Piece::Type::knight); cursor++; break;
             case 'B': piece.set(Piece::Colour::black, Piece::Type::bishop); cursor++; break;
@@ -35,7 +31,7 @@ bool Board::loadfen(const char* position) {
             case '1': case '2': case '3':
             case '4': case '5': case '6':
             case '7': case '8': case '9':
-                cursor += c - '0';
+                cursor += *string - '0';
                 break;
 
             case '/': // A slash moves the cursor to the next rank.
@@ -43,8 +39,8 @@ bool Board::loadfen(const char* position) {
                 rank = cursor;
                 break;
 
-            case ' ': case '\0': // End of string, FEN string parsed.
-                parsed = true;
+            case ' ': // All pieces have been placed.
+                pieces = true;
                 break;
 
             default: // Unknown character, abort!
@@ -53,7 +49,14 @@ bool Board::loadfen(const char* position) {
         }
     }
 
-    return parsed;
+    // Whose turn is it to move?
+    switch(*string) {
+        case 'w': this->player = Piece::Colour::white; break;
+        case 'b': this->player = Piece::Colour::black; break;
+        default: invalid = true; break;
+    }
+
+    return pieces && !invalid;
 }
 
 bool Board::islegal(std::size_t a, std::size_t b) {
