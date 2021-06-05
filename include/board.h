@@ -49,6 +49,6 @@ class Board {
         std::size_t lastmove;
         Piece::Colour player;
         std::size_t elements;
-        std::size_t squares;
+        std::size_t stride;
         Piece* array;
 };

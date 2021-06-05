@@ -1,7 +1,7 @@
 #include "board.h"
 
 bool Board::onrank(std::size_t rank, std::size_t index) {
-    return this->squares - (index / this->squares) == rank;
+    return this->stride - (index / this->stride) == rank;
 }
 
 bool Board::onfile(std::size_t file, std::size_t index) {
@@ -14,17 +14,17 @@ std::size_t Board::square(Direction direction, std::size_t origin, std::size_t d
 
     if(direction == Direction::north) {
         if(this->player == Piece::Colour::white) {
-            dest = origin - (this->squares * distance);
+            dest = origin - (this->stride * distance);
         } else if(this->player == Piece::Colour::black) {
-            dest = origin + (this->squares * distance);
+            dest = origin + (this->stride * distance);
         }
     }
 
     else if(direction == Direction::northeast) {
         if(this->player == Piece::Colour::white) {
-            dest = origin - (this->squares * distance) + distance;
+            dest = origin - (this->stride * distance) + distance;
         } else if(this->player == Piece::Colour::black) {
-            dest = origin + (this->squares * distance) - distance;
+            dest = origin + (this->stride * distance) - distance;
         }
     }
 
@@ -34,25 +34,25 @@ std::size_t Board::square(Direction direction, std::size_t origin, std::size_t d
 
     else if(direction == Direction::southeast) {
         if(this->player == Piece::Colour::white) {
-            dest = origin + (this->squares * distance) + distance;
+            dest = origin + (this->stride * distance) + distance;
         } else if(this->player == Piece::Colour::black) {
-            dest = origin - (this->squares * distance) - distance;
+            dest = origin - (this->stride * distance) - distance;
         }
     }
 
     else if(direction == Direction::south) {
         if(this->player == Piece::Colour::white) {
-            dest = origin + (this->squares * distance);
+            dest = origin + (this->stride * distance);
         } else if(this->player == Piece::Colour::black) {
-            dest = origin - (this->squares * distance);
+            dest = origin - (this->stride * distance);
         }
     }
 
     else if(direction == Direction::southwest) {
         if(this->player == Piece::Colour::white) {
-            dest = origin + (this->squares * distance) - distance;
+            dest = origin + (this->stride * distance) - distance;
         } else if(this->player == Piece::Colour::black) {
-            dest = origin - (this->squares * distance) + distance;
+            dest = origin - (this->stride * distance) + distance;
         }
     }
 
@@ -62,9 +62,9 @@ std::size_t Board::square(Direction direction, std::size_t origin, std::size_t d
 
     else if(direction == Direction::northwest) {
         if(this->player == Piece::Colour::white) {
-            dest = origin - (this->squares * distance) - distance;
+            dest = origin - (this->stride * distance) - distance;
         } else if(this->player == Piece::Colour::black) {
-            dest = origin + (this->squares * distance) + distance;
+            dest = origin + (this->stride * distance) + distance;
         }
     }
 
@@ -98,7 +98,7 @@ bool Board::loadfen(const char* string) {
     // Start placing pieces on the board.
     while(!pieces && !invalid) {
         Piece& piece = this->square(cursor);
-        invalid = cursor > rank + this->squares || cursor > this->elements;
+        invalid = cursor > rank + this->stride || cursor > this->elements;
 
         switch(*string++) {
             // Lowercase letters represent white pieces, uppercase represent black pieces.
@@ -123,7 +123,7 @@ bool Board::loadfen(const char* string) {
                 break;
 
             case '/': // A slash moves the cursor to the next rank.
-                cursor = rank - this->squares;
+                cursor = rank - this->stride;
                 rank = cursor;
                 break;
 
@@ -205,9 +205,9 @@ bool Board::move(std::size_t a, std::size_t b) {
 
 std::size_t Board::square(const char* location) {
     // Find the second-last rank by multiplying board length: (k - 1) * k.
-    std::size_t base = (this->squares - 1) * this->squares;
+    std::size_t base = (this->stride - 1) * this->stride;
 
-    std::size_t rank = base - (location[1] - '1') * this->squares;
+    std::size_t rank = base - (location[1] - '1') * this->stride;
     std::size_t file = location[0] - 'a';
     return rank + file;
 }
@@ -225,7 +225,7 @@ Piece* Board::end(void) {
 }
 
 Board::Board(std::size_t squares) {
-    this->squares = squares;
+    this->stride = squares;
     this->elements = squares * squares;
     this->array = new Piece[this->elements];
     this->player = Piece::Colour::white;
