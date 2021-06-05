@@ -1,5 +1,13 @@
 #include "board.h"
 
+bool Board::onrank(std::size_t rank, std::size_t index) {
+    return this->squares - (index / this->squares) == rank;
+}
+
+bool Board::onfile(std::size_t file, std::size_t index) {
+    return index % file == 0;
+}
+
 bool Board::loadfen(const char* string) {
     // FEN strings start from the A1 square.
     std::size_t cursor = this->square("a1");
@@ -80,13 +88,13 @@ bool Board::islegal(std::size_t a, std::size_t b) {
         // Pawns can move two squares on their first move, otherwise one square.
         case Piece::Type::pawn: {
             if(this->player == Piece::Colour::white) {
-                bool twosquare = this->onrank('2', a) ? (a - 2 * this->squares) == b : false;
+                bool twosquare = this->onrank(2, a) ? (a - 2 * this->squares) == b : false;
                 bool onesquare = a - this->squares == b;
                 bool obstacle = onesquare && bp.type != Piece::Type::empty;
                 bool adjacent = bp.type != Piece::Type::empty && (b == a - this->squares + 1 || b == a - this->squares - 1);
                 movable = (twosquare || onesquare || adjacent) && !obstacle;
             } else if(this->player == Piece::Colour::black) {
-                bool twosquare = this->onrank('7', a) ? (a + 2 * this->squares) == b : false;
+                bool twosquare = this->onrank(7, a) ? (a + 2 * this->squares) == b : false;
                 bool onesquare = a + this->squares == b;
                 bool obstacle = onesquare && bp.type != Piece::Type::empty;
                 bool adjacent = bp.type != Piece::Type::empty && (b == a + this->squares + 1 || b == a + this->squares - 1);
@@ -113,17 +121,6 @@ void Board::advance(void) {
     }
 }
 
-bool Board::onrank(const char rank, std::size_t index) {
-    std::size_t rankidx = rank - '0';
-    std::size_t current = this->squares - (index / this->squares);
-    return current == rankidx;
-}
-
-bool Board::onfile(const char file, std::size_t index) {
-    std::size_t fileidx = file - 'a';
-    return index % fileidx == 0;
-}
-
 std::size_t Board::square(const char* location) {
     // Find the second-last rank by multiplying board length: (k - 1) * k.
     std::size_t base = (this->squares - 1) * this->squares;
@@ -131,10 +128,6 @@ std::size_t Board::square(const char* location) {
     std::size_t rank = base - (location[1] - '1') * this->squares;
     std::size_t file = location[0] - 'a';
     return rank + file;
-}
-
-Piece::Colour Board::current(void) {
-    return this->player;
 }
 
 Piece& Board::square(std::size_t index) {

@@ -39,10 +39,8 @@ int main(void) {
                     Piece& piece = board.square(index);
 
                     if(renderer.store.type == Piece::Type::empty) {
-                        if(board.current() == piece.colour) {
-                            renderer.prev = index;
-                            renderer.store.copy(piece);
-                        }
+                        renderer.prev = index;
+                        renderer.store.copy(piece);
                     }
 
                     else if(board.islegal(renderer.prev, index)) {

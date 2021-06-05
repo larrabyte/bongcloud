@@ -14,17 +14,8 @@ class Board {
         // Return a boolean depending on the legality of a move.
         bool islegal(std::size_t, std::size_t);
 
-        // Return a boolean depending on whether the index is on the specified rank.
-        bool onrank(const char, std::size_t);
-
-        // Return a boolean depending on whether the index is on the specified file.
-        bool onfile(const char, std::size_t);
-
         // Move to the next player.
         void advance(void);
-
-        // Return the current player's colour.
-        Piece::Colour current(void);
 
         // Get the index of a given position.
         std::size_t square(const char*);
@@ -39,6 +30,12 @@ class Board {
         Piece* end(void);
 
     private:
+        // Return a boolean depending on whether the index is on the specified rank.
+        bool onrank(std::size_t, std::size_t);
+
+        // Return a boolean depending on whether the index is on the specified file.
+        bool onfile(std::size_t, std::size_t);
+
         Piece::Colour player;
         std::size_t elements;
         std::size_t squares;
