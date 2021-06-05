@@ -67,7 +67,7 @@ bool Board::islegal(std::size_t a, std::size_t b) {
     if(a == b) return true;
 
     // Otherwise, check our standard cases.
-    bool player = true; // this->player == ap.colour;
+    bool player = this->player == ap.colour;
     bool other = ap.colour != bp.colour || bp.type == Piece::Type::empty;
     bool movable = false;
 
@@ -115,7 +115,7 @@ void Board::advance(void) {
 
 bool Board::onrank(const char rank, std::size_t index) {
     std::size_t rankidx = rank - '0';
-    std::size_t current = 8 - (index / this->squares);
+    std::size_t current = this->squares - (index / this->squares);
     return current == rankidx;
 }
 
