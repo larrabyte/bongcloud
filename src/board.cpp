@@ -8,6 +8,69 @@ bool Board::onfile(std::size_t file, std::size_t index) {
     return index % file == 0;
 }
 
+std::size_t Board::square(Direction direction, std::size_t origin, std::size_t distance) {
+    // Suppress the uninitialised variable warning by setting a value.
+    std::size_t dest = origin;
+
+    if(direction == Direction::north) {
+        if(this->player == Piece::Colour::white) {
+            dest = origin - (this->squares * distance);
+        } else if(this->player == Piece::Colour::black) {
+            dest = origin + (this->squares * distance);
+        }
+    }
+
+    else if(direction == Direction::northeast) {
+        if(this->player == Piece::Colour::white) {
+            dest = origin - (this->squares * distance) + distance;
+        } else if(this->player == Piece::Colour::black) {
+            dest = origin + (this->squares * distance) - distance;
+        }
+    }
+
+    else if(direction == Direction::east) {
+        dest = origin + distance;
+    }
+
+    else if(direction == Direction::southeast) {
+        if(this->player == Piece::Colour::white) {
+            dest = origin + (this->squares * distance) + distance;
+        } else if(this->player == Piece::Colour::black) {
+            dest = origin - (this->squares * distance) - distance;
+        }
+    }
+
+    else if(direction == Direction::south) {
+        if(this->player == Piece::Colour::white) {
+            dest = origin + (this->squares * distance);
+        } else if(this->player == Piece::Colour::black) {
+            dest = origin - (this->squares * distance);
+        }
+    }
+
+    else if(direction == Direction::southwest) {
+        if(this->player == Piece::Colour::white) {
+            dest = origin + (this->squares * distance) - distance;
+        } else if(this->player == Piece::Colour::black) {
+            dest = origin - (this->squares * distance) + distance;
+        }
+    }
+
+    else if(direction == Direction::west) {
+        dest = origin - distance;
+    }
+
+    else if(direction == Direction::northwest) {
+        if(this->player == Piece::Colour::white) {
+            dest = origin - (this->squares * distance) - distance;
+        } else if(this->player == Piece::Colour::black) {
+            dest = origin + (this->squares * distance) + distance;
+        }
+    }
+
+    return dest;
+}
+
 bool Board::loadfen(const char* string) {
     // FEN strings start from the A1 square.
     std::size_t cursor = this->square("a1");
@@ -87,20 +150,17 @@ bool Board::islegal(std::size_t a, std::size_t b) {
 
         // Pawns can move two squares on their first move, otherwise one square.
         case Piece::Type::pawn: {
-            if(this->player == Piece::Colour::white) {
-                bool twosquare = this->onrank(2, a) ? (a - 2 * this->squares) == b : false;
-                bool onesquare = a - this->squares == b;
-                bool obstacle = onesquare && bp.type != Piece::Type::empty;
-                bool adjacent = bp.type != Piece::Type::empty && (b == a - this->squares + 1 || b == a - this->squares - 1);
-                movable = (twosquare || onesquare || adjacent) && !obstacle;
-            } else if(this->player == Piece::Colour::black) {
-                bool twosquare = this->onrank(7, a) ? (a + 2 * this->squares) == b : false;
-                bool onesquare = a + this->squares == b;
-                bool obstacle = onesquare && bp.type != Piece::Type::empty;
-                bool adjacent = bp.type != Piece::Type::empty && (b == a + this->squares + 1 || b == a + this->squares - 1);
-                movable = (twosquare || onesquare || adjacent) && !obstacle;
-            }
+            std::size_t north = this->square(Direction::north, a, 1);
+            Piece& np = this->square(north);
+            bool doubles = b == this->square(Direction::north, a, 2);
+            bool clear = np.type == Piece::Type::empty;
+            bool single = b == north;
 
+            std::size_t ladj = this->square(Direction::northwest, a, 1);
+            std::size_t radj = this->square(Direction::northeast, a, 1);
+            bool adjacent = (b == ladj || b == radj) && bp.type != Piece::Type::empty;
+
+            movable = ((doubles || single) && clear) || adjacent;
             break;
         }
 

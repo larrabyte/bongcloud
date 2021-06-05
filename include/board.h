@@ -30,6 +30,16 @@ class Board {
         Piece* end(void);
 
     private:
+        enum class Direction {
+            north, northeast,
+            east, southeast,
+            south, southwest,
+            west, northwest
+        };
+
+        // Return the index of the square at a given distance and direction.
+        std::size_t square(Direction, std::size_t, std::size_t);
+
         // Return a boolean depending on whether the index is on the specified rank.
         bool onrank(std::size_t, std::size_t);
 
