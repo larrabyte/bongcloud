@@ -167,10 +167,13 @@ bool Board::move(std::size_t a, std::size_t b) {
 
         // Pawns can move two squares on their first move, otherwise one square.
         case Piece::Type::pawn: {
+            std::size_t ahead = this->square(Direction::north, a, 1);
+            Piece& aheadp = this->square(ahead);
+
+            bool singles = b == ahead;
             bool doubles = ap.movecnt == 0 && b == this->square(Direction::north, a, 2);
-            bool single = b == this->square(Direction::north, a, 1);
-            bool clear = bp.type == Piece::Type::empty;
-            bool standard = (doubles || single) && clear;
+            bool stdclear = bp.type == Piece::Type::empty && aheadp.type == Piece::Type::empty;
+            bool standard = (doubles || singles) && stdclear;
 
             std::size_t frontl = this->square(Direction::northwest, a, 1);
             std::size_t frontr = this->square(Direction::northeast, a, 1);
