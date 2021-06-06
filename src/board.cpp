@@ -190,6 +190,28 @@ bool Board::move(std::size_t a, std::size_t b) {
             break;
         }
 
+        case Piece::Type::knight: {
+            std::size_t north = this->square(Direction::north, a, 2);
+            std::size_t east = this->square(Direction::east, a, 2);
+            std::size_t south = this->square(Direction::south, a, 2);
+            std::size_t west = this->square(Direction::west, a, 2);
+
+            std::size_t nl = this->square(Direction::west, north, 1);
+            std::size_t nr = this->square(Direction::east, north, 1);
+            std::size_t el = this->square(Direction::south, east, 1);
+            std::size_t er = this->square(Direction::north, east, 1);
+            bool northeast = b == nl || b == nr || b == el || b == er;
+
+            std::size_t sl = this->square(Direction::west, south, 1);
+            std::size_t sr = this->square(Direction::east, south, 1);
+            std::size_t wl = this->square(Direction::south, west, 1);
+            std::size_t wr = this->square(Direction::north, west, 1);
+            bool southwest = b == sl || b == sr || b == wl || b == wr;
+
+            movable = northeast || southwest;
+            break;
+        }
+
         // ?????
         default: {
             movable = true;
