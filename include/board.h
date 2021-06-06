@@ -17,6 +17,9 @@ class Board {
         // Get the index of a given position.
         std::size_t square(const char*);
 
+        // Get the index of a given position (file and rank, starting from 1).
+        std::size_t square(std::size_t, std::size_t);
+
         // Get the piece at a given index.
         Piece& square(std::size_t);
 
@@ -37,11 +40,11 @@ class Board {
         // Return the index of the square at a given distance and direction.
         std::size_t square(Direction, std::size_t, std::size_t);
 
-        // Return a boolean depending on whether the index is on the specified rank.
-        bool onrank(std::size_t, std::size_t);
+        // Return the rank of the index specified.
+        std::size_t rank(std::size_t);
 
-        // Return a boolean depending on whether the index is on the specified file.
-        bool onfile(std::size_t, std::size_t);
+        // Return the file of the index specified.
+        std::size_t file(std::size_t);
 
         // Advance the board state.
         void advance(Piece&, Piece&, std::size_t);

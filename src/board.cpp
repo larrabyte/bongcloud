@@ -1,11 +1,11 @@
 #include "board.h"
 
-bool Board::onrank(std::size_t rank, std::size_t index) {
-    return this->stride - (index / this->stride) == rank;
+std::size_t Board::rank(std::size_t index) {
+    return this->stride - (index / this->stride);
 }
 
-bool Board::onfile(std::size_t file, std::size_t index) {
-    return index % file == 0;
+std::size_t Board::file(std::size_t index) {
+    return index % this->stride + 1;
 }
 
 std::size_t Board::square(Direction direction, std::size_t origin, std::size_t distance) {
@@ -193,6 +193,7 @@ bool Board::move(std::size_t a, std::size_t b) {
             break;
         }
 
+        // Knights jump like 2+1. They don't slide, fortunately.
         case Piece::Type::knight: {
             std::size_t north = this->square(Direction::north, a, 2);
             std::size_t east = this->square(Direction::east, a, 2);
@@ -215,6 +216,69 @@ bool Board::move(std::size_t a, std::size_t b) {
             break;
         }
 
+        // Bishops are sliding pieces! Check squares for obstacles.
+        case Piece::Type::bishop: {
+            std::size_t ar = this->rank(a);
+            std::size_t af = this->file(a);
+            std::size_t br = this->rank(b);
+            std::size_t bf = this->file(b);
+
+            std::size_t v = ar > br ? ar - br : br - ar;
+            std::size_t h = af > bf ? af - bf : bf - af;
+            bool diagonal = v == h;
+            bool clear = true;
+
+            // Check for obstacles.
+            if(diagonal) {
+                if(br > ar && bf > af) {
+                    std::size_t cr = ar + 1;
+                    std::size_t cf = af + 1;
+
+                    while(cr < br && clear) {
+                        std::size_t index = this->square(cr++, cf++);
+                        Piece& cp = this->square(index);
+                        clear = cp.type == Piece::Type::empty;
+                    }
+                }
+
+                else if(br < ar && bf > af) {
+                    std::size_t cr = ar - 1;
+                    std::size_t cf = af + 1;
+
+                    while(cr > br && clear) {
+                        std::size_t index = this->square(cr--, cf++);
+                        Piece& cp = this->square(index);
+                        clear = cp.type == Piece::Type::empty;
+                    }
+                }
+
+                else if(br < ar && bf < af) {
+                    std::size_t cr = ar - 1;
+                    std::size_t cf = af - 1;
+
+                    while(cr > br && clear) {
+                        std::size_t index = this->square(cr--, cf--);
+                        Piece& cp = this->square(index);
+                        clear = cp.type == Piece::Type::empty;
+                    }
+                }
+
+                else if(br > ar && bf < af) {
+                    std::size_t cr = ar + 1;
+                    std::size_t cf = ar - 1;
+
+                    while(cr < br && clear) {
+                        std::size_t index = this->square(cr++, cf--);
+                        Piece& cp = this->square(index);
+                        clear = cp.type == Piece::Type::empty;
+                    }
+                }
+            }
+
+            movable = diagonal && clear;
+            break;
+        }
+
         // ?????
         default: {
             movable = true;
@@ -226,6 +290,12 @@ bool Board::move(std::size_t a, std::size_t b) {
     bool success = player && other && movable;
     if(success) this->advance(ap, bp, a);
     return success;
+}
+
+std::size_t Board::square(std::size_t rank, std::size_t file) {
+    std::size_t base = (this->stride - 1) * this->stride;
+    rank = base - (rank - 1) * this->stride;
+    return rank + file - 1;
 }
 
 std::size_t Board::square(const char* location) {
