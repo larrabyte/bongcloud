@@ -279,6 +279,61 @@ bool Board::move(std::size_t a, std::size_t b) {
             break;
         }
 
+        // Rooks can also slide, but vertically/horizontally.
+        case Piece::Type::rook: {
+            std::size_t arank = this->rank(a);
+            std::size_t afile = this->file(a);
+            std::size_t brank = this->rank(b);
+            std::size_t bfile = this->file(b);
+            bool slidable = arank == brank || afile == bfile;
+            bool clear = true;
+
+            if(slidable) {
+                if(brank > arank) {
+                    std::size_t crank = arank + 1;
+
+                    while(crank < brank) {
+                        std::size_t index = this->square(crank++, arank);
+                        Piece& cursor = this->square(index);
+                        clear = cursor.type == Piece::Type::empty;
+                    }
+                }
+
+                else if(bfile > afile) {
+                    std::size_t cfile = afile + 1;
+
+                    while(cfile < bfile) {
+                        std::size_t index = this->square(arank, cfile++);
+                        Piece& cursor = this->square(index);
+                        clear = cursor.type == Piece::Type::empty;
+                    }
+                }
+
+                else if(brank < arank) {
+                    std::size_t crank = arank - 1;
+
+                    while(crank > brank) {
+                        std::size_t index = this->square(crank--, afile);
+                        Piece& cursor = this->square(index);
+                        clear = cursor.type == Piece::Type::empty;
+                    }
+                }
+
+                else if(bfile < afile) {
+                    std::size_t cfile = afile - 1;
+
+                    while(cfile > bfile) {
+                        std::size_t index = this->square(arank, cfile--);
+                        Piece& cursor = this->square(index);
+                        clear = cursor.type == Piece::Type::empty;
+                    }
+                }
+            }
+
+            movable = slidable && clear;
+            break;
+        }
+
         // ?????
         default: {
             movable = true;
