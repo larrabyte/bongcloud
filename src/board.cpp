@@ -218,59 +218,59 @@ bool Board::move(std::size_t a, std::size_t b) {
 
         // Bishops are sliding pieces! Check squares for obstacles.
         case Piece::Type::bishop: {
-            std::size_t ar = this->rank(a);
-            std::size_t af = this->file(a);
-            std::size_t br = this->rank(b);
-            std::size_t bf = this->file(b);
+            std::size_t arank = this->rank(a);
+            std::size_t afile = this->file(a);
+            std::size_t brank = this->rank(b);
+            std::size_t bfile = this->file(b);
 
-            std::size_t v = ar > br ? ar - br : br - ar;
-            std::size_t h = af > bf ? af - bf : bf - af;
+            std::size_t v = arank > brank ? arank - brank : brank - arank;
+            std::size_t h = afile > bfile ? afile - bfile : bfile - afile;
             bool diagonal = v == h;
             bool clear = true;
 
             // Check for obstacles.
             if(diagonal) {
-                if(br > ar && bf > af) {
-                    std::size_t cr = ar + 1;
-                    std::size_t cf = af + 1;
+                if(brank > arank && bfile > afile) {
+                    std::size_t crank = arank + 1;
+                    std::size_t cfile = afile + 1;
 
-                    while(cr < br && clear) {
-                        std::size_t index = this->square(cr++, cf++);
-                        Piece& cp = this->square(index);
-                        clear = cp.type == Piece::Type::empty;
+                    while(crank < brank && clear) {
+                        std::size_t index = this->square(crank++, cfile++);
+                        Piece& cursor = this->square(index);
+                        clear = cursor.type == Piece::Type::empty;
                     }
                 }
 
-                else if(br < ar && bf > af) {
-                    std::size_t cr = ar - 1;
-                    std::size_t cf = af + 1;
+                else if(brank < arank && bfile > afile) {
+                    std::size_t crank = arank - 1;
+                    std::size_t cfile = afile + 1;
 
-                    while(cr > br && clear) {
-                        std::size_t index = this->square(cr--, cf++);
-                        Piece& cp = this->square(index);
-                        clear = cp.type == Piece::Type::empty;
+                    while(crank > brank && clear) {
+                        std::size_t index = this->square(crank--, cfile++);
+                        Piece& cursor = this->square(index);
+                        clear = cursor.type == Piece::Type::empty;
                     }
                 }
 
-                else if(br < ar && bf < af) {
-                    std::size_t cr = ar - 1;
-                    std::size_t cf = af - 1;
+                else if(brank < arank && bfile < afile) {
+                    std::size_t crank = arank - 1;
+                    std::size_t cfile = afile - 1;
 
-                    while(cr > br && clear) {
-                        std::size_t index = this->square(cr--, cf--);
-                        Piece& cp = this->square(index);
-                        clear = cp.type == Piece::Type::empty;
+                    while(crank > brank && clear) {
+                        std::size_t index = this->square(crank--, cfile--);
+                        Piece& cursor = this->square(index);
+                        clear = cursor.type == Piece::Type::empty;
                     }
                 }
 
-                else if(br > ar && bf < af) {
-                    std::size_t cr = ar + 1;
-                    std::size_t cf = ar - 1;
+                else if(brank > arank && bfile < afile) {
+                    std::size_t crank = arank + 1;
+                    std::size_t cfile = afile - 1;
 
-                    while(cr < br && clear) {
-                        std::size_t index = this->square(cr++, cf--);
-                        Piece& cp = this->square(index);
-                        clear = cp.type == Piece::Type::empty;
+                    while(crank < brank && clear) {
+                        std::size_t index = this->square(crank++, cfile--);
+                        Piece& cursor = this->square(index);
+                        clear = cursor.type == Piece::Type::empty;
                     }
                 }
             }
