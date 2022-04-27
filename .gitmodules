@@ -1,0 +1,3 @@
+[submodule "centurion"]
+	path = centurion
+	url = https://github.com/albin-johansson/centurion

@@ -5,13 +5,12 @@ SRCFILES := $(wildcard src/*.cpp)
 OBJFILES := $(SRCFILES:src/%.cpp=obj/%.o)
 DEPFILES := $(SRCFILES:src/%.cpp=obj/%.d)
 
-WARNINGS := -Wall -Wextra -Wpedantic
-INCLUDES := -Iinclude
-SDL2INC  := $(shell sdl2-config --cflags)
-SDL2LIB  := $(shell sdl2-config --libs)
+WARNINGS  := -Wall -Wextra -Wpedantic
+INCLUDES  := -Iinclude -Icenturion/src $(shell sdl2-config --cflags)
+LIBRARIES := $(shell sdl2-config --libs) -lSDL2_image -lSDL2_mixer -lSDL2_ttf -lfmt
 
-CFLAGS := $(WARNINGS) $(INCLUDES) $(SDL2INC) -MD -MP -std=c++20 -O2
-LFLAGS := $(SDL2LIB)
+CFLAGS := $(WARNINGS) $(INCLUDES) -MD -MP -std=c++20 -O2
+LFLAGS := $(LIBRARIES)
 
 all: bongcloud
 -include $(DEPFILES)
