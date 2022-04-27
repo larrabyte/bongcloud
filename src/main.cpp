@@ -1,8 +1,6 @@
-#include <centurion.hpp>
-#include <fmt/core.h>
+#include "board.hpp"
 
-#include <cstddef>
-#include <random>
+#include <centurion.hpp>
 
 int main(int argc, char** argv) {
     // Initialise the SDL libraries.
@@ -11,27 +9,20 @@ int main(int argc, char** argv) {
     const cen::mix mix;
     const cen::ttf ttf;
 
+    // Initialise a window/renderer pair.
     cen::window window;
     cen::renderer renderer = window.make_renderer();
     window.show();
 
-    std::random_device entropy_source;
-    auto seed = entropy_source();
-    std::default_random_engine rng(seed);
+    // Initialise the board.
+    bongcloud::board board(8);
 
+    // Initialise an event handler and then loop.
     cen::event_handler handler;
     bool running = true;
 
     while (running) {
         while (handler.poll()) {
-            if (handler.is<cen::mouse_button_event>()) {
-                auto& event = handler.get<cen::mouse_button_event>();
-                if (event.pressed()) {
-                    auto x = rng();
-                    fmt::print("[bongcloud] random number requested: {}\n", x);
-                }
-            }
-
             if (handler.is<cen::quit_event>()) {
                 running = false;
                 break;
