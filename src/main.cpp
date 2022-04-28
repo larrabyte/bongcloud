@@ -1,3 +1,4 @@
+#include "renderer.hpp"
 #include "board.hpp"
 
 #include <argparse/argparse.hpp>
@@ -8,12 +9,6 @@ constexpr std::size_t default_board_size = 8;
 constexpr std::size_t default_square_resolution = 64;
 
 int main(int argc, char** argv) {
-    // Initialise the SDL libraries.
-    const cen::sdl sdl;
-    const cen::img img;
-    const cen::mix mix;
-    const cen::ttf ttf;
-
     // Retrieve any additional parameters from the command line if present.
     argparse::ArgumentParser program("bongcloud");
 
@@ -37,22 +32,9 @@ int main(int argc, char** argv) {
 
     auto board_size = program.get<std::size_t>("size");
     auto square_res = program.get<std::size_t>("resolution");
-    auto board_res = square_res * board_size;
 
-    cen::iarea resolution = {
-        static_cast<int>(board_res),
-        static_cast<int>(board_res)
-    };
-
-    fmt::print("[bongcloud] square resolution set to: {}x{}\n", square_res, square_res);
-    fmt::print("[bongcloud] screen resolution set to: {}x{}\n", board_res, board_res);
-
-    // Initialise a window/renderer pair.
-    cen::window window("bongcloud", resolution, cen::window::allow_high_dpi);
-    cen::renderer renderer = window.make_renderer();
-    window.show();
-
-    // Initialise the board.
+    // Initialise the board and its associated renderer.
+    bongcloud::renderer renderer(square_res, board_size);
     bongcloud::board board(board_size);
 
     // Initialise an event handler and then loop.
@@ -66,11 +48,7 @@ int main(int argc, char** argv) {
                 break;
             }
         }
-
-        renderer.clear_with(cen::colors::coral);
-        renderer.present();
     }
 
-    window.hide();
     return 0;
 }
