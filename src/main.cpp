@@ -5,8 +5,10 @@
 #include <centurion.hpp>
 #include <fmt/core.h>
 
-constexpr std::size_t default_board_size = 8;
-constexpr std::size_t default_square_resolution = 64;
+namespace defaults {
+    constexpr std::size_t board_size = 8;
+    constexpr std::size_t square_resolution = 64;
+}
 
 int main(int argc, char** argv) {
     // Retrieve any additional parameters from the command line if present.
@@ -16,13 +18,13 @@ int main(int argc, char** argv) {
         .required()
         .help("the size of the board")
         .scan<'u', std::size_t>()
-        .default_value(default_board_size);
+        .default_value(defaults::board_size);
 
     program.add_argument("-r", "--resolution")
         .required()
         .help("the resolution of each square")
         .scan<'u', std::size_t>()
-        .default_value(default_square_resolution);
+        .default_value(defaults::square_resolution);
 
     try {
         program.parse_args(argc, argv);
@@ -48,6 +50,8 @@ int main(int argc, char** argv) {
                 break;
             }
         }
+
+        renderer.render(board);
     }
 
     return 0;
