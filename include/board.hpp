@@ -15,9 +15,9 @@ namespace bongcloud {
 
         private:
             // The length of the board.
-            std::size_t length;
+            std::size_t m_length;
 
-            // The board's internal array.
-            std::vector<int> internal;
+            // The board's internal representation.
+            std::vector<int> m_internal;
     };
 }

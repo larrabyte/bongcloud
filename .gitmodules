@@ -1,3 +1,6 @@
 [submodule "centurion"]
 	path = centurion
 	url = https://github.com/albin-johansson/centurion
+[submodule "argparse"]
+	path = argparse
+	url = https://github.com/p-ranav/argparse
