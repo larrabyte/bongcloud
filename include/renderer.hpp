@@ -25,6 +25,9 @@ namespace bongcloud {
             cen::window m_window;
             cen::renderer m_renderer;
 
+            // Piece texture array.
+            std::vector<std::optional<cen::texture>> m_textures;
+
             // Resolution scale factor.
             double m_scale;
 

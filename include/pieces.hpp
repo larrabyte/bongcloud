@@ -5,18 +5,18 @@ namespace bongcloud {
         public:
             // Defines every colour of piece available.
             enum class color_t {
-                white,
-                black
+                white = 0b0,
+                black = 0b1
             };
 
             // Defines every type of piece available.
             enum class type_t {
-                pawn,
-                knight,
-                bishop,
-                rook,
-                queen,
-                king
+                pawn = 0b000,
+                knight = 0b001,
+                bishop = 0b010,
+                rook = 0b011,
+                queen = 0b100,
+                king = 0b101
             };
 
             // The piece constructor.

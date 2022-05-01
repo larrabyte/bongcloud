@@ -42,6 +42,42 @@ bongcloud::renderer::renderer(const std::size_t square_res, const std::size_t bo
     fmt::print("[bongcloud] square resolution set to: {}x{}\n", m_resolution, m_resolution);
     fmt::print("[bongcloud] screen resolution set to: {}x{}\n", scaled.width, scaled.height);
     m_window.show();
+
+    // Load textures from disk and store them in the texture array.
+    const std::array<std::string, 16> paths {
+        // White textures.
+        "data/wp.bmp",
+        "data/wn.bmp",
+        "data/wb.bmp",
+        "data/wr.bmp",
+        "data/wq.bmp",
+        "data/wk.bmp",
+        "",
+        "",
+
+        // Black textures.
+        "data/bp.bmp",
+        "data/bn.bmp",
+        "data/bb.bmp",
+        "data/br.bmp",
+        "data/bq.bmp",
+        "data/bk.bmp",
+        "",
+        ""
+    };
+
+    for (const auto& path : paths) {
+        if(path.size() == 0) {
+            // Reserved entries should be set to not present.
+            m_textures.push_back(std::nullopt);
+            continue;
+        }
+
+        fmt::print("[bongcloud] loading texture at {}...\n", path);
+        cen::surface surface(path);
+        cen::texture texture = m_renderer.make_texture(surface);
+        m_textures.push_back(std::move(texture));
+    }
 }
 
 void bongcloud::renderer::render(const board& surface) {
@@ -50,7 +86,7 @@ void bongcloud::renderer::render(const board& surface) {
     std::size_t y = m_renderer.output_size().height - m_resolution;
     std::size_t i = 0, x = 0;
 
-    for (const auto& piece : surface) {
+    for (const auto& square : surface) {
         // Construct a Centurion rectangle to represent this square.
         cen::irect rect(x, y, m_resolution, m_resolution);
 
@@ -62,6 +98,17 @@ void bongcloud::renderer::render(const board& surface) {
         // Render the square.
         m_renderer.set_color(color);
         m_renderer.fill_rect(rect);
+
+        // Get the appropriate texture for the piece on the square (if present) and render it.
+        if(square.container) {
+            auto color = static_cast<int>(square.container->color);
+            auto type = static_cast<int>(square.container->type);
+            auto offset = (color << 3) | type;
+
+            // Assume that the texture is always present.
+            auto& texture = *m_textures[offset];
+            m_renderer.render(texture, rect);
+        }
 
         // Advance the i, x and y values to the next square.
         if (++i % surface.length != 0) {
