@@ -16,7 +16,7 @@ namespace bongcloud {
             square(const piece&);
 
             // The piece that a square contains.
-            std::optional<piece> piece;
+            std::optional<piece> container;
     };
 
     class board {
@@ -26,6 +26,9 @@ namespace bongcloud {
 
             // Renders the board.
             void render(cen::renderer&);
+
+            // Load a FEN string into the board.
+            void load_fen(const std::string_view);
 
             // To provide support for iteration.
             std::vector<square>::iterator begin(void) noexcept { return m_internal.begin(); }
