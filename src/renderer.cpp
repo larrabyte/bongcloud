@@ -68,7 +68,7 @@ bongcloud::renderer::renderer(const std::size_t square_res, const std::size_t bo
         ""
     };
 
-    for (const auto& path : paths) {
+    for(const auto& path : paths) {
         if(path.size() == 0) {
             // Reserved entries should be set to not present.
             m_textures.push_back(std::nullopt);
@@ -88,7 +88,7 @@ void bongcloud::renderer::render(const board& surface) {
     std::size_t y = m_renderer.output_size().height - m_resolution;
     std::size_t i = 0, x = 0;
 
-    for (const auto& square : surface) {
+    for(const auto& square : surface) {
         // Construct a Centurion rectangle to represent this square.
         cen::irect rect(x, y, m_resolution, m_resolution);
 
@@ -98,7 +98,7 @@ void bongcloud::renderer::render(const board& surface) {
         auto predicate = [=] { return (rank % 2 == 0) ? i % 2 == 0 : i % 2 != 0; };
         cen::color color;
 
-        if (highlights && (i == highlights->first || i == highlights->second)) {
+        if(highlights && (i == highlights->first || i == highlights->second)) {
             color = predicate() ? colors::dark_last_move : colors::light_last_move;
         } else {
             color = predicate() ? colors::dark_square : colors::light_square;
@@ -120,7 +120,7 @@ void bongcloud::renderer::render(const board& surface) {
         }
 
         // Advance the i, x and y values to the next square.
-        if (++i % surface.length != 0) {
+        if(++i % surface.length != 0) {
             x += m_resolution;
         } else {
             y -= m_resolution;

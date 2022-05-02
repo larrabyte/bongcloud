@@ -51,9 +51,9 @@ int main(int argc, char** argv) {
     cen::event_handler handler;
     bool running = true;
 
-    while (running) {
-        while (handler.poll()) {
-            if (handler.is<cen::quit_event>()) {
+    while(running) {
+        while(handler.poll()) {
+            if(handler.is<cen::quit_event>()) {
                 running = false;
                 break;
             }
