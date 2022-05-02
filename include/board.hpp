@@ -24,11 +24,11 @@ namespace bongcloud {
             // The board's constructor.
             board(const std::size_t);
 
-            // Renders the board.
-            void render(cen::renderer&);
-
-            // Load a FEN string into the board.
+            // Loads a FEN string into the board.
             void load_fen(const std::string_view);
+
+            // Returns the last move.
+            std::optional<std::pair<std::size_t, std::size_t>> last_move(void) const;
 
             // To provide support for iteration.
             std::vector<square>::iterator begin(void) noexcept { return m_internal.begin(); }
@@ -42,5 +42,8 @@ namespace bongcloud {
         private:
             // The board's internal representation.
             std::vector<square> m_internal;
+
+            // The last move made.
+            std::optional<std::pair<std::size_t, std::size_t>> m_last_move;
     };
 }

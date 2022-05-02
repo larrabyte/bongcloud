@@ -57,3 +57,7 @@ void bongcloud::board::load_fen(const std::string_view string) {
         }
     }
 }
+
+std::optional<std::pair<std::size_t, std::size_t>> bongcloud::board::last_move(void) const {
+    return m_last_move;
+}

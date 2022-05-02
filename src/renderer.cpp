@@ -5,6 +5,8 @@
 namespace colors {
     constexpr cen::color light_square {0xEC, 0xDB, 0xB9};
     constexpr cen::color dark_square {0xAE, 0x89, 0x68};
+    constexpr cen::color light_last_move {0xCE, 0xD2, 0x87};
+    constexpr cen::color dark_last_move {0xA9, 0xA3, 0x56};
 }
 
 namespace ctors {
@@ -90,10 +92,17 @@ void bongcloud::renderer::render(const board& surface) {
         // Construct a Centurion rectangle to represent this square.
         cen::irect rect(x, y, m_resolution, m_resolution);
 
-        // Compute whether the square should be light or dark.
+        // Compute whether the square should be light or dark or highlighted.
         std::size_t rank = i / 8;
+        auto highlights = surface.last_move();
         auto predicate = [=] { return (rank % 2 == 0) ? i % 2 == 0 : i % 2 != 0; };
-        cen::color color = predicate() ? colors::dark_square : colors::light_square;
+        cen::color color;
+
+        if (highlights && (i == highlights->first || i == highlights->second)) {
+            color = predicate() ? colors::dark_last_move : colors::light_last_move;
+        } else {
+            color = predicate() ? colors::dark_square : colors::light_square;
+        }
 
         // Render the square.
         m_renderer.set_color(color);
