@@ -16,7 +16,7 @@ namespace ctors {
             static_cast<int>(resolution)
         };
 
-        std::uint32_t flags = cen::window::allow_high_dpi | cen::window::resizable;
+        std::uint32_t flags = cen::window::allow_high_dpi;
         return cen::window("bongcloud", area, flags);
     }
 
@@ -93,7 +93,7 @@ void bongcloud::renderer::render(const board& surface) {
         cen::irect rect(x, y, m_resolution, m_resolution);
 
         // Compute whether the square should be light or dark or highlighted.
-        std::size_t rank = i / 8;
+        std::size_t rank = i / surface.length;
         auto highlights = surface.last_move();
         auto predicate = [=] { return (rank % 2 == 0) ? i % 2 == 0 : i % 2 != 0; };
         cen::color color;
@@ -129,4 +129,15 @@ void bongcloud::renderer::render(const board& surface) {
     }
 
     m_renderer.present();
+}
+
+std::size_t bongcloud::renderer::square_at(const board& surface, const std::size_t x, const std::size_t y) const {
+    // Compute the square at the given x and y coordinates.
+    std::size_t rank = (m_renderer.output_size().height - y) / m_resolution;
+    std::size_t file = x / m_resolution;
+    return (rank * surface.length) + file;
+}
+
+double bongcloud::renderer::scale(void) const noexcept {
+    return m_scale;
 }

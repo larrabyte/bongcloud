@@ -53,7 +53,6 @@ void bongcloud::board::load_fen(const std::string_view string) {
 
             default: // Unknown character, abort!
                 throw std::runtime_error("illegal FEN string");
-
         }
     }
 }

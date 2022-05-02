@@ -14,6 +14,12 @@ namespace bongcloud {
             // Renders a board to the screen.
             void render(const board&);
 
+            // Returns the index of the square at the given (scaled) mouse position.
+            std::size_t square_at(const board&, const std::size_t, const std::size_t) const;
+
+            // Returns the current resolution scale.
+            double scale(void) const noexcept;
+
         private:
             // The SDL libraries.
             const cen::sdl m_sdl;

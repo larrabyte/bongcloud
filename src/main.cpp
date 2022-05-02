@@ -57,6 +57,19 @@ int main(int argc, char** argv) {
                 running = false;
                 break;
             }
+
+            if(handler.is<cen::mouse_button_event>()) {
+                auto& event = handler.get<cen::mouse_button_event>();
+
+                // Make sure it was a left-click.
+                if(event.button() == cen::mouse_button::left && event.pressed()) {
+                    auto x = static_cast<std::size_t>(event.x() * renderer.scale());
+                    auto y = static_cast<std::size_t>(event.y() * renderer.scale());
+                    auto i = renderer.square_at(board, x, y);
+
+                    fmt::print("[bongcloud] left-click at ({}, {}) yields square {}\n", x, y, i);
+                }
+            }
         }
 
         renderer.render(board);
