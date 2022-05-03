@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
 
                     if(!stored && board[i].container) {
                         renderer.cursor(i);
-                    } else if(i == stored || board.move(*stored, i)) {
+                    } else if(i == stored || (stored && board.move(*stored, i))) {
                         renderer.cursor(std::nullopt);
                     }
                 }
