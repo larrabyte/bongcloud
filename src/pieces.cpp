@@ -30,18 +30,27 @@ bool bongcloud::board::is_movement_allowed(const std::size_t from, const std::si
             bool one_forward = difference == length && !m_internal[to].container;
 
             bool two_forward = {
-                difference == 2 * length &&
+                (difference == 2 * length) &&
                 (from / length == 1 || from / length == length - 2) &&
-                !m_internal[to].container
+                (!m_internal[to].container)
             };
 
             // Pawns can diagonally capture if there is a piece present.
             bool diagonal_capture = {
                 (difference == length - 1 || difference == length + 1) &&
-                m_internal[to].container
+                (m_internal[to].container)
             };
 
-            return one_forward || two_forward || diagonal_capture;
+            // HON HON!
+            bool en_passant = {
+                (m_last_move) &&
+                (m_internal[m_last_move->second].container->type == piece::type_t::pawn) &&
+                (absolute_difference(m_last_move->first, m_last_move->second) / length == 2) &&
+                ((origin.color == piece::color_t::white && to == m_last_move->second + length) ||
+                (origin.color == piece::color_t::black && to == m_last_move->second - length))
+            };
+
+            return one_forward || two_forward || diagonal_capture || en_passant;
         }
 
         case piece::type_t::knight: {
