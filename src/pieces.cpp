@@ -72,6 +72,47 @@ bool bongcloud::board::is_movement_allowed(const std::size_t from, const std::si
         }
 
         case piece::type_t::bishop: {
+            std::size_t from_rank = from / length;
+            std::size_t from_file = from % length;
+            std::size_t to_rank = to / length;
+            std::size_t to_file = to % length;
+
+            // Bishops can move diagonally, therefore these differences must be equal.
+            // The minus one is for the next loop, which checks for obstructions from
+            // the previous diagonal square. Note that equality has not been modified.
+            std::size_t rank_difference = absolute_difference(from_rank, to_rank) - 1;
+            std::size_t file_difference = absolute_difference(from_file, to_file) - 1;
+            if(rank_difference != file_difference) {
+                return false;
+            }
+
+            while(rank_difference > 0) {
+                std::optional<std::size_t> index;
+
+                if(from_rank < to_rank && from_file < to_file) {
+                    index = from + (rank_difference * length) + file_difference;
+                } else if(from_rank > to_rank && from_file < to_file) {
+                    index = from - (rank_difference * length) + file_difference;
+                } else if(from_rank > to_rank && from_file > to_file) {
+                    index = from - (rank_difference * length) - file_difference;
+                } else if(from_rank < to_rank && from_file > to_file) {
+                    index = from + (rank_difference * length) - file_difference;
+                }
+
+                if(!index) {
+                    // This should never occur.
+                    throw std::runtime_error("illegal bishop legality check");
+                }
+
+                if(m_internal[*index].container) {
+                    return false;
+                }
+
+                rank_difference--;
+                file_difference--;
+            }
+
+            // If we're still here, then the previous loop didn't find any obstructing pieces.
             return true;
         }
 
