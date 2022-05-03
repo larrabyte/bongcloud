@@ -45,7 +45,14 @@ bool bongcloud::board::is_movement_allowed(const std::size_t from, const std::si
         }
 
         case piece::type_t::knight: {
-            return true;
+            std::size_t difference = absolute_difference(from, to);
+
+            // TODO: Fix knight wrapping behaviour.
+            bool vertical = difference == (2 * length) - 1 || difference == (2 * length) + 1;
+            bool horizontal = difference == length + 2 || difference == length - 2;
+
+            fmt::print("[bongcloud] knight move legality: {}/{}\n", vertical, horizontal);
+            return vertical || horizontal;
         }
 
         case piece::type_t::bishop: {
