@@ -33,6 +33,14 @@ namespace ctors {
     }
 }
 
+namespace internal {
+    std::size_t compute_texture_offset(const bongcloud::piece& piece) {
+        auto color = static_cast<std::size_t>(piece.color);
+        auto type = static_cast<std::size_t>(piece.type);
+        return (color << 3) | type;
+    }
+}
+
 bongcloud::renderer::renderer(const std::size_t square_res, const std::size_t board_size)
     : m_window {ctors::make_window(square_res * board_size)},
       m_renderer {ctors::make_renderer(m_window)},
@@ -109,13 +117,10 @@ void bongcloud::renderer::render(const board& surface) {
         m_renderer.fill_rect(rect);
 
         // Get the appropriate texture for the piece on the square (if present) and render it.
-        if(square.container) {
-            auto color = static_cast<int>(square.container->color);
-            auto type = static_cast<int>(square.container->type);
-            auto offset = (color << 3) | type;
-
-            // Assume that the texture is always present.
-            auto& texture = *m_textures[offset];
+        // Assume that the piece's texture is always present.
+        if(square.container && i != m_mouse) {
+            auto offset = internal::compute_texture_offset(*square.container);
+            const auto& texture = *m_textures[offset];
             m_renderer.render(texture, rect);
         }
 
@@ -128,7 +133,36 @@ void bongcloud::renderer::render(const board& surface) {
         }
     }
 
+    // If a cursor square is specified, render it last.
+    if(m_mouse) {
+        cen::mouse mouse;
+        mouse.update();
+
+        cen::irect rect(
+            // Set the top-left of the rectangle to the middle of the square.
+            static_cast<int>(mouse.x() * m_scale - (m_resolution / 2)),
+            static_cast<int>(mouse.y() * m_scale - (m_resolution / 2)),
+            m_resolution,
+            m_resolution
+        );
+
+        const auto& square = surface[*m_mouse];
+        auto offset = internal::compute_texture_offset(*square.container);
+
+        // Assume that the texture is always present.
+        const auto& texture = *m_textures[offset];
+        m_renderer.render(texture, rect);
+    }
+
     m_renderer.present();
+}
+
+void bongcloud::renderer::cursor(std::optional<std::size_t> index) {
+    m_mouse = index;
+}
+
+std::optional<std::size_t> bongcloud::renderer::cursor(void) const noexcept {
+    return m_mouse;
 }
 
 std::size_t bongcloud::renderer::square_at(const board& surface, const std::size_t x, const std::size_t y) const {

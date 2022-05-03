@@ -24,6 +24,9 @@ namespace bongcloud {
             // The board's constructor.
             board(const std::size_t);
 
+            // Move a piece from one square to another.
+            void move(const std::size_t, const std::size_t);
+
             // Loads a FEN string into the board.
             void load_fen(const std::string_view);
 
@@ -35,6 +38,10 @@ namespace bongcloud {
             std::vector<square>::const_iterator begin(void) const noexcept { return m_internal.cbegin(); }
             std::vector<square>::iterator end(void) noexcept { return m_internal.end(); }
             std::vector<square>::const_iterator end(void) const noexcept { return m_internal.cend(); }
+
+            // To provide support for array indexing.
+            square& operator[] (const std::size_t i) { return m_internal[i]; }
+            const square& operator[] (const std::size_t i) const { return m_internal[i]; }
 
             // The length of the board.
             const std::size_t length;

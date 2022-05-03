@@ -14,6 +14,12 @@ namespace bongcloud {
             // Renders a board to the screen.
             void render(const board&);
 
+            // Attaches the index of the square to the mouse.
+            void cursor(std::optional<std::size_t>);
+
+            // Returns the index of the square attached to the mouse.
+            std::optional<std::size_t> cursor(void) const noexcept;
+
             // Returns the index of the square at the given (scaled) mouse position.
             std::size_t square_at(const board&, const std::size_t, const std::size_t) const;
 
@@ -33,6 +39,9 @@ namespace bongcloud {
 
             // Piece texture array.
             std::vector<std::optional<cen::texture>> m_textures;
+
+            // The index of the hidden square.
+            std::optional<std::size_t> m_mouse;
 
             // Resolution scale factor.
             double m_scale;

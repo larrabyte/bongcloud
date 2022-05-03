@@ -66,8 +66,18 @@ int main(int argc, char** argv) {
                     auto x = static_cast<std::size_t>(event.x() * renderer.scale());
                     auto y = static_cast<std::size_t>(event.y() * renderer.scale());
                     auto i = renderer.square_at(board, x, y);
-
                     fmt::print("[bongcloud] left-click at ({}, {}) yields square {}\n", x, y, i);
+
+                    auto stored = renderer.cursor();
+
+                    if(!stored && board[i].container) {
+                        renderer.cursor(i);
+                    } else if(i == stored) {
+                        renderer.cursor(std::nullopt);
+                    } else {
+                        renderer.cursor(std::nullopt);
+                        board.move(*stored, i);
+                    }
                 }
             }
         }

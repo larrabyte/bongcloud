@@ -13,6 +13,15 @@ bongcloud::board::board(const std::size_t l) : length {l}, m_internal {l * l, sq
     fmt::print("[bongcloud] initialising board of size {}x{}...\n", l, l);
 }
 
+void bongcloud::board::move(const std::size_t origin, const std::size_t dest) {
+    fmt::print("[bongcloud] moving piece from square {} to square {}\n", origin, dest);
+
+    // Empty the origin square and move its piece to the destination square.
+    m_internal[dest].container = m_internal[origin].container;
+    m_internal[origin].container = std::nullopt;
+    m_last_move = std::make_pair(origin, dest);
+}
+
 void bongcloud::board::load_fen(const std::string_view string) {
     // FEN strings start from the A1 square.
     std::size_t square = 0, index = 0;
