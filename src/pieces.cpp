@@ -46,6 +46,7 @@ bool bongcloud::board::is_movement_allowed(const std::size_t from, const std::si
                 (m_last_move) &&
                 (m_internal[m_last_move->second].container->type == piece::type_t::pawn) &&
                 (absolute_difference(m_last_move->first, m_last_move->second) / length == 2) &&
+                (absolute_difference(from, m_last_move->second) == 1) &&
                 ((origin.color == piece::color_t::white && to == m_last_move->second + length) ||
                 (origin.color == piece::color_t::black && to == m_last_move->second - length))
             };
