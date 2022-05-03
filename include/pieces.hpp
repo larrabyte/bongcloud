@@ -20,7 +20,7 @@ namespace bongcloud {
             };
 
             // The piece constructor.
-            piece(const color_t, const type_t);
+            piece(const color_t c, const type_t t) : color(c), type(t) {};
 
             color_t color;
             type_t type;

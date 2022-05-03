@@ -24,8 +24,8 @@ namespace bongcloud {
             // The board's constructor.
             board(const std::size_t);
 
-            // Move a piece from one square to another.
-            void move(const std::size_t, const std::size_t);
+            // Move a piece from one square to another. Returns true if the move was performed.
+            bool move(const std::size_t, const std::size_t);
 
             // Loads a FEN string into the board.
             void load_fen(const std::string_view);
@@ -47,6 +47,9 @@ namespace bongcloud {
             const std::size_t length;
 
         private:
+            // Returns the permissibility of a move based on piece movement rules.
+            bool is_movement_allowed(const std::size_t, const std::size_t);
+
             // The board's internal representation.
             std::vector<square> m_internal;
 
