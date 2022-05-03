@@ -45,13 +45,21 @@ bool bongcloud::board::is_movement_allowed(const std::size_t from, const std::si
         }
 
         case piece::type_t::knight: {
-            std::size_t difference = absolute_difference(from, to);
+            std::size_t from_rank = from / length;
+            std::size_t from_file = from % length;
+            std::size_t to_rank = to / length;
+            std::size_t to_file = to % length;
 
-            // TODO: Fix knight wrapping behaviour.
-            bool vertical = difference == (2 * length) - 1 || difference == (2 * length) + 1;
-            bool horizontal = difference == length + 2 || difference == length - 2;
+            // Knights can move in an L-shape: 2 units in one direction and 1 unit in another.
+            std::size_t rank_difference = absolute_difference(from_rank, to_rank);
+            std::size_t file_difference = absolute_difference(from_file, to_file);
 
-            return vertical || horizontal;
+            bool l_shape = {
+                (rank_difference == 1 && file_difference == 2) ||
+                (rank_difference == 2 && file_difference == 1)
+            };
+
+            return l_shape;
         }
 
         case piece::type_t::bishop: {
