@@ -3,7 +3,7 @@
 
 #include <fmt/core.h>
 
-std::size_t absolute_difference(const std::size_t a, const std::size_t b) noexcept {
+inline std::size_t absolute_difference(const std::size_t a, const std::size_t b) noexcept {
     return (a > b) ? a - b : b - a;
 }
 
@@ -78,25 +78,24 @@ bool bongcloud::board::is_movement_allowed(const std::size_t from, const std::si
             std::size_t to_file = to % length;
 
             // Bishops can move diagonally, therefore these differences must be equal.
-            // The minus one is for the next loop, which checks for obstructions from
-            // the previous diagonal square. Note that equality has not been modified.
-            std::size_t rank_difference = absolute_difference(from_rank, to_rank) - 1;
-            std::size_t file_difference = absolute_difference(from_file, to_file) - 1;
+            std::size_t rank_difference = absolute_difference(from_rank, to_rank);
+            std::size_t file_difference = absolute_difference(from_file, to_file);
             if(rank_difference != file_difference) {
                 return false;
             }
 
-            while(rank_difference > 0) {
+            // The minus one is so that the loop starts checking from the previous diagonal square.
+            while(rank_difference - 1 > 0) {
                 std::optional<std::size_t> index;
 
                 if(from_rank < to_rank && from_file < to_file) {
-                    index = from + (rank_difference * length) + file_difference;
+                    index = from + (rank_difference - 1 * length) + file_difference;
                 } else if(from_rank > to_rank && from_file < to_file) {
-                    index = from - (rank_difference * length) + file_difference;
+                    index = from - (rank_difference - 1 * length) + file_difference;
                 } else if(from_rank > to_rank && from_file > to_file) {
-                    index = from - (rank_difference * length) - file_difference;
+                    index = from - (rank_difference - 1 * length) - file_difference;
                 } else if(from_rank < to_rank && from_file > to_file) {
-                    index = from + (rank_difference * length) - file_difference;
+                    index = from + (rank_difference - 1 * length) - file_difference;
                 }
 
                 if(!index) {
