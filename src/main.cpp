@@ -8,7 +8,7 @@
 namespace defaults {
     const std::size_t board_size = 8;
     const std::size_t square_resolution = 64;
-    const char* fen_8x8 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    const std::string fen_8x8 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     const bool anarchy = false;
 }
 
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
 
     auto board_size = program.get<std::size_t>("size");
     auto square_res = program.get<std::size_t>("resolution");
-    auto fen_string = program.get<const char*>("fen");
+    auto fen_string = program.get<std::string>("fen");
     auto anarchy = program.get<bool>("anarchy");
 
     // Initialise the board and its associated renderer.
