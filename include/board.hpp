@@ -22,7 +22,7 @@ namespace bongcloud {
     class board {
         public:
             // The board's constructor.
-            board(const std::size_t);
+            board(const std::size_t, const bool);
 
             // Move a piece from one square to another. Returns true if the move was performed.
             bool move(const std::size_t, const std::size_t);
@@ -55,5 +55,8 @@ namespace bongcloud {
 
             // The last move made.
             std::optional<std::pair<std::size_t, std::size_t>> m_last_move;
+
+            // Anarchy mode.
+            bool m_anarchy;
     };
 }

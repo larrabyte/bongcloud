@@ -3,10 +3,10 @@
 #include <fmt/core.h>
 
 namespace colors {
-    constexpr cen::color light_square {0xEC, 0xDB, 0xB9};
-    constexpr cen::color dark_square {0xAE, 0x89, 0x68};
-    constexpr cen::color light_last_move {0xCE, 0xD2, 0x87};
-    constexpr cen::color dark_last_move {0xA9, 0xA3, 0x56};
+    const cen::color light_square {0xEC, 0xDB, 0xB9};
+    const cen::color dark_square {0xAE, 0x89, 0x68};
+    const cen::color light_last_move {0xCE, 0xD2, 0x87};
+    const cen::color dark_last_move {0xA9, 0xA3, 0x56};
 }
 
 namespace ctors {
@@ -41,11 +41,11 @@ namespace internal {
     }
 }
 
-bongcloud::renderer::renderer(const std::size_t square_res, const std::size_t board_size)
-    : m_window {ctors::make_window(square_res * board_size)},
-      m_renderer {ctors::make_renderer(m_window)},
-      m_scale {ctors::compute_scale(m_window, m_renderer)},
-      m_resolution {static_cast<std::size_t>(square_res * m_scale)} {
+bongcloud::renderer::renderer(const std::size_t square_res, const std::size_t board_size) :
+    m_window {ctors::make_window(square_res * board_size)},
+    m_renderer {ctors::make_renderer(m_window)},
+    m_scale {ctors::compute_scale(m_window, m_renderer)},
+    m_resolution {static_cast<std::size_t>(square_res * m_scale)} {
 
     cen::iarea scaled = m_renderer.output_size();
     fmt::print("[bongcloud] resolution scale factor: {}\n", m_scale);

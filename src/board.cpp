@@ -9,15 +9,20 @@
 bongcloud::square::square(void) : container(std::nullopt) {}
 bongcloud::square::square(const bongcloud::piece& p) : container(p) {}
 
-bongcloud::board::board(const std::size_t l) : length {l}, m_internal {l * l, square()} {
-    fmt::print("[bongcloud] initialising board of size {}x{}...\n", l, l);
+bongcloud::board::board(const std::size_t l, const bool anarchy) :
+    length {l},
+    m_internal {l * l, square()},
+    m_last_move {std::nullopt},
+    m_anarchy {anarchy} {
+
+    fmt::print("[bongcloud] initialising board of size {}x{}... (anarchy: {})\n", l, l, anarchy);
 }
 
 bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
     fmt::print("[bongcloud] moving piece from square {} to square {}\n", from, to);
 
     // Check if piece movement rules are being violated.
-    if(!is_movement_allowed(from, to)) {
+    if(!m_anarchy && !is_movement_allowed(from, to)) {
         return false;
     }
 
