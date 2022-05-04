@@ -17,7 +17,6 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
     fmt::print("[bongcloud] moving piece from square {} to square {}\n", from, to);
 
     // Check if piece movement rules are being violated.
-    const auto& piece = *m_internal[from].container;
     if(!is_movement_allowed(from, to)) {
         return false;
     }
