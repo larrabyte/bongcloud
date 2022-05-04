@@ -3,8 +3,58 @@
 
 #include <fmt/core.h>
 
-inline std::size_t absolute_difference(const std::size_t a, const std::size_t b) noexcept {
-    return (a > b) ? a - b : b - a;
+namespace internal {
+    inline std::size_t absdiff(const std::size_t a, const std::size_t b) noexcept {
+        return (a > b) ? a - b : b - a;
+    }
+
+    namespace obstructions {
+        bool bishop(
+            const bongcloud::board& surface,
+            const std::size_t origin,
+            const std::size_t from_rank,
+            const std::size_t from_file,
+            const std::size_t to_rank,
+            const std::size_t to_file,
+            std::size_t rank_difference,
+            std::size_t file_difference) {
+
+            while(rank_difference > 0 && file_difference > 0) {
+                std::size_t index;
+
+                // The destination square is to the top-right of the origin square.
+                if(from_rank < to_rank && from_file < to_file) {
+                    index = origin + (rank_difference * surface.length) + file_difference;
+                }
+
+                // The destination square is to the bottom-right of the origin square.
+                else if(from_rank > to_rank && from_file < to_file) {
+                    index = origin - (rank_difference * surface.length) + file_difference;
+                }
+
+                // The destination square is to the bottom-left of the origin square.
+                else if(from_rank > to_rank && from_file > to_file) {
+                    index = origin - (rank_difference * surface.length) - file_difference;
+                }
+
+                // The destination square is to the top-left of the origin square.
+                else /* if(from_rank > to_rank && from_file < to_file) */ {
+                    index = origin + (rank_difference * surface.length) - file_difference;
+                }
+
+                // If a piece is present, then the path is obstructed.
+                if(surface[index].container) {
+                    return true;
+                }
+
+                // Decrement to the next square.
+                rank_difference--;
+                file_difference--;
+            }
+
+            return false;
+        }
+    }
 }
 
 bool bongcloud::board::is_movement_allowed(const std::size_t from, const std::size_t to) {
@@ -26,7 +76,7 @@ bool bongcloud::board::is_movement_allowed(const std::size_t from, const std::si
             // Pawns can move one square forward or two if they're on the first or second-last rank.
             // Since ranks are zero-indexed, this corresponds to the 1st and (length - 2)th ranks.
             // Pawns cannot take directly in-front of them.
-            std::size_t difference = absolute_difference(from, to);
+            std::size_t difference = internal::absdiff(from, to);
             bool one_forward = difference == length && !m_internal[to].container;
 
             bool two_forward = {
@@ -45,8 +95,8 @@ bool bongcloud::board::is_movement_allowed(const std::size_t from, const std::si
             bool en_passant = {
                 (m_last_move) &&
                 (m_internal[m_last_move->second].container->type == piece::type_t::pawn) &&
-                (absolute_difference(m_last_move->first, m_last_move->second) / length == 2) &&
-                (absolute_difference(from, m_last_move->second) == 1) &&
+                (internal::absdiff(m_last_move->first, m_last_move->second) / length == 2) &&
+                (internal::absdiff(from, m_last_move->second) == 1) &&
                 ((origin.color == piece::color_t::white && to == m_last_move->second + length) ||
                 (origin.color == piece::color_t::black && to == m_last_move->second - length))
             };
@@ -61,8 +111,8 @@ bool bongcloud::board::is_movement_allowed(const std::size_t from, const std::si
             std::size_t to_file = to % length;
 
             // Knights can move in an L-shape: 2 units in one direction and 1 unit in another.
-            std::size_t rank_difference = absolute_difference(from_rank, to_rank);
-            std::size_t file_difference = absolute_difference(from_file, to_file);
+            std::size_t rank_difference = internal::absdiff(from_rank, to_rank);
+            std::size_t file_difference = internal::absdiff(from_file, to_file);
 
             bool l_shape = {
                 (rank_difference == 1 && file_difference == 2) ||
@@ -79,41 +129,23 @@ bool bongcloud::board::is_movement_allowed(const std::size_t from, const std::si
             std::size_t to_file = to % length;
 
             // Bishops can move diagonally, therefore these differences must be equal.
-            std::size_t rank_difference = absolute_difference(from_rank, to_rank);
-            std::size_t file_difference = absolute_difference(from_file, to_file);
+            std::size_t rank_difference = internal::absdiff(from_rank, to_rank);
+            std::size_t file_difference = internal::absdiff(from_file, to_file);
             if(rank_difference != file_difference) {
                 return false;
             }
 
-            // The minus one is so that the loop starts checking from the previous diagonal square.
-            while(rank_difference - 1 > 0) {
-                std::optional<std::size_t> index;
-
-                if(from_rank < to_rank && from_file < to_file) {
-                    index = from + (rank_difference - 1 * length) + file_difference;
-                } else if(from_rank > to_rank && from_file < to_file) {
-                    index = from - (rank_difference - 1 * length) + file_difference;
-                } else if(from_rank > to_rank && from_file > to_file) {
-                    index = from - (rank_difference - 1 * length) - file_difference;
-                } else if(from_rank < to_rank && from_file > to_file) {
-                    index = from + (rank_difference - 1 * length) - file_difference;
-                }
-
-                if(!index) {
-                    // This should never occur.
-                    throw std::runtime_error("illegal bishop legality check");
-                }
-
-                if(m_internal[*index].container) {
-                    return false;
-                }
-
-                rank_difference--;
-                file_difference--;
-            }
-
-            // If we're still here, then the previous loop didn't find any obstructing pieces.
-            return true;
+            // Since diagonality was checked, all that's left to do is check for obstacles.
+            return !internal::obstructions::bishop(
+                *this,
+                from,
+                from_rank,
+                from_file,
+                to_rank,
+                to_file,
+                rank_difference - 1,
+                file_difference - 1
+            );
         }
 
         case piece::type_t::rook: {
