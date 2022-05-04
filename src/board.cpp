@@ -20,17 +20,25 @@ bongcloud::board::board(const std::size_t l, const bool anarchy) :
 
 bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
     fmt::print("[bongcloud] moving piece from square {} to square {}\n", from, to);
+    auto& origin = m_internal[from].container;
+    auto& dest = m_internal[to].container;
 
-    // Check if piece movement rules are being violated.
-    if(!m_anarchy && !is_movement_allowed(from, to)) {
-        return false;
+    bool legal = {
+        (origin->color == m_color) &&
+        (!dest || (dest->color != origin->color)) &&
+        (is_movement_allowed(from, to))
+    };
+
+    if(m_anarchy || legal) {
+        // Empty the origin square and move its piece to the destination square.
+        dest = origin;
+        origin = std::nullopt;
+        m_last_move = std::make_pair(from, to);
+        m_color = (m_color == piece::color_t::white) ? piece::color_t::black : piece::color_t::white;
+        return true;
     }
 
-    // Empty the origin square and move its piece to the destination square.
-    m_internal[to].container = m_internal[from].container;
-    m_internal[from].container = std::nullopt;
-    m_last_move = std::make_pair(from, to);
-    return true;
+    return false;
 }
 
 void bongcloud::board::load_fen(const std::string_view string) {

@@ -56,6 +56,9 @@ namespace bongcloud {
             // The last move made.
             std::optional<std::pair<std::size_t, std::size_t>> m_last_move;
 
+            // Whose turn it is to move.
+            piece::color_t m_color = piece::color_t::white;
+
             // Anarchy mode.
             bool m_anarchy;
     };
