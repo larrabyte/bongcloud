@@ -54,6 +54,24 @@ namespace internal {
 
             return false;
         }
+
+        bool rook(
+            const bongcloud::board& surface,
+            const std::size_t from,
+            const std::size_t to,
+            std::size_t difference) {
+
+            while(difference > 0) {
+                std::size_t index = (from > to) ? from - difference : from + difference;
+                if(surface[index].container) {
+                    return true;
+                }
+
+                difference -= (difference >= surface.length) ? surface.length : 1;
+            }
+
+            return false;
+        }
     }
 }
 
@@ -149,7 +167,23 @@ bool bongcloud::board::is_movement_allowed(const std::size_t from, const std::si
         }
 
         case piece::type_t::rook: {
-            return true;
+            std::size_t from_rank = from / length;
+            std::size_t from_file = from % length;
+            std::size_t to_rank = to / length;
+            std::size_t to_file = to % length;
+
+            // Bishops can move diagonally, therefore these differences must be equal.
+            std::size_t rank_difference = internal::absdiff(from_rank, to_rank);
+            std::size_t file_difference = internal::absdiff(from_file, to_file);
+            if(rank_difference != 0 && file_difference != 0) {
+                return false;
+            }
+
+            // Rooks can only travel in a straight, unobstructed line.
+            // Subtract to start obstruction checking from the previous square.
+            std::size_t difference = internal::absdiff(from, to);
+            difference -= (difference >= length) ? length : 1;
+            return !internal::obstructions::rook(*this, from, to, difference);
         }
 
         case piece::type_t::queen: {
