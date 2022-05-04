@@ -187,7 +187,35 @@ bool bongcloud::board::is_movement_allowed(const std::size_t from, const std::si
         }
 
         case piece::type_t::queen: {
-            return true;
+            std::size_t from_rank = from / length;
+            std::size_t from_file = from % length;
+            std::size_t to_rank = to / length;
+            std::size_t to_file = to % length;
+
+            // Queens are equivalent to a combined bishop and rook.
+            std::size_t rank_difference = internal::absdiff(from_rank, to_rank);
+            std::size_t file_difference = internal::absdiff(from_file, to_file);
+            bool diagonal = rank_difference == file_difference;
+            bool straight = rank_difference == 0 || file_difference == 0;
+
+            if(!diagonal && !straight) {
+                return false;
+            } else if(diagonal) {
+                return !internal::obstructions::bishop(
+                    *this,
+                    from,
+                    from_rank,
+                    from_file,
+                    to_rank,
+                    to_file,
+                    rank_difference - 1,
+                    file_difference - 1
+                );
+            } else /* if(straight) */ {
+                std::size_t difference = internal::absdiff(from, to);
+                difference -= (difference >= length) ? length : 1;
+                return !internal::obstructions::rook(*this, from, to, difference);
+            }
         }
 
         case piece::type_t::king: {
