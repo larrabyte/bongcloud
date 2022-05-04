@@ -219,7 +219,12 @@ bool bongcloud::board::is_movement_allowed(const std::size_t from, const std::si
         }
 
         case piece::type_t::king: {
-            return true;
+            // The king can move in any direction for one square.
+            const std::array<std::size_t, 4> allowed = {1, length - 1, length, length + 1};
+            std::size_t difference = internal::absdiff(from, to);
+
+            // std::find() will return allowed.end() if difference is not present in the array.
+            return std::find(allowed.begin(), allowed.end(), difference) != allowed.end();
         }
 
         // What piece is this??
