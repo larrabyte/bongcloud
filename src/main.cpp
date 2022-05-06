@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
 
                     auto stored = renderer.cursor();
 
-                    if(!stored && board[i].container) {
+                    if(!stored && board[i].piece) {
                         renderer.cursor(i);
                     } else if(i == stored || (stored && board.move(*stored, i))) {
                         renderer.cursor(std::nullopt);

@@ -90,19 +90,19 @@ bongcloud::renderer::renderer(const std::size_t square_res, const std::size_t bo
     }
 }
 
-void bongcloud::renderer::render(const board& surface) {
+void bongcloud::renderer::render(const bongcloud::board& board) {
     m_renderer.clear_with(cen::colors::black);
 
     std::size_t y = m_renderer.output_size().height - m_resolution;
     std::size_t i = 0, x = 0;
 
-    for(const auto& square : surface) {
+    for(const auto& square : board) {
         // Construct a Centurion rectangle to represent this square.
         cen::irect rect(x, y, m_resolution, m_resolution);
 
         // Compute whether the square should be light or dark or highlighted.
-        std::size_t rank = i / surface.length;
-        auto highlights = surface.last_move();
+        std::size_t rank = i / board.length;
+        auto highlights = board.latest();
         auto predicate = [=] { return (rank % 2 == 0) ? i % 2 == 0 : i % 2 != 0; };
         cen::color color;
 
@@ -118,14 +118,14 @@ void bongcloud::renderer::render(const board& surface) {
 
         // Get the appropriate texture for the piece on the square (if present) and render it.
         // Assume that the piece's texture is always present.
-        if(square.container && i != m_mouse) {
-            auto offset = internal::compute_texture_offset(*square.container);
+        if(square.piece && i != m_mouse) {
+            auto offset = internal::compute_texture_offset(*square.piece);
             const auto& texture = *m_textures[offset];
             m_renderer.render(texture, rect);
         }
 
         // Advance the i, x and y values to the next square.
-        if(++i % surface.length != 0) {
+        if(++i % board.length != 0) {
             x += m_resolution;
         } else {
             y -= m_resolution;
@@ -146,8 +146,8 @@ void bongcloud::renderer::render(const board& surface) {
             m_resolution
         );
 
-        const auto& square = surface[*m_mouse];
-        auto offset = internal::compute_texture_offset(*square.container);
+        const auto& square = board[*m_mouse];
+        auto offset = internal::compute_texture_offset(*square.piece);
 
         // Assume that the texture is always present.
         const auto& texture = *m_textures[offset];
@@ -157,21 +157,9 @@ void bongcloud::renderer::render(const board& surface) {
     m_renderer.present();
 }
 
-void bongcloud::renderer::cursor(std::optional<std::size_t> index) {
-    m_mouse = index;
-}
-
-std::optional<std::size_t> bongcloud::renderer::cursor(void) const noexcept {
-    return m_mouse;
-}
-
-std::size_t bongcloud::renderer::square_at(const board& surface, const std::size_t x, const std::size_t y) const {
+std::size_t bongcloud::renderer::square_at(const bongcloud::board& board, const std::size_t x, const std::size_t y) const noexcept {
     // Compute the square at the given x and y coordinates.
     std::size_t rank = (m_renderer.output_size().height - y) / m_resolution;
     std::size_t file = x / m_resolution;
-    return (rank * surface.length) + file;
-}
-
-double bongcloud::renderer::scale(void) const noexcept {
-    return m_scale;
+    return (rank * board.length) + file;
 }

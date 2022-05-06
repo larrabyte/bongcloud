@@ -14,17 +14,23 @@ namespace bongcloud {
             // Renders a board to the screen.
             void render(const board&);
 
-            // Attaches the index of the square to the mouse.
-            void cursor(std::optional<std::size_t>);
+            // Returns the index of the square at a given mouse coordinate.
+            std::size_t square_at(const board&, const std::size_t, const std::size_t) const noexcept;
+
+            // Attaches the square and its associated piece to the mouse.
+            inline void cursor(std::optional<std::size_t> i) noexcept {
+                m_mouse = i;
+            }
 
             // Returns the index of the square attached to the mouse.
-            std::optional<std::size_t> cursor(void) const noexcept;
-
-            // Returns the index of the square at the given (scaled) mouse position.
-            std::size_t square_at(const board&, const std::size_t, const std::size_t) const;
+            inline std::optional<std::size_t> cursor(void) const noexcept {
+                return m_mouse;
+            }
 
             // Returns the current resolution scale.
-            double scale(void) const noexcept;
+            inline double scale(void) const noexcept {
+                return m_scale;
+            }
 
         private:
             // The SDL libraries.
