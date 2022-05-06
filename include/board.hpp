@@ -25,6 +25,9 @@ namespace bongcloud {
             // Setting the boolean to true disables all move checking.
             board(const std::size_t, const bool);
 
+            // Prints out the current board state to stdout.
+            void print(void) const;
+
             // Moves a piece from one square to another.
             // Returns true if the move was successful.
             bool move(const std::size_t, const std::size_t);

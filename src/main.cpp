@@ -66,6 +66,17 @@ int main(int argc, char** argv) {
                 break;
             }
 
+            if(handler.is<cen::keyboard_event>()) {
+                auto& event = handler.get<cen::keyboard_event>();
+
+                // Pressing Left Control will print the current board state.
+                if(event.pressed() && event.is_active(cen::scancodes::left_ctrl)) {
+                    fmt::print("\n[bongcloud] board.print():\n");
+                    board.print();
+                    fmt::print("\n\n");
+                }
+            }
+
             if(handler.is<cen::mouse_button_event>()) {
                 auto& event = handler.get<cen::mouse_button_event>();
 
