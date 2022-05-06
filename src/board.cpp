@@ -15,31 +15,6 @@ bongcloud::board::board(const std::size_t l, const bool anarchy) :
 }
 
 void bongcloud::board::print(void) const {
-    // Piece-to-character conversion routine.
-    auto charconv = [](const std::optional<piece>& p) {
-        if(!p) {
-            return '-';
-        }
-
-        char c;
-
-        switch(p->type) {
-            case piece::types::pawn: c = 'p'; break;
-            case piece::types::knight: c = 'n'; break;
-            case piece::types::bishop: c = 'b'; break;
-            case piece::types::rook: c = 'r'; break;
-            case piece::types::queen: c = 'q'; break;
-            case piece::types::king: c = 'k'; break;
-            default: c = '?'; break;
-        }
-
-        if(c != '?' && p->color == piece::colors::black) {
-            c = std::toupper(c);
-        }
-
-        return c;
-    };
-
     // Start from the top-left square.
     std::size_t rank = 7, file = 0;
     bool finished = false;
