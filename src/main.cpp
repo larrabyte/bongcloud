@@ -1,5 +1,6 @@
 #include "renderer.hpp"
 #include "board.hpp"
+#include "ai.hpp"
 
 #include <argparse/argparse.hpp>
 #include <centurion.hpp>
@@ -10,6 +11,7 @@ namespace defaults {
     const std::size_t square_resolution = 64;
     const std::string fen_8x8 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     const bool anarchy = false;
+    const bool bot = false;
 }
 
 int main(int argc, char** argv) {
@@ -39,6 +41,12 @@ int main(int argc, char** argv) {
         .default_value(defaults::anarchy)
         .implicit_value(!defaults::anarchy);
 
+    program.add_argument("-b", "--bot")
+        .required()
+        .help("play the built-in bot")
+        .default_value(defaults::bot)
+        .implicit_value(!defaults::bot);
+
     try {
         program.parse_args(argc, argv);
     } catch (const std::runtime_error& err) {
@@ -49,10 +57,12 @@ int main(int argc, char** argv) {
     auto square_res = program.get<std::size_t>("resolution");
     auto fen_string = program.get<std::string>("fen");
     auto anarchy = program.get<bool>("anarchy");
+    auto bot = program.get<bool>("bot");
 
     // Initialise the board and its associated renderer.
     bongcloud::renderer renderer(square_res, board_size);
     bongcloud::board board(board_size, anarchy);
+    bongcloud::random_ai engine(board);
     board.load_fen(fen_string);
 
     // Initialise an event handler and then loop.
@@ -94,6 +104,25 @@ int main(int argc, char** argv) {
                     } else if(i == stored || (stored && board.move(*stored, i))) {
                         renderer.cursor(std::nullopt);
                     }
+                }
+            }
+        }
+
+        if(bot && board.color() == bongcloud::piece::colors::black) {
+            bool success = false;
+
+            while(!success) {
+                // Let the AI decide a move for black.
+                auto move = engine.generate();
+
+                bool bounded = {
+                    (move.first < board.length * board.length) &&
+                    (move.second < board.length * board.length) &&
+                    (move.first != move.second)
+                };
+
+                if(bounded && board[move.first].piece) {
+                    success = board.move(move.first, move.second);
                 }
             }
         }
