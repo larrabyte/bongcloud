@@ -36,8 +36,8 @@ namespace ctors {
 
 namespace internal {
     std::size_t compute_texture_offset(const bongcloud::piece& piece) {
-        auto color = static_cast<std::size_t>(piece.color);
-        auto type = static_cast<std::size_t>(piece.type);
+        auto color = static_cast<std::size_t>(piece.hue);
+        auto type = static_cast<std::size_t>(piece.variety);
 
         // TODO: Find a way to make the shifting argument dynamic
         // so piece textures can be changed arbitrarily.

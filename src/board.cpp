@@ -31,17 +31,17 @@ void bongcloud::board::print(void) const {
         else {
             char c;
 
-            switch(piece->type) {
-                case piece::types::pawn: c = 'p'; break;
-                case piece::types::knight: c = 'n'; break;
-                case piece::types::bishop: c = 'b'; break;
-                case piece::types::rook: c = 'r'; break;
-                case piece::types::queen: c = 'q'; break;
-                case piece::types::king: c = 'k'; break;
+            switch(piece->variety) {
+                case piece::type::pawn: c = 'p'; break;
+                case piece::type::knight: c = 'n'; break;
+                case piece::type::bishop: c = 'b'; break;
+                case piece::type::rook: c = 'r'; break;
+                case piece::type::queen: c = 'q'; break;
+                case piece::type::king: c = 'k'; break;
                 default: c = '?'; break;
             }
 
-            if(c != '?' && piece->color == piece::colors::black) {
+            if(c != '?' && piece->hue == piece::color::black) {
                 c = std::toupper(c);
             }
 
@@ -65,13 +65,13 @@ void bongcloud::board::print(void) const {
     }
 }
 
-bool bongcloud::board::check(const piece::colors color) const {
+bool bongcloud::board::check(const piece::color color) const {
     // Attempt to find the index of the specified player's king.
     std::optional<std::size_t> king;
 
     for(std::size_t i = 0; i < length * length; i++) {
         const auto& piece = m_internal[i].piece;
-        if(piece && piece->color == color && piece->type == piece::types::king) {
+        if(piece && piece->hue == color && piece->variety == piece::type::king) {
             king = i;
             break;
         }
@@ -85,7 +85,7 @@ bool bongcloud::board::check(const piece::colors color) const {
     // Find the index of the current player's king.
     for(std::size_t i = 0; i < length * length; i++) {
         const auto& piece = m_internal[i].piece;
-        if(piece && piece->color != m_color && permissible(i, *king)) {
+        if(piece && piece->hue != m_color && permissible(i, *king)) {
             return true;
         }
     }
@@ -93,7 +93,7 @@ bool bongcloud::board::check(const piece::colors color) const {
     return false;
 }
 
-bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
+bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
     auto& origin = m_internal[from].piece;
     auto& dest = m_internal[to].piece;
 
@@ -101,23 +101,23 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
         throw std::runtime_error("tried to move from square with no piece");
     }
 
-    bool correct_color = origin->color == m_color;
-    bool cannibal = dest && origin->color == dest->color;
+    bool correct_color = origin->hue == m_color;
+    bool cannibal = dest && origin->hue == dest->hue;
     auto type = permissible(from, to);
 
     if(m_anarchy || (correct_color && !cannibal && type)) {
-        if(type == piece::moves::normal || type == piece::moves::capture) {
+        if(type == piece::move::normal || type == piece::move::capture) {
             // Move and clear.
             dest = origin;
-            dest->move_count++;
+            dest->moves++;
             origin = std::nullopt;
         }
 
-        else if(type == piece::moves::en_passant) {
+        else if(type == piece::move::en_passant) {
             // Move the piece at the origin square to the
             // destination square and update its move count.
             dest = origin;
-            dest->move_count++;
+            dest->moves++;
 
             // Clear the origin square and the square directly behind,
             // which is equivalent to a square adjacent to the origin.
@@ -126,18 +126,18 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
             target = std::nullopt;
         }
 
-        else if(type == piece::moves::short_castle || type == piece::moves::long_castle) {
+        else if(type == piece::move::short_castle || type == piece::move::long_castle) {
             // Calculate the appropriate squares to send the king and rook.
-            std::size_t origin_offset = (type == piece::moves::short_castle) ? to + 1 : to - 2;
-            std::size_t dest_offset = (type == piece::moves::short_castle) ? to - 1 : to + 1;
+            std::size_t origin_offset = (type == piece::move::short_castle) ? to + 1 : to - 2;
+            std::size_t dest_offset = (type == piece::move::short_castle) ? to - 1 : to + 1;
             auto& rook_origin = m_internal[origin_offset].piece;
             auto& rook_dest = m_internal[dest_offset].piece;
 
             // Update piece positions and increment the move count.
             dest = origin;
             rook_dest = rook_origin;
-            dest->move_count++;
-            rook_dest->move_count++;
+            dest->moves++;
+            rook_dest->moves++;
 
             // Remove the original king and rook from the board.
             origin = std::nullopt;
@@ -153,9 +153,9 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
 
         // Update m_color to reflect the next player to move.
         auto index = static_cast<std::size_t>(m_color);
-        const std::array<piece::colors, 2> next {
-            piece::colors::black,
-            piece::colors::white
+        const std::array<piece::color, 2> next {
+            piece::color::black,
+            piece::color::white
         };
 
         m_color = next[index];
@@ -165,7 +165,7 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
     return false;
 }
 
-void bongcloud::board::load_fen(const std::string_view string) {
+void bongcloud::board::load(const std::string_view string) {
     // FEN strings start from the A1 square.
     std::size_t square = 0, index = 0;
 
@@ -174,8 +174,8 @@ void bongcloud::board::load_fen(const std::string_view string) {
 
         switch(c) {
             using piece = bongcloud::piece;
-            using color = bongcloud::piece::colors;
-            using type = bongcloud::piece::types;
+            using color = bongcloud::piece::color;
+            using type = bongcloud::piece::type;
 
             // Lowercase letters represent white pieces, uppercase letters represent black pieces.
             case 'r': m_internal[square++].piece = piece(color::white, type::rook); break;

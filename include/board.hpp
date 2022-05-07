@@ -29,14 +29,14 @@ namespace bongcloud {
             void print(void) const;
 
             // Returns whether a player is currently in check.
-            bool check(const piece::colors) const;
+            bool check(const piece::color) const;
 
             // Moves a piece from one square to another.
             // Returns true if the move was successful.
-            bool move(const std::size_t, const std::size_t);
+            bool mutate(const std::size_t, const std::size_t);
 
             // Overwrites the current board state using a FEN string.
-            void load_fen(const std::string_view);
+            void load(const std::string_view);
 
             // Returns the last move made (may be std::nullopt).
             inline std::optional<std::pair<std::size_t, std::size_t>> latest(void) const noexcept {
@@ -44,7 +44,7 @@ namespace bongcloud {
             }
 
             // Returns the color of the player whose turn it is to move.
-            inline piece::colors color(void) const noexcept {
+            inline piece::color color(void) const noexcept {
                 return m_color;
             }
 
@@ -79,7 +79,7 @@ namespace bongcloud {
 
         private:
             // Returns the type of a move based on piece movement rules.
-            std::optional<piece::moves> permissible(const std::size_t, const std::size_t) const;
+            std::optional<piece::move> permissible(const std::size_t, const std::size_t) const;
 
             // The board's internal representation.
             std::vector<square> m_internal;
@@ -88,7 +88,7 @@ namespace bongcloud {
             std::optional<std::pair<std::size_t, std::size_t>> m_latest;
 
             // Whose turn it is to move.
-            piece::colors m_color = piece::colors::white;
+            piece::color m_color = piece::color::white;
 
             // Whether moves are checked before being played.
             bool m_anarchy;

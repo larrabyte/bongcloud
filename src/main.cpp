@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
     bongcloud::renderer renderer(square_res, board_size);
     bongcloud::board board(board_size, anarchy);
     bongcloud::random_ai engine(board);
-    board.load_fen(fen_string);
+    board.load(fen_string);
 
     // Initialise an event handler and then loop.
     cen::event_handler handler;
@@ -101,14 +101,14 @@ int main(int argc, char** argv) {
 
                     if(!stored && board[i].piece) {
                         renderer.cursor(i);
-                    } else if(i == stored || (stored && board.move(*stored, i))) {
+                    } else if(i == stored || (stored && board.mutate(*stored, i))) {
                         renderer.cursor(std::nullopt);
                     }
                 }
             }
         }
 
-        if(bot && board.color() == bongcloud::piece::colors::black) {
+        if(bot && board.color() == bongcloud::piece::color::black) {
             bool success = false;
 
             while(!success) {
@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
                 };
 
                 if(bounded && board[move.first].piece) {
-                    success = board.move(move.first, move.second);
+                    success = board.mutate(move.first, move.second);
                 }
             }
         }
