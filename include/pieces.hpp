@@ -21,6 +21,16 @@ namespace bongcloud {
                 king
             };
 
+            // Defines every type of move possible.
+            enum class moves {
+                normal,
+                capture,
+                en_passant,
+                short_castle,
+                long_castle,
+                promotion
+            };
+
             // The piece constructor.
             piece(const colors c, const types t) : color(c), type(t) {}
 

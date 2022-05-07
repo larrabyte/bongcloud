@@ -75,8 +75,8 @@ namespace bongcloud {
             const std::size_t length;
 
         private:
-            // Returns the permissibility of a move based on piece movement rules.
-            bool permissible(const std::size_t, const std::size_t) const;
+            // Returns the type of a move based on piece movement rules.
+            std::optional<piece::moves> permissible(const std::size_t, const std::size_t) const;
 
             // The board's internal representation.
             std::vector<square> m_internal;

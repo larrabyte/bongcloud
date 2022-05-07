@@ -75,7 +75,7 @@ namespace internal {
     }
 }
 
-bool bongcloud::board::permissible(const std::size_t from, const std::size_t to) const {
+std::optional<bongcloud::piece::moves> bongcloud::board::permissible(const std::size_t from, const std::size_t to) const {
     // Some initial sanity checks.
     const auto& origin = m_internal[from].piece;
     const auto& dest = m_internal[to].piece;
@@ -101,47 +101,58 @@ bool bongcloud::board::permissible(const std::size_t from, const std::size_t to)
         bool white_direction = origin->color == piece::colors::white && from_rank < to_rank;
         bool black_direction = origin->color == piece::colors::black && from_rank > to_rank;
         if(!white_direction && !black_direction) {
-            return false;
+            return std::nullopt;
         }
 
         // Pawns can move one square forward or two if it's their first move.
         // Pawns cannot take directly in-front of them.
         bool step_forward = rank_difference == 1 && file_difference == 0 && !dest;
         bool jump_forward = rank_difference == 2 && file_difference == 0 && !dest && origin->move_count == 0;
+        if(step_forward || jump_forward) {
+            return piece::moves::normal;
+        }
 
-        // Pawns can diagionally capture if there is a piece present.
-        bool diagonal_capture = rank_difference == 1 && file_difference == 1 && dest;
+        // Pawns can also diagionally capture if there is a piece present.
+        if(rank_difference == 1 && file_difference == 1 && dest) {
+            return piece::moves::capture;
+        }
 
         // HON HON!
-        bool en_passant = false;
-
         if(m_latest) {
             bool pawn = m_internal[m_latest->second].piece->type == piece::types::pawn;
             bool jumped = internal::absdiff(m_latest->first, m_latest->second) == length * 2;
             bool taking = internal::absdiff(to, m_latest->second) == length;
             bool adjacent = internal::absdiff(from, m_latest->second) == 1;
-            en_passant = pawn && jumped && adjacent && taking;
+            if(pawn && jumped && taking && adjacent) {
+                return piece::moves::en_passant;
+            }
         }
 
-        return step_forward || jump_forward || diagonal_capture || en_passant;
+        // If we are here, then the move must be illegal.
+        return std::nullopt;
     }
 
     else if(origin->type == piece::types::knight) {
         // Knights can move in an L-shape.
         bool type_one = rank_difference == 1 && file_difference == 2;
         bool type_two = rank_difference == 2 && file_difference == 1;
-        return type_one || type_two;
+
+        if(type_one || type_two) {
+            return (dest) ? piece::moves::capture : piece::moves::normal;
+        }
+
+        return std::nullopt;
     }
 
     else if(origin->type == piece::types::bishop) {
         // Bishops can move diagonally, therefore the differences must be equal.
         if(rank_difference != file_difference) {
-            return false;
+            return std::nullopt;
         }
 
         // Since diagonality was checked, all that's left to do is check for obstacles.
         // Subtract one from both differences to start obstruction checking from the previous square.
-        return !internal::obstructions::bishop(
+        bool obstructed = internal::obstructions::bishop(
             *this,
             from,
             from_rank,
@@ -151,24 +162,38 @@ bool bongcloud::board::permissible(const std::size_t from, const std::size_t to)
             rank_difference - 1,
             file_difference - 1
         );
+
+        if(!obstructed) {
+            return (dest) ? piece::moves::capture : piece::moves::normal;
+        }
+
+        return std::nullopt;
     }
 
     else if(origin->type == piece::types::rook) {
         if(rank_difference != 0 && file_difference != 0) {
-            return false;
+            return std::nullopt;
         }
 
         // Rooks can only travel in a straight, unobstructed line.
         // Subtract to start obstruction checking from the previous square.
         std::size_t difference = internal::absdiff(from, to);
         difference -= (difference >= length) ? length : 1;
-        return !internal::obstructions::rook(*this, from, to, difference);
+        bool obstructed = internal::obstructions::rook(*this, from, to, difference);
+
+        if(!obstructed) {
+            return (dest) ? piece::moves::capture : piece::moves::normal;
+        }
+
+        return std::nullopt;
     }
 
     else if(origin->type == piece::types::queen) {
+        bool obstructed;
+
         // If the queen is moving in a diagonal pattern, it must obey bishop movement rules.
         if(rank_difference == file_difference) {
-            return !internal::obstructions::bishop(
+            obstructed = internal::obstructions::bishop(
                 *this,
                 from,
                 from_rank,
@@ -184,11 +209,19 @@ bool bongcloud::board::permissible(const std::size_t from, const std::size_t to)
         else if(rank_difference == 0 || file_difference == 0) {
             std::size_t difference = internal::absdiff(from, to);
             difference -= (difference >= length) ? length : 1;
-            return !internal::obstructions::rook(*this, from, to, difference);
+            obstructed = internal::obstructions::rook(*this, from, to, difference);
         }
 
-        // Otherwise, this move is illegal.
-        return false;
+        // A move that is not diagonal or straight is illegal.
+        else {
+            return std::nullopt;
+        }
+
+        if(!obstructed) {
+            return (dest) ? piece::moves::capture : piece::moves::normal;
+        }
+
+        return std::nullopt;
     }
 
     else if(origin->type == piece::types::king) {
@@ -196,7 +229,11 @@ bool bongcloud::board::permissible(const std::size_t from, const std::size_t to)
         bool horizontal = rank_difference == 0 && file_difference == 1;
         bool vertical = rank_difference == 1 && file_difference == 0;
         bool diagonal = rank_difference == 1 && file_difference == 1;
-        return horizontal || vertical || diagonal;
+        if(horizontal || vertical || diagonal) {
+            return (dest) ? piece::moves::capture : piece::moves::normal;
+        }
+
+        return std::nullopt;
     }
 
     else {

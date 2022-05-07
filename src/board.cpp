@@ -75,17 +75,34 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
 
     bool correct_color = origin->color == m_color;
     bool cannibal = dest && origin->color == dest->color;
-    bool movable = permissible(from, to);
+    auto type = permissible(from, to);
 
-    if(m_anarchy || (correct_color && !cannibal && movable)) {
-        // Move the piece at the origin square to the
-        // destination square and update its move count.
-        dest = origin;
-        dest->move_count++;
+    if(m_anarchy || (correct_color && !cannibal && type)) {
+        if(type == piece::moves::normal || type == piece::moves::capture) {
+            // Move and clear.
+            dest = origin;
+            dest->move_count++;
+            origin = std::nullopt;
+        }
 
-        // Clear the origin square and
-        // then update the latest move.
-        origin = std::nullopt;
+        else if(type == piece::moves::en_passant) {
+            // Move the piece at the origin square to the
+            // destination square and update its move count.
+            dest = origin;
+            dest->move_count++;
+
+            // Clear the origin square and the square directly behind,
+            // which is equivalent to a square adjacent to the origin.
+            auto& target = m_internal[m_latest->second].piece;
+            origin = std::nullopt;
+            target = std::nullopt;
+        }
+
+        else {
+            throw std::runtime_error("unimplemented movement type");
+        }
+
+        // Update the latest move.
         m_latest = std::make_pair(from, to);
 
         // Update m_color to reflect the next player to move.
