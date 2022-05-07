@@ -119,10 +119,10 @@ std::optional<bongcloud::piece::move> bongcloud::board::permissible(const std::s
 
         // HON HON!
         if(m_latest) {
-            bool pawn = m_internal[m_latest->second]->variety == piece::type::pawn;
-            bool jumped = internal::absdiff(m_latest->first, m_latest->second) == length * 2;
-            bool taking = internal::absdiff(to, m_latest->second) == length;
-            bool adjacent = internal::absdiff(from, m_latest->second) == 1;
+            bool pawn = m_internal[m_latest->to]->variety == piece::type::pawn;
+            bool jumped = internal::absdiff(m_latest->from, m_latest->to) == length * 2;
+            bool taking = internal::absdiff(to, m_latest->to) == length;
+            bool adjacent = internal::absdiff(from, m_latest->to) == 1;
             if(pawn && jumped && taking && adjacent) {
                 return piece::move::en_passant;
             }

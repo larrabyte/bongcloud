@@ -10,6 +10,11 @@ namespace bongcloud {
     // A square is just an optional piece.
     using square = std::optional<piece>;
 
+    struct move {
+        std::size_t from;
+        std::size_t to;
+    };
+
     class board {
         public:
             // The default board constructor, which takes a length and a boolean as parameters.
@@ -30,7 +35,7 @@ namespace bongcloud {
             void load(const std::string_view);
 
             // Returns the last move made (may be std::nullopt).
-            inline std::optional<std::pair<std::size_t, std::size_t>> latest(void) const noexcept {
+            inline std::optional<move> latest(void) const noexcept {
                 return m_latest;
             }
 
@@ -76,7 +81,7 @@ namespace bongcloud {
             std::vector<square> m_internal;
 
             // The last move, represented as a (from, to) pair of indices.
-            std::optional<std::pair<std::size_t, std::size_t>> m_latest;
+            std::optional<move> m_latest;
 
             // Whose turn it is to move.
             piece::color m_color = piece::color::white;

@@ -121,7 +121,7 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
 
             // Clear the origin square and the square directly behind,
             // which is equivalent to a square adjacent to the origin.
-            auto& target = m_internal[m_latest->second];
+            auto& target = m_internal[m_latest->to];
             origin = std::nullopt;
             target = std::nullopt;
         }
@@ -149,7 +149,7 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
         }
 
         // Update the latest move.
-        m_latest = std::make_pair(from, to);
+        m_latest = {from, to};
 
         // Update m_color to reflect the next player to move.
         auto index = static_cast<std::size_t>(m_color);

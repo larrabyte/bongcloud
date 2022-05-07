@@ -122,7 +122,7 @@ void bongcloud::renderer::render(const bongcloud::board& board) {
         bool dark_square = predicate(board.length, rank);
         cen::color color;
 
-        if(highlights && (i == highlights->first || i == highlights->second)) {
+        if(highlights && (i == highlights->from || i == highlights->to)) {
             color = (dark_square) ? colors::dark_last_move : colors::light_last_move;
         } else {
             color = (dark_square) ? colors::dark_square : colors::light_square;
