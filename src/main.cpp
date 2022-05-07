@@ -79,11 +79,25 @@ int main(int argc, char** argv) {
             if(handler.is<cen::keyboard_event>()) {
                 auto& event = handler.get<cen::keyboard_event>();
 
-                // Pressing Left Control will print the current board state.
-                if(event.pressed() && event.is_active(cen::scancodes::left_ctrl)) {
-                    fmt::print("\n[bongcloud] board.print():\n");
-                    board.print();
-                    fmt::print("\n\n");
+                if(event.pressed()) {
+                    bool ctrl_or_cmd = {
+                        event.is_active(cen::key_mod::lctrl) ||
+                        event.is_active(cen::key_mod::lgui)
+                    };
+
+                    // Pressing Ctrl+P will print the current board state.
+                    if(ctrl_or_cmd && event.is_active(cen::scancodes::p)) {
+                        board.print();
+                    }
+
+                    // Pressing Ctrl+Z will undo the last move.
+                    if(ctrl_or_cmd && event.is_active(cen::scancodes::z)) {
+                        board.undo();
+
+                        if(bot) {
+                            board.undo();
+                        }
+                    }
                 }
             }
 

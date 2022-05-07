@@ -45,6 +45,9 @@ namespace bongcloud {
             // Overwrites the current board state using a FEN string.
             void load(const std::string_view);
 
+            // Undoes the last move.
+            void undo(void);
+
             // Returns a constant reference to the board's history array.
             const std::vector<mutation>& history(void) const noexcept {
                 return m_history;

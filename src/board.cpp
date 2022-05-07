@@ -5,6 +5,13 @@
 #include <fmt/core.h>
 #include <cstddef>
 
+namespace internal {
+    const bongcloud::piece::color next_color[] = {
+        bongcloud::piece::color::black,
+        bongcloud::piece::color::white
+    };
+}
+
 bongcloud::board::board(const std::size_t l, const bool anarchy) :
     length {l},
     m_internal {l * l},
@@ -17,6 +24,8 @@ void bongcloud::board::print(void) const {
     // Start from the top-left square.
     std::size_t rank = 7, file = 0;
     bool finished = false;
+
+    fmt::print("\n[bongcloud] board.print():\n");
     fmt::print("[bongcloud] ");
 
     while(!finished) {
@@ -62,6 +71,8 @@ void bongcloud::board::print(void) const {
             fmt::print(" ");
         }
     }
+
+    fmt::print("\n\n");
 }
 
 bool bongcloud::board::check(const piece::color color) const {
@@ -169,13 +180,10 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
 
         // Update m_color to reflect the next player to move.
         auto index = static_cast<std::size_t>(m_color);
-        const std::array<piece::color, 2> next {
-            piece::color::black,
-            piece::color::white
-        };
+        m_color = internal::next_color[index];
 
+        // Store the mutation object and return.
         m_history.push_back(recent);
-        m_color = next[index];
         return true;
     }
 
@@ -224,4 +232,39 @@ void bongcloud::board::load(const std::string_view string) {
                 throw std::runtime_error("illegal FEN string");
         }
     }
+}
+
+void bongcloud::board::undo(void) {
+    // Ensure that there is a move to undo.
+    if(m_history.size() == 0) {
+        return;
+    }
+
+    // Retrieve the last move and undo it.
+    const auto& last = m_history.back();
+    auto& origin = m_internal[last.move.from];
+    auto& dest = m_internal[last.move.to];
+    origin = dest;
+    origin->moves--;
+    dest = std::nullopt;
+
+    if(last.capture) {
+        auto& capture = m_internal[last.capture->index];
+        capture = last.capture->piece;
+    }
+
+    if(last.castle) {
+        auto& rook_origin = m_internal[last.castle->from];
+        auto& rook_dest = m_internal[last.castle->to];
+        rook_origin = rook_dest;
+        rook_origin->moves--;
+        rook_dest = std::nullopt;
+    }
+
+    // Delete the last move.
+    m_history.pop_back();
+
+    // Update m_color to reflect the previous player.
+    auto index = static_cast<std::size_t>(m_color);
+    m_color = internal::next_color[index];
 }
