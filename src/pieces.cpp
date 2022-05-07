@@ -192,12 +192,11 @@ bool bongcloud::board::permissible(const std::size_t from, const std::size_t to)
     }
 
     else if(origin->type == piece::types::king) {
-        // The king can move in any direction for one square.
-        const std::array<std::size_t, 4> allowed = {1, length - 1, length, length + 1};
-        std::size_t difference = internal::absdiff(from, to);
-
-        // std::find() will return allowed.end() if difference is not present in the array.
-        return std::find(allowed.begin(), allowed.end(), difference) != allowed.end();
+        // The king can move in any direction (but only for one square).
+        bool horizontal = rank_difference == 0 && file_difference == 1;
+        bool vertical = rank_difference == 1 && file_difference == 0;
+        bool diagonal = rank_difference == 1 && file_difference == 1;
+        return horizontal || vertical || diagonal;
     }
 
     else {
