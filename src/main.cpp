@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
 
                     auto stored = renderer.cursor();
 
-                    if(!stored && board[i].piece) {
+                    if(!stored && board[i]) {
                         renderer.cursor(i);
                     } else if(i == stored || (stored && board.mutate(*stored, i))) {
                         renderer.cursor(std::nullopt);
@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
                     (move.first != move.second)
                 };
 
-                if(bounded && board[move.first].piece) {
+                if(bounded && board[move.first]) {
                     success = board.mutate(move.first, move.second);
                 }
             }

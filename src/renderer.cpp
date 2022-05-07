@@ -134,8 +134,8 @@ void bongcloud::renderer::render(const bongcloud::board& board) {
 
         // Get the appropriate texture for the piece on the square (if present) and render it.
         // Assume that the piece's texture is always present.
-        if(square.piece && i != m_mouse) {
-            auto offset = internal::compute_texture_offset(*square.piece);
+        if(square && i != m_mouse) {
+            auto offset = internal::compute_texture_offset(*square);
             const auto& texture = *m_textures[offset];
             m_renderer.render(texture, rect);
         }
@@ -162,8 +162,8 @@ void bongcloud::renderer::render(const bongcloud::board& board) {
             m_resolution
         );
 
-        const auto& square = board[*m_mouse];
-        auto offset = internal::compute_texture_offset(*square.piece);
+        const auto& piece = board[*m_mouse];
+        auto offset = internal::compute_texture_offset(*piece);
 
         // Assume that the texture is always present.
         const auto& texture = *m_textures[offset];

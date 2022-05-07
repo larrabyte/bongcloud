@@ -7,17 +7,8 @@
 #include <vector>
 
 namespace bongcloud {
-    class square {
-        public:
-            // The default square constructor, which initialises the square to be empty.
-            square(void) : piece(std::nullopt) {}
-
-            // Another constructor, which takes a piece as an argument.
-            square(const bongcloud::piece& p) : piece(p) {}
-
-            // The piece that a square contains.
-            std::optional<bongcloud::piece> piece;
-    };
+    // A square is just an optional piece.
+    using square = std::optional<piece>;
 
     class board {
         public:

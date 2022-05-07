@@ -22,7 +22,7 @@ void bongcloud::board::print(void) const {
 
     while(!finished) {
         std::size_t index = (rank * length) + file;
-        const auto& piece = m_internal[index].piece;
+        const auto& piece = m_internal[index];
 
         if(!piece) {
             fmt::print("-");
@@ -70,7 +70,7 @@ bool bongcloud::board::check(const piece::color color) const {
     std::optional<std::size_t> king;
 
     for(std::size_t i = 0; i < length * length; i++) {
-        const auto& piece = m_internal[i].piece;
+        const auto& piece = m_internal[i];
         if(piece && piece->hue == color && piece->variety == piece::type::king) {
             king = i;
             break;
@@ -84,7 +84,7 @@ bool bongcloud::board::check(const piece::color color) const {
 
     // Find the index of the current player's king.
     for(std::size_t i = 0; i < length * length; i++) {
-        const auto& piece = m_internal[i].piece;
+        const auto& piece = m_internal[i];
         if(piece && piece->hue != m_color && permissible(i, *king)) {
             return true;
         }
@@ -94,8 +94,8 @@ bool bongcloud::board::check(const piece::color color) const {
 }
 
 bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
-    auto& origin = m_internal[from].piece;
-    auto& dest = m_internal[to].piece;
+    auto& origin = m_internal[from];
+    auto& dest = m_internal[to];
 
     if(!origin) {
         throw std::runtime_error("tried to move from square with no piece");
@@ -121,7 +121,7 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
 
             // Clear the origin square and the square directly behind,
             // which is equivalent to a square adjacent to the origin.
-            auto& target = m_internal[m_latest->second].piece;
+            auto& target = m_internal[m_latest->second];
             origin = std::nullopt;
             target = std::nullopt;
         }
@@ -130,8 +130,8 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
             // Calculate the appropriate squares to send the king and rook.
             std::size_t origin_offset = (type == piece::move::short_castle) ? to + 1 : to - 2;
             std::size_t dest_offset = (type == piece::move::short_castle) ? to - 1 : to + 1;
-            auto& rook_origin = m_internal[origin_offset].piece;
-            auto& rook_dest = m_internal[dest_offset].piece;
+            auto& rook_origin = m_internal[origin_offset];
+            auto& rook_dest = m_internal[dest_offset];
 
             // Update piece positions and increment the move count.
             dest = origin;
@@ -178,18 +178,18 @@ void bongcloud::board::load(const std::string_view string) {
             using type = bongcloud::piece::type;
 
             // Lowercase letters represent white pieces, uppercase letters represent black pieces.
-            case 'r': m_internal[square++].piece = piece(color::white, type::rook); break;
-            case 'n': m_internal[square++].piece = piece(color::white, type::knight); break;
-            case 'b': m_internal[square++].piece = piece(color::white, type::bishop); break;
-            case 'q': m_internal[square++].piece = piece(color::white, type::queen); break;
-            case 'k': m_internal[square++].piece = piece(color::white, type::king); break;
-            case 'p': m_internal[square++].piece = piece(color::white, type::pawn); break;
-            case 'R': m_internal[square++].piece = piece(color::black, type::rook); break;
-            case 'N': m_internal[square++].piece = piece(color::black, type::knight); break;
-            case 'B': m_internal[square++].piece = piece(color::black, type::bishop); break;
-            case 'Q': m_internal[square++].piece = piece(color::black, type::queen); break;
-            case 'K': m_internal[square++].piece = piece(color::black, type::king); break;
-            case 'P': m_internal[square++].piece = piece(color::black, type::pawn); break;
+            case 'r': m_internal[square++] = piece(color::white, type::rook); break;
+            case 'n': m_internal[square++] = piece(color::white, type::knight); break;
+            case 'b': m_internal[square++] = piece(color::white, type::bishop); break;
+            case 'q': m_internal[square++] = piece(color::white, type::queen); break;
+            case 'k': m_internal[square++] = piece(color::white, type::king); break;
+            case 'p': m_internal[square++] = piece(color::white, type::pawn); break;
+            case 'R': m_internal[square++] = piece(color::black, type::rook); break;
+            case 'N': m_internal[square++] = piece(color::black, type::knight); break;
+            case 'B': m_internal[square++] = piece(color::black, type::bishop); break;
+            case 'Q': m_internal[square++] = piece(color::black, type::queen); break;
+            case 'K': m_internal[square++] = piece(color::black, type::king); break;
+            case 'P': m_internal[square++] = piece(color::black, type::pawn); break;
 
             // Numbers signify the number of squares to skip.
             case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':

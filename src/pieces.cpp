@@ -43,7 +43,7 @@ namespace internal {
                 }
 
                 // If a piece is present, then the path is obstructed.
-                if(board[index].piece) {
+                if(board[index]) {
                     return true;
                 }
 
@@ -63,7 +63,7 @@ namespace internal {
 
             while(difference > 0) {
                 std::size_t index = (from > to) ? from - difference : from + difference;
-                if(board[index].piece) {
+                if(board[index]) {
                     return true;
                 }
 
@@ -77,8 +77,8 @@ namespace internal {
 
 std::optional<bongcloud::piece::move> bongcloud::board::permissible(const std::size_t from, const std::size_t to) const {
     // Some initial sanity checks.
-    const auto& origin = m_internal[from].piece;
-    const auto& dest = m_internal[to].piece;
+    const auto& origin = m_internal[from];
+    const auto& dest = m_internal[to];
 
     if(!origin) {
         throw std::runtime_error("tried to move from square with no piece");
@@ -119,7 +119,7 @@ std::optional<bongcloud::piece::move> bongcloud::board::permissible(const std::s
 
         // HON HON!
         if(m_latest) {
-            bool pawn = m_internal[m_latest->second].piece->variety == piece::type::pawn;
+            bool pawn = m_internal[m_latest->second]->variety == piece::type::pawn;
             bool jumped = internal::absdiff(m_latest->first, m_latest->second) == length * 2;
             bool taking = internal::absdiff(to, m_latest->second) == length;
             bool adjacent = internal::absdiff(from, m_latest->second) == 1;
@@ -239,7 +239,7 @@ std::optional<bongcloud::piece::move> bongcloud::board::permissible(const std::s
         std::size_t castle_index = (castle_short) ? to + 1 : to - 2;
 
         if(castle_index < length * length) {
-            const auto &target = m_internal[castle_index].piece;
+            const auto &target = m_internal[castle_index];
             std::size_t castle_difference = internal::absdiff(from, castle_index);
 
             bool king_ready = origin->moves == 0;
