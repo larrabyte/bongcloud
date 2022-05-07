@@ -229,8 +229,27 @@ std::optional<bongcloud::piece::moves> bongcloud::board::permissible(const std::
         bool horizontal = rank_difference == 0 && file_difference == 1;
         bool vertical = rank_difference == 1 && file_difference == 0;
         bool diagonal = rank_difference == 1 && file_difference == 1;
+
         if(horizontal || vertical || diagonal) {
             return (dest) ? piece::moves::capture : piece::moves::normal;
+        }
+
+        // The king can also castle short (king-side).
+        bool castle_short = from < to;
+        std::size_t castle_index = (castle_short) ? to + 1 : to - 2;
+
+        if(castle_index < length * length) {
+            const auto &target = m_internal[castle_index].piece;
+            std::size_t castle_difference = internal::absdiff(from, castle_index);
+
+            bool king_ready = origin->move_count == 0;
+            bool jump_to_empty = rank_difference == 0 && file_difference == 2 && !dest;
+            bool rook_ready = target && target->type == piece::types::rook && target->move_count == 0;
+            bool obstructed = internal::obstructions::rook(*this, from, castle_index, castle_difference - 1);
+
+            if(king_ready && jump_to_empty && rook_ready && !obstructed) {
+                return (castle_short) ? piece::moves::short_castle : piece::moves::long_castle;
+            }
         }
 
         return std::nullopt;

@@ -98,6 +98,24 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
             target = std::nullopt;
         }
 
+        else if(type == piece::moves::short_castle || type == piece::moves::long_castle) {
+            // Calculate the appropriate squares to send the king and rook.
+            std::size_t origin_offset = (type == piece::moves::short_castle) ? to + 1 : to - 2;
+            std::size_t dest_offset = (type == piece::moves::short_castle) ? to - 1 : to + 1;
+            auto& rook_origin = m_internal[origin_offset].piece;
+            auto& rook_dest = m_internal[dest_offset].piece;
+
+            // Update piece positions and increment the move count.
+            dest = origin;
+            rook_dest = rook_origin;
+            dest->move_count++;
+            rook_dest->move_count++;
+
+            // Remove the original king and rook from the board.
+            origin = std::nullopt;
+            rook_origin = std::nullopt;
+        }
+
         else {
             throw std::runtime_error("unimplemented movement type");
         }
