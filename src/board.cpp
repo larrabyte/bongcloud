@@ -65,6 +65,34 @@ void bongcloud::board::print(void) const {
     }
 }
 
+bool bongcloud::board::check(const piece::colors color) const {
+    // Attempt to find the index of the specified player's king.
+    std::optional<std::size_t> king;
+
+    for(std::size_t i = 0; i < length * length; i++) {
+        const auto& piece = m_internal[i].piece;
+        if(piece && piece->color == color && piece->type == piece::types::king) {
+            king = i;
+            break;
+        }
+    }
+
+    // Invalid sentintel still remains.
+    if(!king) {
+        throw std::runtime_error("no king on board");
+    }
+
+    // Find the index of the current player's king.
+    for(std::size_t i = 0; i < length * length; i++) {
+        const auto& piece = m_internal[i].piece;
+        if(piece && piece->color != m_color && permissible(i, *king)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
     auto& origin = m_internal[from].piece;
     auto& dest = m_internal[to].piece;

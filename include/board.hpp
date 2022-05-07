@@ -28,6 +28,9 @@ namespace bongcloud {
             // Prints out the current board state to stdout.
             void print(void) const;
 
+            // Returns whether a player is currently in check.
+            bool check(const piece::colors) const;
+
             // Moves a piece from one square to another.
             // Returns true if the move was successful.
             bool move(const std::size_t, const std::size_t);
