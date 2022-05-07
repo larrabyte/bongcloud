@@ -1,6 +1,7 @@
 #include "renderer.hpp"
 
 #include <fmt/core.h>
+#include <bit>
 
 namespace colors {
     const cen::color light_square {0xEC, 0xDB, 0xB9};
@@ -37,6 +38,9 @@ namespace internal {
     std::size_t compute_texture_offset(const bongcloud::piece& piece) {
         auto color = static_cast<std::size_t>(piece.color);
         auto type = static_cast<std::size_t>(piece.type);
+
+        // TODO: Find a way to make the shifting argument dynamic
+        // so piece textures can be changed arbitrarily.
         return (color << 3) | type;
     }
 }
@@ -54,35 +58,43 @@ bongcloud::renderer::renderer(const std::size_t square_res, const std::size_t bo
     m_window.show();
 
     // Load textures from disk and store them in the texture array.
-    const std::array<std::string, 16> paths {
-        // White textures.
+    const std::string white[] = {
         "data/wp.bmp",
         "data/wn.bmp",
         "data/wb.bmp",
         "data/wr.bmp",
         "data/wq.bmp",
-        "data/wk.bmp",
-        "",
-        "",
+        "data/wk.bmp"
+    };
 
-        // Black textures.
+    const std::string black[] = {
         "data/bp.bmp",
         "data/bn.bmp",
         "data/bb.bmp",
         "data/br.bmp",
         "data/bq.bmp",
-        "data/bk.bmp",
-        "",
-        ""
+        "data/bk.bmp"
     };
 
-    for(const auto& path : paths) {
-        if(path.size() == 0) {
-            // Reserved entries should be set to not present.
+    static_assert(
+        std::size(white) == std::size(black),
+        "white and black must have the same number of textures"
+    );
+
+    std::size_t rounded_size = 1 << std::bit_width(std::size(white));
+    std::size_t maximum_index = rounded_size * 2;
+    m_textures.reserve(maximum_index);
+
+    for(std::size_t i = 0; i < maximum_index; i++) {
+        bool oob_white = i >= std::size(white) && i < rounded_size;
+        bool oob_black = i >= std::size(black) + rounded_size;
+
+        if(oob_white || oob_black) {
             m_textures.push_back(std::nullopt);
             continue;
         }
 
+        const auto& path = (i < rounded_size) ? white[i] : black[i - rounded_size];
         fmt::print("[bongcloud] loading texture at {}...\n", path);
         cen::surface surface(path);
         cen::texture texture = m_renderer.make_texture(surface);
