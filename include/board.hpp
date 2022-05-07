@@ -15,6 +15,17 @@ namespace bongcloud {
         std::size_t to;
     };
 
+    struct capture {
+        std::size_t index;
+        bongcloud::piece piece;
+    };
+
+    struct mutation {
+        bongcloud::move move;
+        std::optional<bongcloud::move> castle;
+        std::optional<bongcloud::capture> capture;
+    };
+
     class board {
         public:
             // The default board constructor, which takes a length and a boolean as parameters.
@@ -34,9 +45,20 @@ namespace bongcloud {
             // Overwrites the current board state using a FEN string.
             void load(const std::string_view);
 
+            // Returns a constant reference to the board's history array.
+            const std::vector<mutation>& history(void) const noexcept {
+                return m_history;
+            }
+
             // Returns the last move made (may be std::nullopt).
             inline std::optional<move> latest(void) const noexcept {
-                return m_latest;
+                std::optional<move> m;
+
+                if(m_history.size() > 0) {
+                    m = m_history.back().move;
+                }
+
+                return m;
             }
 
             // Returns the color of the player whose turn it is to move.
@@ -80,8 +102,8 @@ namespace bongcloud {
             // The board's internal representation.
             std::vector<square> m_internal;
 
-            // The last move, represented as a (from, to) pair of indices.
-            std::optional<move> m_latest;
+            // An array of previously made moves.
+            std::vector<mutation> m_history;
 
             // Whose turn it is to move.
             piece::color m_color = piece::color::white;

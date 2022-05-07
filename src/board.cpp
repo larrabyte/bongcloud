@@ -8,7 +8,6 @@
 bongcloud::board::board(const std::size_t l, const bool anarchy) :
     length {l},
     m_internal {l * l},
-    m_latest {std::nullopt},
     m_anarchy {anarchy} {
 
     fmt::print("[bongcloud] initialising board of size {}x{}... (anarchy: {})\n", l, l, anarchy);
@@ -106,11 +105,26 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
     auto type = permissible(from, to);
 
     if(m_anarchy || (correct_color && !cannibal && type)) {
-        if(type == piece::move::normal || type == piece::move::capture) {
-            // Move and clear.
+        // Create a mutation object to store this move.
+        mutation recent;
+        recent.move = {from, to};
+
+        if(type == piece::move::normal) {
+            // Move the piece forward and
+            // clear the origin square.
             dest = origin;
-            dest->moves++;
             origin = std::nullopt;
+            dest->moves++;
+        }
+
+        else if(type == piece::move::capture) {
+            // Store a copy of the captured piece
+            // in the mutation object before erasing.
+            recent.capture = {to, *dest};
+
+            dest = origin;
+            origin = std::nullopt;
+            dest->moves++;
         }
 
         else if(type == piece::move::en_passant) {
@@ -121,7 +135,9 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
 
             // Clear the origin square and the square directly behind,
             // which is equivalent to a square adjacent to the origin.
-            auto& target = m_internal[m_latest->to];
+            const auto& last = latest();
+            auto& target = m_internal[last->to];
+            recent.capture = {last->to, *target};
             origin = std::nullopt;
             target = std::nullopt;
         }
@@ -132,6 +148,9 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
             std::size_t dest_offset = (type == piece::move::short_castle) ? to - 1 : to + 1;
             auto& rook_origin = m_internal[origin_offset];
             auto& rook_dest = m_internal[dest_offset];
+
+            // Add the rook's movement entry to the mutation object.
+            recent.castle = {origin_offset, dest_offset};
 
             // Update piece positions and increment the move count.
             dest = origin;
@@ -148,9 +167,6 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
             throw std::runtime_error("unimplemented movement type");
         }
 
-        // Update the latest move.
-        m_latest = {from, to};
-
         // Update m_color to reflect the next player to move.
         auto index = static_cast<std::size_t>(m_color);
         const std::array<piece::color, 2> next {
@@ -158,6 +174,7 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
             piece::color::white
         };
 
+        m_history.push_back(recent);
         m_color = next[index];
         return true;
     }

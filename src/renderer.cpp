@@ -108,25 +108,25 @@ void bongcloud::renderer::render(const bongcloud::board& board) {
     std::size_t y = m_renderer.output_size().height - m_resolution;
     std::size_t i = 0, x = 0;
 
-    auto predicate = [&](const std::size_t l, const std::size_t r) {
-        return (l % 2 != 0) ? i % 2 == 0 : ((r % 2 == 0) ? i % 2 == 0 : i % 2 != 0);
-    };
-
     for(const auto& square : board) {
         // Construct a Centurion rectangle to represent this square.
         cen::irect rect(x, y, m_resolution, m_resolution);
 
         // Compute whether the square should be light or dark or highlighted.
-        std::size_t rank = i / board.length;
-        auto highlights = board.latest();
-        bool dark_square = predicate(board.length, rank);
-        cen::color color;
+        const auto& latest = board.latest();
+        bool green = latest && (i == latest->from || i == latest->to);
 
-        if(highlights && (i == highlights->from || i == highlights->to)) {
-            color = (dark_square) ? colors::dark_last_move : colors::light_last_move;
-        } else {
-            color = (dark_square) ? colors::dark_square : colors::light_square;
-        }
+        bool dark = {
+            (board.length % 2 != 0) ?
+            (i % 2 == 0) :
+            (i / board.length % 2 == 0) ? i % 2 == 0 : i % 2 != 0
+        };
+
+        cen::color color = {
+            (green) ?
+            (dark) ? colors::dark_last_move : colors::light_last_move :
+            (dark) ? colors::dark_square : colors::light_square
+        };
 
         // Render the square.
         m_renderer.set_color(color);
