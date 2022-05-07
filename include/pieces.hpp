@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 namespace bongcloud {
     class piece {
         public:
@@ -22,7 +24,13 @@ namespace bongcloud {
             // The piece constructor.
             piece(const colors c, const types t) : color(c), type(t) {}
 
+            // The color of the piece.
             colors color;
+
+            // The type of the piece.
             types type;
+
+            // The number of times the piece has moved.
+            std::size_t move_count = 0;
     };
 }

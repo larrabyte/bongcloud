@@ -78,11 +78,24 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
     bool movable = permissible(from, to);
 
     if(m_anarchy || (correct_color && !cannibal && movable)) {
-        // Empty the origin square and move its piece to the destination square.
+        // Move the piece at the origin square to the
+        // destination square and update its move count.
         dest = origin;
+        dest->move_count++;
+
+        // Clear the origin square and
+        // then update the latest move.
         origin = std::nullopt;
         m_latest = std::make_pair(from, to);
-        m_color = (m_color == piece::colors::white) ? piece::colors::black : piece::colors::white;
+
+        // Update m_color to reflect the next player to move.
+        auto index = static_cast<std::size_t>(m_color);
+        const std::array<piece::colors, 2> next {
+            piece::colors::black,
+            piece::colors::white
+        };
+
+        m_color = next[index];
         return true;
     }
 

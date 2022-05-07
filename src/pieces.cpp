@@ -88,81 +88,86 @@ bool bongcloud::board::permissible(const std::size_t from, const std::size_t to)
         throw std::runtime_error("tried to check permissiblity of a non-move");
     }
 
-    switch(origin->type) {
-        case piece::types::pawn: {
-            // Pawns can't move backwards or sideways.
-            bool correct_direction = {
-                (origin->color == piece::colors::white && from < to) ||
-                (origin->color == piece::colors::black && from > to)
-            };
+    // Apply piece movement rules.
+    std::size_t from_rank = from / length;
+    std::size_t from_file = from % length;
+    std::size_t to_rank = to / length;
+    std::size_t to_file = to % length;
+    std::size_t rank_difference = internal::absdiff(from_rank, to_rank);
+    std::size_t file_difference = internal::absdiff(from_file, to_file);
 
-            if(!correct_direction) {
-                return false;
-            }
-
-            // Pawns can move one square forward or two if they're on the first or second-last rank.
-            // Since ranks are zero-indexed, this corresponds to the 1st and (length - 2)th ranks.
-            // Pawns cannot take directly in-front of them.
-            std::size_t difference = internal::absdiff(from, to);
-            bool one_forward = difference == length && !m_internal[to].piece;
-
-            bool two_forward = {
-                (difference == 2 * length) &&
-                (from / length == 1 || from / length == length - 2) &&
-                (!m_internal[to].piece)
-            };
-
-            // Pawns can diagonally capture if there is a piece present.
-            bool diagonal_capture = {
-                (difference == length - 1 || difference == length + 1) &&
-                (m_internal[to].piece)
-            };
-
-            // HON HON!
-            bool en_passant = {
-                (m_latest) &&
-                (m_internal[m_latest->second].piece->type == piece::types::pawn) &&
-                (internal::absdiff(m_latest->first, m_latest->second) / length == 2) &&
-                (internal::absdiff(from, m_latest->second) == 1) &&
-                ((origin->color == piece::colors::white && to == m_latest->second + length) ||
-                (origin->color == piece::colors::black && to == m_latest->second - length))
-            };
-
-            return one_forward || two_forward || diagonal_capture || en_passant;
+    if(origin->type == piece::types::pawn) {
+        // Pawns can't move backwards or sideways.
+        bool white_direction = origin->color == piece::colors::white && from_rank < to_rank;
+        bool black_direction = origin->color == piece::colors::black && from_rank > to_rank;
+        if(!white_direction && !black_direction) {
+            return false;
         }
 
-        case piece::types::knight: {
-            std::size_t from_rank = from / length;
-            std::size_t from_file = from % length;
-            std::size_t to_rank = to / length;
-            std::size_t to_file = to % length;
+        // Pawns can move one square forward or two if it's their first move.
+        // Pawns cannot take directly in-front of them.
+        bool step_forward = rank_difference == 1 && file_difference == 0 && !dest;
+        bool jump_forward = rank_difference == 2 && file_difference == 0 && !dest && origin->move_count == 0;
 
-            // Knights can move in an L-shape: 2 units in one direction and 1 unit in another.
-            std::size_t rank_difference = internal::absdiff(from_rank, to_rank);
-            std::size_t file_difference = internal::absdiff(from_file, to_file);
+        // Pawns can diagionally capture if there is a piece present.
+        bool diagonal_capture = rank_difference == 1 && file_difference == 1 && dest;
 
-            bool l_shape = {
-                (rank_difference == 1 && file_difference == 2) ||
-                (rank_difference == 2 && file_difference == 1)
-            };
+        // HON HON!
+        bool en_passant = false;
 
-            return l_shape;
+        if(m_latest) {
+            bool pawn = m_internal[m_latest->second].piece->type == piece::types::pawn;
+            bool jumped = internal::absdiff(m_latest->first, m_latest->second) == length * 2;
+            bool taking = internal::absdiff(to, m_latest->second) == length;
+            bool adjacent = internal::absdiff(from, m_latest->second) == 1;
+            en_passant = pawn && jumped && adjacent && taking;
         }
 
-        case piece::types::bishop: {
-            std::size_t from_rank = from / length;
-            std::size_t from_file = from % length;
-            std::size_t to_rank = to / length;
-            std::size_t to_file = to % length;
+        return step_forward || jump_forward || diagonal_capture || en_passant;
+    }
 
-            // Bishops can move diagonally, therefore these differences must be equal.
-            std::size_t rank_difference = internal::absdiff(from_rank, to_rank);
-            std::size_t file_difference = internal::absdiff(from_file, to_file);
-            if(rank_difference != file_difference) {
-                return false;
-            }
+    else if(origin->type == piece::types::knight) {
+        // Knights can move in an L-shape.
+        bool type_one = rank_difference == 1 && file_difference == 2;
+        bool type_two = rank_difference == 2 && file_difference == 1;
+        return type_one || type_two;
+    }
 
-            // Since diagonality was checked, all that's left to do is check for obstacles.
+    else if(origin->type == piece::types::bishop) {
+        // Bishops can move diagonally, therefore the differences must be equal.
+        if(rank_difference != file_difference) {
+            return false;
+        }
+
+        // Since diagonality was checked, all that's left to do is check for obstacles.
+        // Subtract one from both differences to start obstruction checking from the previous square.
+        return !internal::obstructions::bishop(
+            *this,
+            from,
+            from_rank,
+            from_file,
+            to_rank,
+            to_file,
+            rank_difference - 1,
+            file_difference - 1
+        );
+    }
+
+    else if(origin->type == piece::types::rook) {
+        if(rank_difference != 0 && file_difference != 0) {
+            return false;
+        }
+
+        // Rooks can only travel in a straight, unobstructed line.
+        // Subtract to start obstruction checking from the previous square.
+        std::size_t difference = internal::absdiff(from, to);
+        difference -= (difference >= length) ? length : 1;
+        return !internal::obstructions::rook(*this, from, to, difference);
+    }
+
+    else if(origin->type == piece::types::queen) {
+        // If the queen is moving in a diagonal pattern, it must obey bishop movement rules.
+        if(rank_difference == file_difference) {
             return !internal::obstructions::bishop(
                 *this,
                 from,
@@ -175,69 +180,27 @@ bool bongcloud::board::permissible(const std::size_t from, const std::size_t to)
             );
         }
 
-        case piece::types::rook: {
-            std::size_t from_rank = from / length;
-            std::size_t from_file = from % length;
-            std::size_t to_rank = to / length;
-            std::size_t to_file = to % length;
-
-            // Bishops can move diagonally, therefore these differences must be equal.
-            std::size_t rank_difference = internal::absdiff(from_rank, to_rank);
-            std::size_t file_difference = internal::absdiff(from_file, to_file);
-            if(rank_difference != 0 && file_difference != 0) {
-                return false;
-            }
-
-            // Rooks can only travel in a straight, unobstructed line.
-            // Subtract to start obstruction checking from the previous square.
+        // Otherwise if the queen is moving in a straight line, it must obey rook movement rules.
+        else if(rank_difference == 0 || file_difference == 0) {
             std::size_t difference = internal::absdiff(from, to);
             difference -= (difference >= length) ? length : 1;
             return !internal::obstructions::rook(*this, from, to, difference);
         }
 
-        case piece::types::queen: {
-            std::size_t from_rank = from / length;
-            std::size_t from_file = from % length;
-            std::size_t to_rank = to / length;
-            std::size_t to_file = to % length;
+        // Otherwise, this move is illegal.
+        return false;
+    }
 
-            // Queens are equivalent to a combined bishop and rook.
-            std::size_t rank_difference = internal::absdiff(from_rank, to_rank);
-            std::size_t file_difference = internal::absdiff(from_file, to_file);
-            bool diagonal = rank_difference == file_difference;
-            bool straight = rank_difference == 0 || file_difference == 0;
+    else if(origin->type == piece::types::king) {
+        // The king can move in any direction for one square.
+        const std::array<std::size_t, 4> allowed = {1, length - 1, length, length + 1};
+        std::size_t difference = internal::absdiff(from, to);
 
-            if(!diagonal && !straight) {
-                return false;
-            } else if(diagonal) {
-                return !internal::obstructions::bishop(
-                    *this,
-                    from,
-                    from_rank,
-                    from_file,
-                    to_rank,
-                    to_file,
-                    rank_difference - 1,
-                    file_difference - 1
-                );
-            } else /* if(straight) */ {
-                std::size_t difference = internal::absdiff(from, to);
-                difference -= (difference >= length) ? length : 1;
-                return !internal::obstructions::rook(*this, from, to, difference);
-            }
-        }
+        // std::find() will return allowed.end() if difference is not present in the array.
+        return std::find(allowed.begin(), allowed.end(), difference) != allowed.end();
+    }
 
-        case piece::types::king: {
-            // The king can move in any direction for one square.
-            const std::array<std::size_t, 4> allowed = {1, length - 1, length, length + 1};
-            std::size_t difference = internal::absdiff(from, to);
-
-            // std::find() will return allowed.end() if difference is not present in the array.
-            return std::find(allowed.begin(), allowed.end(), difference) != allowed.end();
-        }
-
-        // What piece is this??
-        default:
-            throw std::runtime_error("illegal piece type");
+    else {
+        throw std::runtime_error("illegal piece type");
     }
 }
