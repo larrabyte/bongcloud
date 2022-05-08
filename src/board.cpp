@@ -186,6 +186,11 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
     }
 
     else if(type == piece::move::promotion) {
+        // If there is a piece present, make sure to add a capture entry.
+        if(dest) {
+            recent.capture = {to, *dest};
+        }
+
         // Create a new queen with the same move count.
         dest = piece(origin->hue, piece::type::queen);
         dest->moves = origin->moves;
