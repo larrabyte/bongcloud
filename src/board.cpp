@@ -5,19 +5,27 @@
 #include <fmt/core.h>
 #include <cstddef>
 
-namespace internal {
-    const bongcloud::piece::color next_color[] = {
+namespace internal::color {
+    const bongcloud::piece::color array[] = {
         bongcloud::piece::color::black,
         bongcloud::piece::color::white
     };
+
+    inline bongcloud::piece::color next(const bongcloud::piece::color color) {
+        return array[static_cast<std::size_t>(color)];
+    }
+
+    inline bongcloud::piece::color prev(const bongcloud::piece::color color) {
+        return array[static_cast<std::size_t>(color)];
+    }
 }
 
-bongcloud::board::board(const std::size_t l, const bool anarchy) :
+bongcloud::board::board(const std::size_t l, const bool a) :
     length {l},
     m_internal {l * l},
-    m_anarchy {anarchy} {
+    m_anarchy {a} {
 
-    fmt::print("[bongcloud] initialising board of size {}x{}... (anarchy: {})\n", l, l, anarchy);
+    fmt::print("[bongcloud] initialising board of size {}x{}... (anarchy: {})\n", l, l, a);
 }
 
 void bongcloud::board::print(void) const {
@@ -25,7 +33,7 @@ void bongcloud::board::print(void) const {
     std::size_t rank = 7, file = 0;
     bool finished = false;
 
-    fmt::print("\n[bongcloud] board.print():\n");
+    fmt::print("[bongcloud] board.print():\n");
     fmt::print("[bongcloud] ");
 
     while(!finished) {
@@ -72,7 +80,7 @@ void bongcloud::board::print(void) const {
         }
     }
 
-    fmt::print("\n\n");
+    fmt::print("\n");
 }
 
 bool bongcloud::board::check(const piece::color color) const {
@@ -178,11 +186,8 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
             throw std::runtime_error("unimplemented movement type");
         }
 
-        // Update m_color to reflect the next player to move.
-        auto index = static_cast<std::size_t>(m_color);
-        m_color = internal::next_color[index];
-
-        // Store the mutation object and return.
+        // Update the board's state for the next move.
+        m_color = internal::color::next(m_color);
         m_history.push_back(recent);
         return true;
     }
@@ -261,10 +266,7 @@ void bongcloud::board::undo(void) {
         rook_dest = std::nullopt;
     }
 
-    // Delete the last move.
+    // Revert to the previous player and delete the last move.
+    m_color = internal::color::prev(m_color);
     m_history.pop_back();
-
-    // Update m_color to reflect the previous player.
-    auto index = static_cast<std::size_t>(m_color);
-    m_color = internal::next_color[index];
 }

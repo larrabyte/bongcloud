@@ -22,7 +22,7 @@ namespace ctors {
     }
 
     cen::renderer make_renderer(cen::window& window) {
-        std::uint32_t flags = cen::renderer::accelerated | cen::renderer::vsync;
+        std::uint32_t flags = cen::renderer::accelerated;
         return window.make_renderer(flags);
     }
 
