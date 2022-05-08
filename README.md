@@ -7,7 +7,7 @@ Make sure to execute `git clone` with the `--recurse-submodules` flag to install
 $ git clone --recurse-submodules https://github.com/larrabyte/bongcloud
 ```
 
-Then, install `fmtlib` using your favourite package manager.
+Then, install `fmtlib` and `SDL2` (along with its extension libraries) using your favourite package manager.
 
 To compile, simply invoke the Makefile using `make`. If you're on Windows, try sacrificing one of your PC components to ensure good luck before attempting to compile using MSVC. I managed to get it working at one point but for some reason it just kept throwing linker errors and I just gave up after a while.
 
