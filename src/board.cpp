@@ -103,7 +103,7 @@ bool bongcloud::board::check(const piece::color color) const {
     // Find the index of the current player's king.
     for(std::size_t i = 0; i < length * length; i++) {
         const auto& piece = m_internal[i];
-        if(piece && piece->hue != m_color && permissible(i, *king)) {
+        if(piece && piece->hue != color && permissible(i, *king)) {
             return true;
         }
     }
@@ -123,86 +123,92 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
     bool cannibal = dest && origin->hue == dest->hue;
     auto type = permissible(from, to);
 
-    if(m_anarchy || (correct_color && !cannibal && type)) {
-        // Create a mutation object to store this move.
-        mutation recent;
-        recent.move = {from, to};
-
-        if(type == piece::move::normal) {
-            // Move the piece forward and
-            // clear the origin square.
-            dest = origin;
-            origin = std::nullopt;
-            dest->moves++;
-        }
-
-        else if(type == piece::move::capture) {
-            // Store a copy of the captured piece
-            // in the mutation object before erasing.
-            recent.capture = {to, *dest};
-
-            dest = origin;
-            origin = std::nullopt;
-            dest->moves++;
-        }
-
-        else if(type == piece::move::en_passant) {
-            // Move the piece at the origin square to the
-            // destination square and update its move count.
-            dest = origin;
-            dest->moves++;
-
-            // Clear the origin square and the square directly behind,
-            // which is equivalent to a square adjacent to the origin.
-            const auto& last = latest();
-            auto& target = m_internal[last->to];
-            recent.capture = {last->to, *target};
-            origin = std::nullopt;
-            target = std::nullopt;
-        }
-
-        else if(type == piece::move::short_castle || type == piece::move::long_castle) {
-            // Calculate the appropriate squares to send the king and rook.
-            std::size_t origin_offset = (type == piece::move::short_castle) ? to + 1 : to - 2;
-            std::size_t dest_offset = (type == piece::move::short_castle) ? to - 1 : to + 1;
-            auto& rook_origin = m_internal[origin_offset];
-            auto& rook_dest = m_internal[dest_offset];
-
-            // Add the rook's movement entry to the mutation object.
-            recent.castle = {origin_offset, dest_offset};
-
-            // Update piece positions and increment the move count.
-            dest = origin;
-            rook_dest = rook_origin;
-            dest->moves++;
-            rook_dest->moves++;
-
-            // Remove the original king and rook from the board.
-            origin = std::nullopt;
-            rook_origin = std::nullopt;
-        }
-
-        else if(type == piece::move::promotion) {
-            // Create a new queen with the same move count.
-            dest = piece(origin->hue, piece::type::queen);
-            dest->moves = origin->moves;
-            origin = std::nullopt;
-
-            // Add the promotion entry to the mutation object.
-            recent.promotion = dest;
-        }
-
-        else {
-            throw std::runtime_error("unimplemented movement type");
-        }
-
-        // Update the board's state for the next move.
-        m_color = internal::color::next(m_color);
-        m_history.push_back(recent);
-        return true;
+    if(!m_anarchy && (!correct_color || cannibal || !type)) {
+        return false;
     }
 
-    return false;
+    // Create a mutation object to store this move.
+    mutation recent;
+    recent.move = {from, to};
+
+    if(m_anarchy || type == piece::move::normal) {
+        // Move the piece forward and
+        // clear the origin square.
+        dest = origin;
+        origin = std::nullopt;
+        dest->moves++;
+    }
+
+    else if(type == piece::move::capture) {
+        // Store a copy of the captured piece
+        // in the mutation object before erasing.
+        recent.capture = {to, *dest};
+
+        dest = origin;
+        origin = std::nullopt;
+        dest->moves++;
+    }
+
+    else if(type == piece::move::en_passant) {
+        // Move the piece at the origin square to the
+        // destination square and update its move count.
+        dest = origin;
+        dest->moves++;
+
+        // Clear the origin square and the square directly behind,
+        // which is equivalent to a square adjacent to the origin.
+        const auto& last = latest();
+        auto& target = m_internal[last->to];
+        recent.capture = {last->to, *target};
+        origin = std::nullopt;
+        target = std::nullopt;
+    }
+
+    else if(type == piece::move::short_castle || type == piece::move::long_castle) {
+        // Calculate the appropriate squares to send the king and rook.
+        std::size_t origin_offset = (type == piece::move::short_castle) ? to + 1 : to - 2;
+        std::size_t dest_offset = (type == piece::move::short_castle) ? to - 1 : to + 1;
+        auto& rook_origin = m_internal[origin_offset];
+        auto& rook_dest = m_internal[dest_offset];
+
+        // Add the rook's movement entry to the mutation object.
+        recent.castle = {origin_offset, dest_offset};
+
+        // Update piece positions and increment the move count.
+        dest = origin;
+        rook_dest = rook_origin;
+        dest->moves++;
+        rook_dest->moves++;
+
+        // Remove the original king and rook from the board.
+        origin = std::nullopt;
+        rook_origin = std::nullopt;
+    }
+
+    else if(type == piece::move::promotion) {
+        // Create a new queen with the same move count.
+        dest = piece(origin->hue, piece::type::queen);
+        dest->moves = origin->moves;
+        origin = std::nullopt;
+
+        // Add the promotion entry to the mutation object.
+        recent.promotion = dest;
+    }
+
+    else {
+        throw std::runtime_error("unimplemented movement type");
+    }
+
+    m_color = internal::color::next(m_color);
+    m_history.push_back(std::move(recent));
+
+    // Check if the last move was illegal based on check.
+    if(!m_anarchy && check(internal::color::prev(m_color))) {
+        undo();
+        return false;
+    }
+
+    return true;
 }
 
 void bongcloud::board::load(const std::string_view string) {
