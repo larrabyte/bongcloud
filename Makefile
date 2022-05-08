@@ -9,7 +9,7 @@ WARNINGS  := -Wall -Wextra -Wpedantic
 INCLUDES  := -Iinclude -Icenturion/src -Iargparse/include $(shell sdl2-config --cflags)
 LIBRARIES := $(shell sdl2-config --libs) -lSDL2_image -lSDL2_mixer -lSDL2_ttf -lfmt
 
-CFLAGS := $(WARNINGS) $(INCLUDES) -MD -MP -std=c++20 -O2
+CFLAGS := $(WARNINGS) $(INCLUDES) -MD -MP -std=c++20 -O2 -flto
 LFLAGS := $(LIBRARIES)
 
 all: bongcloud
@@ -27,5 +27,5 @@ clean:
 	@printf "[cleaner] removed built binaries.\n"
 
 obj/%.o: src/%.cpp
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CXX) $(CFLAGS) -c $< -o $@
 	@printf "[cpp2obj] $< compiled.\n"
