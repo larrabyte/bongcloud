@@ -108,7 +108,11 @@ std::optional<bongcloud::piece::move> bongcloud::board::permissible(const std::s
         // Pawns cannot take directly in-front of them.
         bool step_forward = rank_difference == 1 && file_difference == 0 && !dest;
         bool jump_forward = rank_difference == 2 && file_difference == 0 && !dest && origin->moves == 0;
-        if(step_forward || jump_forward) {
+        bool promotion = to_rank == 0 || to_rank == length - 1;
+
+        if(step_forward && promotion) {
+            return piece::move::promotion;
+        } else if(step_forward || jump_forward) {
             return piece::move::normal;
         }
 

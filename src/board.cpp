@@ -182,6 +182,16 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
             rook_origin = std::nullopt;
         }
 
+        else if(type == piece::move::promotion) {
+            // Create a new queen with the same move count.
+            dest = piece(origin->hue, piece::type::queen);
+            dest->moves = origin->moves;
+            origin = std::nullopt;
+
+            // Add the promotion entry to the mutation object.
+            recent.promotion = dest;
+        }
+
         else {
             throw std::runtime_error("unimplemented movement type");
         }
@@ -249,6 +259,11 @@ void bongcloud::board::undo(void) {
     const auto& last = m_history.back();
     auto& origin = m_internal[last.move.from];
     auto& dest = m_internal[last.move.to];
+
+    if(last.promotion) {
+        dest = piece(last.promotion->hue, piece::type::pawn);
+    }
+
     origin = dest;
     origin->moves--;
     dest = std::nullopt;

@@ -24,6 +24,7 @@ namespace bongcloud {
         bongcloud::move move;
         std::optional<bongcloud::move> castle;
         std::optional<bongcloud::capture> capture;
+        std::optional<bongcloud::piece> promotion;
     };
 
     class board {
