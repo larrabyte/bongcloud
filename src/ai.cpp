@@ -10,8 +10,8 @@ bongcloud::random_ai::random_ai(const bongcloud::board& b) :
     fmt::print("[bongcloud] initialising random ai...\n");
 }
 
-std::pair<std::size_t, std::size_t> bongcloud::random_ai::generate(void) {
+bongcloud::move bongcloud::random_ai::generate(void) {
     auto a = m_distribution(m_random);
     auto b = m_distribution(m_random);
-    return std::make_pair(a, b);
+    return {a, b};
 }

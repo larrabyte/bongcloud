@@ -128,15 +128,8 @@ int main(int argc, char** argv) {
             while(!success) {
                 // Let the AI decide a move for black.
                 auto move = engine.generate();
-
-                bool bounded = {
-                    (move.first < board.length * board.length) &&
-                    (move.second < board.length * board.length) &&
-                    (move.first != move.second)
-                };
-
-                if(bounded && board[move.first]) {
-                    success = board.mutate(move.first, move.second);
+                if(move.from != move.to && board[move.from]) {
+                    success = board.mutate(move.from, move.to);
                 }
             }
         }
