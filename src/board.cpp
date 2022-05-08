@@ -171,17 +171,27 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
         auto& rook_origin = m_internal[origin_offset];
         auto& rook_dest = m_internal[dest_offset];
 
+        // Check that the king isn't moving through check.
+        // We don't have to worry about captures here.
+        rook_dest = origin;
+        origin = std::nullopt;
+
+        if(check(m_color)) {
+            origin = rook_dest;
+            rook_dest = std::nullopt;
+            return false;
+        }
+
         // Add the rook's movement entry to the mutation object.
         recent.castle = {origin_offset, dest_offset};
 
         // Update piece positions and increment the move count.
-        dest = origin;
+        dest = rook_dest;
         rook_dest = rook_origin;
         dest->moves++;
         rook_dest->moves++;
 
         // Remove the original king and rook from the board.
-        origin = std::nullopt;
         rook_origin = std::nullopt;
     }
 
