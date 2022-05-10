@@ -1,22 +1,23 @@
 #include "pieces.hpp"
+#include "extras.hpp"
 #include "board.hpp"
 
 #include <centurion.hpp>
 #include <fmt/core.h>
 #include <cstddef>
 
-namespace internal::color {
-    const bongcloud::piece::color array[] = {
+namespace internal {
+    constexpr bongcloud::piece::color color_array[] = {
         bongcloud::piece::color::black,
         bongcloud::piece::color::white
     };
 
-    inline bongcloud::piece::color next(const bongcloud::piece::color color) {
-        return array[static_cast<std::size_t>(color)];
+    inline bongcloud::piece::color next_color(const bongcloud::piece::color color) {
+        return color_array[ext::to_underlying(color)];
     }
 
-    inline bongcloud::piece::color prev(const bongcloud::piece::color color) {
-        return array[static_cast<std::size_t>(color)];
+    inline bongcloud::piece::color prev_color(const bongcloud::piece::color color) {
+        return color_array[ext::to_underlying(color)];
     }
 }
 
@@ -214,11 +215,11 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
         throw std::runtime_error("unimplemented movement type");
     }
 
-    m_color = internal::color::next(m_color);
+    m_color = internal::next_color(m_color);
     m_history.push_back(std::move(recent));
 
     // Check if the last move was illegal based on check.
-    if(!m_anarchy && check(internal::color::prev(m_color))) {
+    if(!m_anarchy && check(internal::prev_color(m_color))) {
         undo();
         return false;
     }
@@ -303,6 +304,6 @@ void bongcloud::board::undo(void) {
     }
 
     // Revert to the previous player and delete the last move.
-    m_color = internal::color::prev(m_color);
+    m_color = internal::prev_color(m_color);
     m_history.pop_back();
 }

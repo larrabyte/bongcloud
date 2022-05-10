@@ -5,29 +5,35 @@
 namespace bongcloud {
     struct piece {
         // Defines every colour of piece available.
-        enum class color {
+        enum class color : std::size_t {
             white,
-            black
+            black,
+            first = white,
+            last = black
         };
 
         // Defines every type of piece available.
-        enum class type {
+        enum class type : std::size_t {
             pawn,
             knight,
             bishop,
             rook,
             queen,
-            king
+            king,
+            first = pawn,
+            last = king
         };
 
         // Defines every type of move possible.
-        enum class move {
+        enum class move : std::size_t {
             normal,
             capture,
             en_passant,
             short_castle,
             long_castle,
-            promotion
+            promotion,
+            first = normal,
+            last = promotion
         };
 
         // The piece constructor.

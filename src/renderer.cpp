@@ -1,16 +1,38 @@
 #include "renderer.hpp"
+#include "extras.hpp"
 
 #include <fmt/core.h>
 #include <bit>
 
-namespace colors {
-    const cen::color light_square {0xEC, 0xDB, 0xB9};
-    const cen::color dark_square {0xAE, 0x89, 0x68};
-    const cen::color light_last_move {0xCE, 0xD2, 0x87};
-    const cen::color dark_last_move {0xA9, 0xA3, 0x56};
-}
+namespace internal {
+    constexpr cen::color light_square {0xEC, 0xDB, 0xB9};
+    constexpr cen::color dark_square {0xAE, 0x89, 0x68};
+    constexpr cen::color light_last_move {0xCE, 0xD2, 0x87};
+    constexpr cen::color dark_last_move {0xA9, 0xA3, 0x56};
 
-namespace ctors {
+    constexpr std::string_view white_textures[] = {
+        "data/wp.bmp",
+        "data/wn.bmp",
+        "data/wb.bmp",
+        "data/wr.bmp",
+        "data/wq.bmp",
+        "data/wk.bmp"
+    };
+
+    constexpr std::string_view black_textures[] = {
+        "data/bp.bmp",
+        "data/bn.bmp",
+        "data/bb.bmp",
+        "data/br.bmp",
+        "data/bq.bmp",
+        "data/bk.bmp"
+    };
+
+    static_assert(
+        std::size(white_textures) == std::size(black_textures),
+        "white and black must have the same number of textures"
+    );
+
     cen::window make_window(const std::size_t resolution) {
         cen::iarea area = {
             static_cast<int>(resolution),
@@ -32,23 +54,41 @@ namespace ctors {
         auto window_width = static_cast<double>(window.width());
         return renderer_width / window_width;
     }
-}
 
-namespace internal {
     std::size_t compute_texture_offset(const bongcloud::piece& piece) {
-        auto color = static_cast<std::size_t>(piece.hue);
-        auto type = static_cast<std::size_t>(piece.variety);
+        constexpr auto offset = [] {
+            // https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2.
+            auto x = ext::to_underlying(bongcloud::piece::type::last);
+            std::size_t e = 0;
 
-        // TODO: Find a way to make the shifting argument dynamic
-        // so piece textures can be changed arbitrarily.
-        return (color << 3) | type;
+            if(x == 0) {
+                return e;
+            } else {
+                x--;
+            }
+
+            for(std::size_t i = 0; i < std::bit_width(x); i++) {
+                x |= x >> (1 << i);
+            }
+
+            x += 1;
+            while(x >>= 1) {
+                e++;
+            }
+
+            return e;
+        }();
+
+        auto color = ext::to_underlying(piece.hue);
+        auto type = ext::to_underlying(piece.variety);
+        return (color << offset) | type;
     }
 }
 
 bongcloud::renderer::renderer(const std::size_t square_res, const std::size_t board_size) :
-    m_window {ctors::make_window(square_res * board_size)},
-    m_renderer {ctors::make_renderer(m_window)},
-    m_scale {ctors::compute_scale(m_window, m_renderer)},
+    m_window {internal::make_window(square_res * board_size)},
+    m_renderer {internal::make_renderer(m_window)},
+    m_scale {internal::compute_scale(m_window, m_renderer)},
     m_resolution {static_cast<std::size_t>(square_res * m_scale)} {
 
     cen::iarea scaled = m_renderer.output_size();
@@ -57,46 +97,22 @@ bongcloud::renderer::renderer(const std::size_t square_res, const std::size_t bo
     fmt::print("[bongcloud] screen resolution set to: {}x{}\n", scaled.width, scaled.height);
     m_window.show();
 
-    // Load textures from disk and store them in the texture array.
-    const std::string white[] = {
-        "data/wp.bmp",
-        "data/wn.bmp",
-        "data/wb.bmp",
-        "data/wr.bmp",
-        "data/wq.bmp",
-        "data/wk.bmp"
-    };
-
-    const std::string black[] = {
-        "data/bp.bmp",
-        "data/bn.bmp",
-        "data/bb.bmp",
-        "data/br.bmp",
-        "data/bq.bmp",
-        "data/bk.bmp"
-    };
-
-    static_assert(
-        std::size(white) == std::size(black),
-        "white and black must have the same number of textures"
-    );
-
-    std::size_t rounded_size = 1 << std::bit_width(std::size(white));
+    std::size_t rounded_size = 1 << std::bit_width(std::size(internal::white_textures));
     std::size_t maximum_index = rounded_size * 2;
     m_textures.reserve(maximum_index);
 
     for(std::size_t i = 0; i < maximum_index; i++) {
-        bool oob_white = i >= std::size(white) && i < rounded_size;
-        bool oob_black = i >= std::size(black) + rounded_size;
+        bool oob_white = i >= std::size(internal::white_textures) && i < rounded_size;
+        bool oob_black = i >= std::size(internal::black_textures) + rounded_size;
 
         if(oob_white || oob_black) {
             m_textures.push_back(std::nullopt);
             continue;
         }
 
-        const auto& path = (i < rounded_size) ? white[i] : black[i - rounded_size];
+        const auto path = (i < rounded_size) ? internal::white_textures[i] : internal::black_textures[i - rounded_size];
         fmt::print("[bongcloud] loading texture at {}...\n", path);
-        cen::surface surface(path);
+        cen::surface surface(path.data());
         cen::texture texture = m_renderer.make_texture(surface);
         m_textures.push_back(std::move(texture));
     }
@@ -124,8 +140,8 @@ void bongcloud::renderer::render(const bongcloud::board& board) {
 
         cen::color color = {
             (green) ?
-            (dark) ? colors::dark_last_move : colors::light_last_move :
-            (dark) ? colors::dark_square : colors::light_square
+            (dark) ? internal::dark_last_move : internal::light_last_move :
+            (dark) ? internal::dark_square : internal::light_square
         };
 
         // Render the square.

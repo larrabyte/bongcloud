@@ -7,11 +7,11 @@
 #include <fmt/core.h>
 
 namespace defaults {
-    const std::size_t board_size = 8;
-    const std::size_t square_resolution = 64;
-    const std::string fen_8x8 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    const bool anarchy = false;
-    const bool bot = false;
+    constexpr std::size_t board_size = 8;
+    constexpr std::size_t square_resolution = 64;
+    constexpr std::string_view fen_8x8 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    constexpr bool anarchy = false;
+    constexpr bool bot = false;
 }
 
 int main(int argc, char** argv) {
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     program.add_argument("-f", "--fen")
         .required()
         .help("the FEN string to load")
-        .default_value(defaults::fen_8x8);
+        .default_value(defaults::fen_8x8.data());
 
     program.add_argument("-a", "--anarchy")
         .required()
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
 
     auto board_size = program.get<std::size_t>("size");
     auto square_res = program.get<std::size_t>("resolution");
-    auto fen_string = program.get<std::string>("fen");
+    auto fen_string = program.get<const char*>("fen");
     auto anarchy = program.get<bool>("anarchy");
     auto bot = program.get<bool>("bot");
 
