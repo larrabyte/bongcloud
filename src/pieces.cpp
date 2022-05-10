@@ -107,9 +107,19 @@ std::optional<bongcloud::piece::move> bongcloud::board::permissible(const std::s
         // Pawns can move one square forward or two if it's their first move.
         // Pawns can take diagonally if there is a piece present, they cannot take ahead.
         bool step_forward = rank_difference == 1 && file_difference == 0 && !dest;
-        bool jump_forward = rank_difference == 2 && file_difference == 0 && !dest && origin->moves == 0;
         bool diagonal_cap = rank_difference == 1 && file_difference == 1 && dest;
         bool promotion = to_rank == 0 || to_rank == length - 1;
+
+        std::size_t fwd_index = (origin->hue == piece::color::white) ? from + length : from - length;
+        const auto& obstructed = m_internal[fwd_index];
+
+        bool jump_forward = {
+            rank_difference == 2 &&
+            file_difference == 0 &&
+            origin->moves == 0 &&
+            !obstructed &&
+            !dest
+        };
 
         if(promotion && (step_forward || diagonal_cap)) {
             return piece::move::promotion;
