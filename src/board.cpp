@@ -120,14 +120,19 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
         throw std::runtime_error("tried to move from square with no piece");
     }
 
-    mutation recent;
-    recent.move = {from, to};
+    mutation latest;
+    latest.move = {from, to};
+
+    bool correct_color = origin->hue == m_color;
+    bool cannibal = dest && origin->hue == dest->hue;
+    auto type = permissible(from, to);
+    bool pseudolegal = correct_color && !cannibal && type;
 
     if(m_anarchy) {
         // Since most moves are usually considered impossible, we require
         // different logic for piece movement when anarchy mode is enabled.
         if(dest) {
-            recent.capture = {to, *dest};
+            latest.capture = {to, *dest};
         }
 
         dest = origin;
@@ -135,107 +140,107 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
         dest->moves++;
     }
 
-    else {
-        bool correct_color = origin->hue == m_color;
-        bool cannibal = dest && origin->hue == dest->hue;
-        auto type = permissible(from, to);
+    else if(pseudolegal) {
+        if(type == piece::move::normal) {
+            // Move the piece forward and
+            // clear the origin square.
+            dest = origin;
+            origin = std::nullopt;
+            dest->moves++;
+        }
 
-        if(correct_color && !cannibal && type) {
-            if(type == piece::move::normal) {
-                // Move the piece forward and
-                // clear the origin square.
-                dest = origin;
-                origin = std::nullopt;
-                dest->moves++;
+        else if(type == piece::move::capture) {
+            // Store a copy of the captured piece
+            // in the mutation object before erasing.
+            latest.capture = {to, *dest};
+
+            dest = origin;
+            origin = std::nullopt;
+            dest->moves++;
+        }
+
+        else if(type == piece::move::en_passant) {
+            // Move the piece at the origin square to the
+            // destination square and update its move count.
+            dest = origin;
+            dest->moves++;
+
+            // Clear the origin square and the square directly behind,
+            // which is equivalent to a square adjacent to the origin.
+            const auto& last = this->latest();
+            auto& target = m_internal[last->to];
+            latest.capture = {last->to, *target};
+            origin = std::nullopt;
+            target = std::nullopt;
+        }
+
+        else if(type == piece::move::short_castle || type == piece::move::long_castle) {
+            // Calculate the appropriate squares to send the king and rook.
+            latest.castle = {
+                (type == piece::move::short_castle) ? to + 1 : to - 2,
+                (type == piece::move::short_castle) ? to - 1 : to + 1
+            };
+
+            auto& rook_origin = m_internal[latest.castle->from];
+            auto& rook_dest = m_internal[latest.castle->to];
+
+            // Check that the king isn't moving through check.
+            // We don't have to worry about captures here.
+            rook_dest = origin;
+            origin = std::nullopt;
+
+            if(check(m_color)) {
+                origin = rook_dest;
+                rook_dest = std::nullopt;
+                return false;
             }
 
-            else if(type == piece::move::capture) {
-                // Store a copy of the captured piece
-                // in the mutation object before erasing.
-                recent.capture = {to, *dest};
+            // Update piece positions and increment the move count.
+            dest = rook_dest;
+            rook_dest = rook_origin;
+            dest->moves++;
+            rook_dest->moves++;
 
-                dest = origin;
-                origin = std::nullopt;
-                dest->moves++;
+            // Remove the original king and rook from the board.
+            rook_origin = std::nullopt;
+        }
+
+        else if(type == piece::move::promotion) {
+            // If there is a piece present, make sure to add a capture entry.
+            if(dest) {
+                latest.capture = {to, *dest};
             }
 
-            else if(type == piece::move::en_passant) {
-                // Move the piece at the origin square to the
-                // destination square and update its move count.
-                dest = origin;
-                dest->moves++;
+            // Create a new queen with the same move count.
+            dest = piece(origin->hue, piece::type::queen);
+            dest->moves = origin->moves;
+            origin = std::nullopt;
 
-                // Clear the origin square and the square directly behind,
-                // which is equivalent to a square adjacent to the origin.
-                const auto& last = latest();
-                auto& target = m_internal[last->to];
-                recent.capture = {last->to, *target};
-                origin = std::nullopt;
-                target = std::nullopt;
-            }
+            // Add the promotion entry to the mutation object.
+            latest.promotion = dest;
+        }
 
-            else if(type == piece::move::short_castle || type == piece::move::long_castle) {
-                // Calculate the appropriate squares to send the king and rook.
-                std::size_t origin_offset = (type == piece::move::short_castle) ? to + 1 : to - 2;
-                std::size_t dest_offset = (type == piece::move::short_castle) ? to - 1 : to + 1;
-                auto& rook_origin = m_internal[origin_offset];
-                auto& rook_dest = m_internal[dest_offset];
-
-                // Check that the king isn't moving through check.
-                // We don't have to worry about captures here.
-                rook_dest = origin;
-                origin = std::nullopt;
-
-                if(check(m_color)) {
-                    origin = rook_dest;
-                    rook_dest = std::nullopt;
-                    return false;
-                }
-
-                // Add the rook's movement entry to the mutation object.
-                recent.castle = {origin_offset, dest_offset};
-
-                // Update piece positions and increment the move count.
-                dest = rook_dest;
-                rook_dest = rook_origin;
-                dest->moves++;
-                rook_dest->moves++;
-
-                // Remove the original king and rook from the board.
-                rook_origin = std::nullopt;
-            }
-
-            else if(type == piece::move::promotion) {
-                // If there is a piece present, make sure to add a capture entry.
-                if(dest) {
-                    recent.capture = {to, *dest};
-                }
-
-                // Create a new queen with the same move count.
-                dest = piece(origin->hue, piece::type::queen);
-                dest->moves = origin->moves;
-                origin = std::nullopt;
-
-                // Add the promotion entry to the mutation object.
-                recent.promotion = dest;
-            }
-
-            else {
-                throw std::runtime_error("unimplemented movement type");
-            }
+        else {
+            throw std::runtime_error("unimplemented movement type");
         }
     }
 
-    m_color = internal::next_color(m_color);
-    m_history.push_back(std::move(recent));
-
-    // Check if the last move was illegal based on check.
-    if(!m_anarchy && check(internal::prev_color(m_color))) {
-        undo();
+    else {
+        // If the move is not pseudolegal and we aren't in anarchy mode,
+        // then this move must be illegal and we can simply return false.
         return false;
     }
 
-    return true;
+    m_color = internal::next_color(m_color);
+    m_history.push_back(std::move(latest));
+    auto previous_color = internal::prev_color(m_color);
+
+    if(m_anarchy || !check(previous_color)) {
+        return true;
+    }
+
+    undo();
+    return false;
 }
 
 void bongcloud::board::load(const std::string_view string) {

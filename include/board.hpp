@@ -109,10 +109,10 @@ namespace bongcloud {
             // An array of previously made moves.
             std::vector<mutation> m_history;
 
+            // Determines whether any move is legal.
+            bool m_anarchy;
+
             // Whose turn it is to move.
             piece::color m_color = piece::color::white;
-
-            // Whether moves are checked before being played.
-            bool m_anarchy;
     };
 }
