@@ -34,7 +34,6 @@ void bongcloud::board::print(void) const {
     std::size_t rank = 7, file = 0;
     bool finished = false;
 
-    fmt::print("[bongcloud] board.print():\n");
     fmt::print("[bongcloud] ");
 
     while(!finished) {
@@ -120,7 +119,13 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
         throw std::runtime_error("tried to move from square with no piece");
     }
 
+    if(m_trivial_half_moves == 100) {
+        // Forced statemate.
+        return false;
+    }
+
     mutation latest;
+    latest.trivials = m_trivial_half_moves;
     latest.move = {from, to};
 
     bool correct_color = origin->hue == m_color;
@@ -236,6 +241,8 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
     auto previous_color = internal::prev_color(m_color);
 
     if(m_anarchy || !check(previous_color)) {
+        bool trivial = dest->variety != piece::type::pawn && type == piece::move::normal;
+        m_trivial_half_moves = (trivial) ? m_trivial_half_moves + 1 : 0;
         return true;
     }
 
@@ -244,18 +251,19 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
 }
 
 void bongcloud::board::load(const std::string_view string) {
-    // FEN strings start from the A1 square.
-    std::size_t square = 0, index = 0;
+    using piece = bongcloud::piece;
+    using color = bongcloud::piece::color;
+    using type = bongcloud::piece::type;
 
-    while(index < string.size()) {
-        const char c = string[index++];
+    // FEN strings start with piece placement from the A1 square.
+    std::size_t square = 0;
+    std::size_t character = 0;
+    char c;
 
+    // First, we handle piece placement.
+    while((c = string.at(character++)) != ' ') {
         switch(c) {
-            using piece = bongcloud::piece;
-            using color = bongcloud::piece::color;
-            using type = bongcloud::piece::type;
-
-            // Lowercase letters represent white pieces, uppercase letters represent black pieces.
+            // Lowercase represent white pieces, uppercase represent black pieces.
             case 'r': m_internal[square++] = piece(color::white, type::rook); break;
             case 'n': m_internal[square++] = piece(color::white, type::knight); break;
             case 'b': m_internal[square++] = piece(color::white, type::bishop); break;
@@ -270,7 +278,9 @@ void bongcloud::board::load(const std::string_view string) {
             case 'P': m_internal[square++] = piece(color::black, type::pawn); break;
 
             // Numbers signify the number of squares to skip.
-            case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+            case '1': case '2': case '3':
+            case '4': case '5': case '6':
+            case '7': case '8': case '9':
                 square += c - '0';
                 break;
 
@@ -278,13 +288,94 @@ void bongcloud::board::load(const std::string_view string) {
                 square = (((square - 1) / length) * length) + length;
                 break;
 
-            case ' ': // All pieces have been placed.
-                return;
-
-            default: // Unknown character, abort!
-                throw std::runtime_error("illegal FEN string");
+            default: {
+                auto comment = fmt::format("illegal FEN piece type: {}", c);
+                throw std::runtime_error(comment);
+            }
         }
     }
+
+    // Next, assign the specified active color.
+    switch(string.at(character++)) {
+        case 'w': m_color = color::white; break;
+        case 'b': m_color = color::black; break;
+
+        default: {
+            auto comment = fmt::format("illegal FEN starting color: {}", c);
+            throw std::runtime_error(comment);
+        }
+    }
+
+    // Next, handle castling rights.
+    // Array corresponds to: white short, white long, black short, black long.
+    std::array<std::optional<std::size_t>, 4> forbidden_castles = {
+        0, length - 1, length * (length - 1), (length * length) - 1
+    };
+
+    // Advance the character cursor since the previous
+    // switch would have left it on a space character.
+    character++;
+
+    while((c = string.at(character++)) != ' ') {
+        switch(c) {
+            case 'K': forbidden_castles[0] = std::nullopt; break;
+            case 'Q': forbidden_castles[1] = std::nullopt; break;
+            case 'k': forbidden_castles[2] = std::nullopt; break;
+            case 'q': forbidden_castles[3] = std::nullopt; break;
+            case '-': break;
+
+            default: {
+                auto comment = fmt::format("illegal character encountered while parsing castling rights: {}", c);
+                throw std::runtime_error(comment);
+            }
+        }
+    }
+
+    for(auto index : forbidden_castles) {
+        if(!index) {
+            continue;
+        }
+
+        auto& piece = m_internal[*index];
+        if(piece && piece->variety == piece::type::rook) {
+            piece->moves = 1;
+        }
+    }
+
+    // Next, handle the en passant target square.
+    if(string.at(character) == '-') {
+        character += 2;
+    } else {
+        const char file = string.at(character++);
+        const char rank = string.at(character++);
+        std::size_t capture_square = ((rank - '1') * length) + (file - 'a');
+
+        // TODO: Validate the capture square and make sure it isn't on a square
+        // which could be impossible to capture en passant on.
+
+        mutation latest;
+        latest.trivials = m_trivial_half_moves;
+
+        latest.move = {
+            (m_color == color::white) ? capture_square + length : capture_square - length,
+            (m_color == color::white) ? capture_square - length : capture_square + length
+        };
+
+        m_history.push_back(latest);
+    }
+
+    // Advance the character cursor since the previous
+    // switch would have left it on a space character.
+    character++;
+
+    auto [pointer, error] = std::from_chars(
+        string.begin() + character,
+        string.end(),
+        m_trivial_half_moves
+    );
+
+    fmt::print("[bongcloud] board.load():\n");
+    this->print();
 }
 
 void bongcloud::board::undo(void) {
@@ -321,5 +412,6 @@ void bongcloud::board::undo(void) {
 
     // Revert to the previous player and delete the last move.
     m_color = internal::prev_color(m_color);
+    m_trivial_half_moves = last.trivials;
     m_history.pop_back();
 }

@@ -22,6 +22,7 @@ namespace bongcloud {
 
     struct mutation {
         bongcloud::move move;
+        std::size_t trivials;
         std::optional<bongcloud::move> castle;
         std::optional<bongcloud::capture> capture;
         std::optional<bongcloud::piece> promotion;
@@ -114,5 +115,8 @@ namespace bongcloud {
 
             // Whose turn it is to move.
             piece::color m_color = piece::color::white;
+
+            // The number of trivial half-moves made.
+            std::size_t m_trivial_half_moves = 0;
     };
 }
