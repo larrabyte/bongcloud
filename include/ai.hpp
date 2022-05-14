@@ -40,7 +40,18 @@ namespace bongcloud {
 
     class classical_ai final : public ai {
         public:
+            classical_ai(const bongcloud::board&, const std::size_t s) : m_depth {s} {};
             double evaluate(const bongcloud::board&);
             std::optional<move> generate(const bongcloud::board&);
+
+        private:
+            // An implementation of the minimax algorithm.
+            double minimax(board&, const std::size_t, const piece::color);
+
+            // Returns a vector containing all possible moves for a given board.
+            std::vector<move> moves(const bongcloud::board&);
+
+            // The number of layers to search when generating a move.
+            const std::size_t m_depth;
     };
 }

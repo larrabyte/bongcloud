@@ -10,6 +10,7 @@
 namespace defaults {
     constexpr std::size_t board_size = 8;
     constexpr std::size_t square_resolution = 64;
+    constexpr std::size_t search_depth = 2;
     constexpr bool anarchy = false;
     constexpr bool bot = false;
 
@@ -68,7 +69,7 @@ int main(int argc, char** argv) {
     board.load(fen_string);
 
     // This can be any object as long as it inherits from the AI abstract class.
-    std::unique_ptr<bongcloud::ai> engine(new bongcloud::random_ai(board));
+    std::unique_ptr<bongcloud::ai> engine(new bongcloud::classical_ai(board, defaults::search_depth));
 
     cen::event_handler handler;
     bool running = true;
