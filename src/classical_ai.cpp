@@ -14,7 +14,7 @@ namespace internal {
     };
 }
 
-double bongcloud::classical_ai::evaluate(const bongcloud::board& board) {
+double bongcloud::classical_ai::evaluate(const bongcloud::board& board) const {
     double evaluation = 0.0;
 
     for(const auto& piece : board) {
@@ -28,7 +28,7 @@ double bongcloud::classical_ai::evaluate(const bongcloud::board& board) {
     return evaluation;
 }
 
-std::vector<bongcloud::move> bongcloud::classical_ai::moves(const bongcloud::board& board) {
+std::vector<bongcloud::move> bongcloud::classical_ai::moves(const bongcloud::board& board) const {
     bongcloud::board local = board;
     std::vector<move> moves;
 
@@ -49,7 +49,7 @@ std::vector<bongcloud::move> bongcloud::classical_ai::moves(const bongcloud::boa
     return moves;
 }
 
-double bongcloud::classical_ai::minimax(bongcloud::board& board, const std::size_t depth, const piece::color color) {
+double bongcloud::classical_ai::minimax(bongcloud::board& board, const std::size_t depth, const piece::color color) const {
     if(depth == 0) {
         return this->evaluate(board);
     }
