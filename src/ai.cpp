@@ -1,17 +1,31 @@
 #include "ai.hpp"
 
-#include <fmt/core.h>
+std::optional<bongcloud::move> bongcloud::random_ai::generate(const bongcloud::board& board) {
+    bongcloud::board local = board;
+    std::vector<move> moves;
 
-bongcloud::random_ai::random_ai(const bongcloud::board& b) :
-    m_device {std::random_device()},
-    m_random {m_device()},
-    m_distribution (0, (b.length * b.length) - 1) {
+    for(std::size_t from = 0; from < local.length * local.length; from++) {
+        for(std::size_t to = 0; to < local.length * local.length; to++) {
+            bool non_move = from == to || !local[from];
+            bool enemy_move = local[from] && local[from]->hue != local.color();
+            bool cannibal = local[from] && local[to] && local[from]->hue == local[to]->hue;
+            if(non_move || enemy_move || cannibal) {
+                continue;
+            }
 
-    fmt::print("[bongcloud] initialising random ai...\n");
-}
+            if(local.mutate(from, to)) {
+                move m = {from, to};
+                moves.push_back(m);
+                local.undo();
+            }
+        }
+    }
 
-bongcloud::move bongcloud::random_ai::generate(void) {
-    auto a = m_distribution(m_random);
-    auto b = m_distribution(m_random);
-    return {a, b};
+    if(moves.empty()) {
+        return std::nullopt;
+    }
+
+    std::uniform_int_distribution<std::size_t> distribution(0, moves.size() - 1);
+    std::size_t index = distribution(m_random);
+    return moves[index];
 }

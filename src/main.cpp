@@ -5,6 +5,7 @@
 #include <argparse/argparse.hpp>
 #include <centurion.hpp>
 #include <fmt/core.h>
+#include <memory>
 
 namespace defaults {
     constexpr std::size_t board_size = 8;
@@ -64,10 +65,11 @@ int main(int argc, char** argv) {
     // Initialise the board and its associated renderer.
     bongcloud::renderer renderer(square_res, board_size);
     bongcloud::board board(board_size, anarchy);
-    bongcloud::random_ai engine(board);
     board.load(fen_string);
 
-    // Initialise an event handler and then loop.
+    // This can be any object as long as it inherits from the AI abstract class.
+    std::unique_ptr<bongcloud::ai> engine(new bongcloud::random_ai(board));
+
     cen::event_handler handler;
     bool running = true;
 
@@ -125,14 +127,17 @@ int main(int argc, char** argv) {
         }
 
         if(bot && board.color() == bongcloud::piece::color::black) {
-            bool success = false;
+            if(auto move = engine->generate(board)) {
+                bool success = board.mutate(move->from, move->to);
 
-            while(!success) {
-                // Let the AI decide a move for black.
-                auto move = engine.generate();
-                if(move.from != move.to && board[move.from]) {
-                    success = board.mutate(move.from, move.to);
+                if(!success) {
+                    throw std::runtime_error("AI tried to play illegal move");
                 }
+            }
+
+            else {
+                // The bot has no more legal moves.
+                bot = false;
             }
         }
 
