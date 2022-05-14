@@ -10,7 +10,7 @@ namespace bongcloud {
         public:
             // Returns a floating-point number representing the advantage for a certain player.
             // Positive means an advantage for white, while negative means an advantage for black.
-            virtual double evaluate(const bongcloud::board& b) { return 0.0; };
+            virtual double evaluate(const bongcloud::board&) { return 0.0; };
 
             // Generates a legal move for the current board's player.
             virtual std::optional<move> generate(const bongcloud::board&) = 0;
