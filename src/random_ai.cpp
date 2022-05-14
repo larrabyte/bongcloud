@@ -6,7 +6,7 @@ std::optional<bongcloud::move> bongcloud::random_ai::generate(const bongcloud::b
 
     for(std::size_t from = 0; from < local.length * local.length; from++) {
         for(std::size_t to = 0; to < local.length * local.length; to++) {
-            if(!this->movable(from, to, board)) {
+            if(!this->movable(from, to, local)) {
                 continue;
             }
 
