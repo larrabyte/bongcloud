@@ -102,6 +102,11 @@ int main(int argc, char** argv) {
                             board.undo();
                         }
                     }
+
+                    if(ctrl_or_cmd && event.is_active(cen::scancodes::e)) {
+                        auto evaluation = engine->evaluate(board);
+                        fmt::print("[bongcloud] current evaluation: {:+}\n", evaluation);
+                    }
                 }
             }
 
