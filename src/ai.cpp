@@ -51,39 +51,49 @@ namespace bongcloud { // Implementation of classical_ai.
         return moves;
     }
 
-    double classical_ai::minimax(bongcloud::board& board, const std::size_t depth, const piece::color color) const {
+    double classical_ai::minimax(bongcloud::board& board, double alpha, double beta, const std::size_t depth, const piece::color color) const {
         if(depth == 0) {
             return this->evaluate(board);
         }
 
-        double worst;
+        double best;
         piece::color next;
 
         if(color == piece::color::white) {
-            worst = -std::numeric_limits<double>::infinity();
+            best = -std::numeric_limits<double>::infinity();
             next = piece::color::black;
 
             for(const auto& move : this->moves(board)) {
                 board.mutate(move.from, move.to);
-                auto contender = this->minimax(board, depth - 1, next);
-                worst = std::max(worst, contender);
+                auto contender = this->minimax(board, alpha, beta, depth - 1, next);
+                best = std::max(best, contender);
                 board.undo();
+
+                alpha = std::max(alpha, contender);
+                if(beta <= alpha) {
+                    break;
+                }
             }
         }
 
         else {
-            worst = std::numeric_limits<double>::infinity();
+            best = std::numeric_limits<double>::infinity();
             next = piece::color::white;
 
             for(const auto& move : this->moves(board)) {
                 board.mutate(move.from, move.to);
-                auto contender = this->minimax(board, depth - 1, next);
-                worst = std::min(worst, contender);
+                auto contender = this->minimax(board, alpha, beta, depth - 1, next);
+                best = std::min(best, contender);
                 board.undo();
+
+                beta = std::min(beta, contender);
+                if(beta <= alpha) {
+                    break;
+                }
             }
         }
 
-        return worst;
+        return best;
     }
 
     std::optional<move> classical_ai::generate(const bongcloud::board& board) {
@@ -95,7 +105,8 @@ namespace bongcloud { // Implementation of classical_ai.
 
         for(const auto& move : this->moves(local)) {
             local.mutate(move.from, move.to);
-            double score = this->minimax(local, m_depth, board.color());
+            double inf = std::numeric_limits<double>::infinity();
+            double score = this->minimax(local, -inf, inf, m_depth, board.color());
 
             position pair = std::make_pair(move, score);
             moves.push_back(pair);

@@ -47,7 +47,7 @@ namespace bongcloud {
 
         private:
             // An implementation of the minimax algorithm.
-            double minimax(board&, const std::size_t, const piece::color) const;
+            double minimax(board&, double, double, const std::size_t, const piece::color) const;
 
             // Returns a vector containing all possible moves for a given board.
             // This will use the board passed in as a scratch area, however
