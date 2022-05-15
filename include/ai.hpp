@@ -10,10 +10,10 @@ namespace bongcloud {
         public:
             // Returns a floating-point number representing the advantage for a certain player.
             // Positive means an advantage for white, while negative means an advantage for black.
-            virtual double evaluate(const bongcloud::board&) const { return 0.0; };
+            virtual double evaluate(const board&) const = 0;
 
             // Generates a legal move for the current board's player.
-            virtual std::optional<move> generate(const bongcloud::board&) = 0;
+            virtual std::optional<move> generate(const board&) = 0;
 
             // An empty destructor implementation.
             virtual ~ai() {};
@@ -28,6 +28,7 @@ namespace bongcloud {
     class random_ai final : public ai {
         public:
             random_ai(const bongcloud::board&) : m_random {m_device()} {};
+            double evaluate(const board&) const;
             std::optional<move> generate(const bongcloud::board&);
 
         private:
@@ -49,7 +50,7 @@ namespace bongcloud {
             double minimax(board&, const std::size_t, const piece::color) const;
 
             // Returns a vector containing all possible moves for a given board.
-            std::vector<move> moves(const bongcloud::board&) const;
+            std::vector<move> moves(const board&) const;
 
             // The number of layers to search when generating a move.
             const std::size_t m_depth;
