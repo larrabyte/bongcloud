@@ -95,7 +95,7 @@ bool bongcloud::board::check(const piece::color color) const {
     // Attempt to find the index of the specified player's king.
     std::vector<std::size_t> kings;
 
-    for(std::size_t i = 0; i < length * length; i++) {
+    for(std::size_t i = 0; i < length * length; ++i) {
         const auto& piece = m_internal[i];
         if(piece && piece->hue == color && piece->variety == piece::type::king) {
             kings.push_back(i);
@@ -109,7 +109,7 @@ bool bongcloud::board::check(const piece::color color) const {
 
     // Return true if any king is in check.
     for(const auto king : kings) {
-        for(std::size_t i = 0; i < length * length; i++) {
+        for(std::size_t i = 0; i < length * length; ++i) {
             const auto& piece = m_internal[i];
             if(piece && piece->hue != color && permissible(i, king)) {
                 return true;
@@ -151,7 +151,7 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
 
         dest = origin;
         origin = std::nullopt;
-        dest->moves++;
+        ++dest->moves;
     }
 
     else if(pseudolegal) {
@@ -160,7 +160,7 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
             // clear the origin square.
             dest = origin;
             origin = std::nullopt;
-            dest->moves++;
+            ++dest->moves;
         }
 
         else if(type == piece::move::capture) {
@@ -170,14 +170,14 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
 
             dest = origin;
             origin = std::nullopt;
-            dest->moves++;
+            ++dest->moves;
         }
 
         else if(type == piece::move::en_passant) {
             // Move the piece at the origin square to the
             // destination square and update its move count.
             dest = origin;
-            dest->moves++;
+            ++dest->moves;
 
             // Clear the origin square and the square directly behind,
             // which is equivalent to a square adjacent to the origin.
@@ -212,8 +212,8 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
             // Update piece positions and increment the move count.
             dest = rook_dest;
             rook_dest = rook_origin;
-            dest->moves++;
-            rook_dest->moves++;
+            ++dest->moves;
+            ++rook_dest->moves;
 
             // Remove the original king and rook from the board.
             rook_origin = std::nullopt;
@@ -323,7 +323,7 @@ void bongcloud::board::load(const std::string_view string) {
 
     // Advance the character cursor since the previous
     // switch would have left it on a space character.
-    character++;
+    ++character;
 
     while((c = string.at(character++)) != ' ') {
         switch(c) {
@@ -375,7 +375,7 @@ void bongcloud::board::load(const std::string_view string) {
 
     // Advance the character cursor since the previous
     // switch would have left it on a space character.
-    character++;
+    ++character;
 
     // Handle the half-move clock via string-to-integer conversion.
     // The full-move count is not handled explicitly as we have no use for it.

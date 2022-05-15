@@ -38,8 +38,8 @@ namespace bongcloud { // Implementation of classical_ai.
         std::vector<move> moves;
         moves.reserve(internal::reserve_buffer);
 
-        for(std::size_t from = 0; from < board.length * board.length; from++) {
-            for(std::size_t to = 0; to < board.length * board.length; to++) {
+        for(std::size_t from = 0; from < board.length * board.length; ++from) {
+            for(std::size_t to = 0; to < board.length * board.length; ++to) {
                 if(this->movable(from, to, board) && board.mutate(from, to)) {
                     move m = {from, to};
                     moves.push_back(m);
@@ -123,8 +123,8 @@ namespace bongcloud { // Implementation of random_ai.
         std::vector<move> moves;
         moves.reserve(internal::reserve_buffer);
 
-        for(std::size_t from = 0; from < local.length * local.length; from++) {
-            for(std::size_t to = 0; to < local.length * local.length; to++) {
+        for(std::size_t from = 0; from < local.length * local.length; ++from) {
+            for(std::size_t to = 0; to < local.length * local.length; ++to) {
                 if(this->movable(from, to, local) && local.mutate(from, to)) {
                     move m = {from, to};
                     moves.push_back(m);

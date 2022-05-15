@@ -67,13 +67,13 @@ namespace internal {
                 x--;
             }
 
-            for(std::size_t i = 0; i < std::bit_width(x); i++) {
+            for(std::size_t i = 0; i < std::bit_width(x); ++i) {
                 x |= x >> (1 << i);
             }
 
             x += 1;
             while(x >>= 1) {
-                e++;
+                ++e;
             }
 
             return e;
@@ -101,7 +101,7 @@ bongcloud::renderer::renderer(const std::size_t square_res, const std::size_t bo
     std::size_t maximum_index = rounded_size * 2;
     m_textures.reserve(maximum_index);
 
-    for(std::size_t i = 0; i < maximum_index; i++) {
+    for(std::size_t i = 0; i < maximum_index; ++i) {
         bool oob_white = i >= std::size(internal::white_textures) && i < rounded_size;
         bool oob_black = i >= std::size(internal::black_textures) + rounded_size;
 
