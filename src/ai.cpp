@@ -55,16 +55,31 @@ namespace bongcloud { // Implementation of classical_ai.
             return this->evaluate(board);
         }
 
-        using colors = piece::color;
-        using doubles = std::numeric_limits<double>;
-        auto next = (color == colors::white) ? colors::black : colors::white;
-        auto worst = (color == colors::white) ? -doubles::infinity() : doubles::infinity();
+        double worst;
+        piece::color next;
 
-        for(const auto& move : this->moves(board)) {
-            board.mutate(move.from, move.to);
-            auto contender = this->minimax(board, depth - 1, next);
-            worst = (color == colors::white) ? std::max(worst, contender) : std::min(worst, contender);
-            board.undo();
+        if(color == piece::color::white) {
+            worst = -std::numeric_limits<double>::infinity();
+            next = piece::color::black;
+
+            for(const auto& move : this->moves(board)) {
+                board.mutate(move.from, move.to);
+                auto contender = this->minimax(board, depth - 1, next);
+                worst = std::max(worst, contender);
+                board.undo();
+            }
+        }
+
+        else {
+            worst = std::numeric_limits<double>::infinity();
+            next = piece::color::white;
+
+            for(const auto& move : this->moves(board)) {
+                board.mutate(move.from, move.to);
+                auto contender = this->minimax(board, depth - 1, next);
+                worst = std::min(worst, contender);
+                board.undo();
+            }
         }
 
         return worst;
