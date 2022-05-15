@@ -93,26 +93,27 @@ void bongcloud::board::print(void) const {
 
 bool bongcloud::board::check(const piece::color color) const {
     // Attempt to find the index of the specified player's king.
-    std::optional<std::size_t> king;
+    std::vector<std::size_t> kings;
 
     for(std::size_t i = 0; i < length * length; i++) {
         const auto& piece = m_internal[i];
         if(piece && piece->hue == color && piece->variety == piece::type::king) {
-            king = i;
+            kings.push_back(i);
             break;
         }
     }
 
-    // Invalid sentintel still remains.
-    if(!king) {
-        throw std::runtime_error("no king on board");
+    if(kings.empty()) {
+        throw std::runtime_error("no king(s) on board");
     }
 
-    // Find the index of the current player's king.
-    for(std::size_t i = 0; i < length * length; i++) {
-        const auto& piece = m_internal[i];
-        if(piece && piece->hue != color && permissible(i, *king)) {
-            return true;
+    // Return true if any king is in check.
+    for(const auto king : kings) {
+        for(std::size_t i = 0; i < length * length; i++) {
+            const auto& piece = m_internal[i];
+            if(piece && piece->hue != color && permissible(i, king)) {
+                return true;
+            }
         }
     }
 
