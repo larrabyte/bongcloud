@@ -9,17 +9,8 @@ namespace internal {
     }
 
     namespace obstructions {
-        bool bishop(
-            const bongcloud::board& board,
-            const std::size_t origin,
-            const std::size_t from_rank,
-            const std::size_t from_file,
-            const std::size_t to_rank,
-            const std::size_t to_file,
-            std::size_t rank_difference,
-            std::size_t file_difference) noexcept {
-
-            while(rank_difference > 0 && file_difference > 0) {
+        bool bishop(const bongcloud::board& board, const std::size_t origin, const std::size_t from_rank, const std::size_t from_file, const std::size_t to_rank, const std::size_t to_file, std::size_t rank_difference, std::size_t file_difference) noexcept {
+            while(--rank_difference > 0 && --file_difference > 0) {
                 std::size_t index;
 
                 // The destination square is to the top-right of the origin square.
@@ -46,28 +37,19 @@ namespace internal {
                 if(board[index]) {
                     return true;
                 }
-
-                // Decrement to the next square.
-                rank_difference--;
-                file_difference--;
             }
 
             return false;
         }
 
-        bool rook(
-            const bongcloud::board& board,
-            const std::size_t from,
-            const std::size_t to,
-            std::size_t difference) noexcept {
+        bool rook(const bongcloud::board& board, const std::size_t from, const std::size_t to, std::size_t difference) noexcept {
+            std::size_t subtractor = (difference >= board.length) ? board.length : 1;
 
-            while(difference > 0) {
+            while((difference -= subtractor) > 0) {
                 std::size_t index = (from > to) ? from - difference : from + difference;
                 if(board[index]) {
                     return true;
                 }
-
-                difference -= (difference >= board.length) ? board.length : 1;
             }
 
             return false;
@@ -163,19 +145,7 @@ std::optional<bongcloud::piece::move> bongcloud::board::permissible(const std::s
         }
 
         // Since diagonality was checked, all that's left to do is check for obstacles.
-        // Subtract one from both differences to start obstruction checking from the previous square.
-        bool obstructed = internal::obstructions::bishop(
-            *this,
-            from,
-            from_rank,
-            from_file,
-            to_rank,
-            to_file,
-            rank_difference - 1,
-            file_difference - 1
-        );
-
-        if(!obstructed) {
+        if(!internal::obstructions::bishop(*this, from, from_rank, from_file, to_rank, to_file, rank_difference, file_difference)) {
             return (dest) ? piece::move::capture : piece::move::normal;
         }
 
@@ -188,12 +158,8 @@ std::optional<bongcloud::piece::move> bongcloud::board::permissible(const std::s
         }
 
         // Rooks can only travel in a straight, unobstructed line.
-        // Subtract to start obstruction checking from the previous square.
         std::size_t difference = internal::absdiff(from, to);
-        difference -= (difference >= length) ? length : 1;
-        bool obstructed = internal::obstructions::rook(*this, from, to, difference);
-
-        if(!obstructed) {
+        if(!internal::obstructions::rook(*this, from, to, difference)) {
             return (dest) ? piece::move::capture : piece::move::normal;
         }
 
@@ -205,22 +171,12 @@ std::optional<bongcloud::piece::move> bongcloud::board::permissible(const std::s
 
         // If the queen is moving in a diagonal pattern, it must obey bishop movement rules.
         if(rank_difference == file_difference) {
-            obstructed = internal::obstructions::bishop(
-                *this,
-                from,
-                from_rank,
-                from_file,
-                to_rank,
-                to_file,
-                rank_difference - 1,
-                file_difference - 1
-            );
+            obstructed = internal::obstructions::bishop(*this, from, from_rank, from_file, to_rank, to_file, rank_difference, file_difference);
         }
 
         // Otherwise if the queen is moving in a straight line, it must obey rook movement rules.
         else if(rank_difference == 0 || file_difference == 0) {
             std::size_t difference = internal::absdiff(from, to);
-            difference -= (difference >= length) ? length : 1;
             obstructed = internal::obstructions::rook(*this, from, to, difference);
         }
 
