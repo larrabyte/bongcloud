@@ -30,15 +30,14 @@ namespace bongcloud { // Implementation of classical_ai.
     }
 
     std::vector<move> classical_ai::moves(bongcloud::board& board) const {
+        // On average, there are 30 possible legal moves in any given state.
+        // We preallocate space here so we don't spend time resizing and copying.
         std::vector<move> moves;
+        moves.reserve(30);
 
         for(std::size_t from = 0; from < board.length * board.length; from++) {
             for(std::size_t to = 0; to < board.length * board.length; to++) {
-                if(!this->movable(from, to, board)) {
-                    continue;
-                }
-
-                if(board.mutate(from, to)) {
+                if(this->movable(from, to, board) && board.mutate(from, to)) {
                     move m = {from, to};
                     moves.push_back(m);
                     board.undo();

@@ -2,6 +2,7 @@
 .stfolder/
 .vscode/
 data/
+runs/
 bin/bongcloud
 .DS_Store
 
