@@ -6,6 +6,8 @@
 #include <centurion.hpp>
 #include <fmt/core.h>
 #include <memory>
+#include <future>
+#include <chrono>
 
 namespace defaults {
     constexpr std::size_t board_size = 8;
@@ -34,6 +36,12 @@ int main(int argc, char** argv) {
         .scan<'u', std::size_t>()
         .default_value(defaults::square_resolution);
 
+    program.add_argument("-d", "--depth")
+        .required()
+        .help("set the search depth of the bot")
+        .scan<'u', std::size_t>()
+        .default_value(defaults::search_depth);
+
     program.add_argument("-f", "--fen")
         .required()
         .help("the FEN string to load")
@@ -59,6 +67,7 @@ int main(int argc, char** argv) {
 
     auto board_size = program.get<std::size_t>("size");
     auto square_res = program.get<std::size_t>("resolution");
+    auto search_depth = program.get<std::size_t>("depth");
     auto fen_string = program.get<std::string>("fen");
     auto anarchy = program.get<bool>("anarchy");
     auto bot = program.get<bool>("bot");
@@ -68,8 +77,9 @@ int main(int argc, char** argv) {
     bongcloud::board board(board_size, anarchy);
     board.load(fen_string);
 
-    // This can be any object as long as it inherits from the AI abstract class.
-    std::unique_ptr<bongcloud::ai> engine(new bongcloud::classical_ai(board, defaults::search_depth));
+    // This can be any object as long as it inherits from the abstract AI class.
+    std::unique_ptr<bongcloud::ai> engine(new bongcloud::classical_ai(board, search_depth));
+    std::future<std::optional<bongcloud::move>> future;
 
     cen::event_handler handler;
     bool running = true;
@@ -78,10 +88,9 @@ int main(int argc, char** argv) {
         while(handler.poll()) {
             if(handler.is<cen::quit_event>()) {
                 running = false;
-                break;
             }
 
-            if(handler.is<cen::keyboard_event>()) {
+            else if(handler.is<cen::keyboard_event>()) {
                 auto& event = handler.get<cen::keyboard_event>();
 
                 if(event.pressed()) {
@@ -90,13 +99,13 @@ int main(int argc, char** argv) {
                         event.is_active(cen::key_mod::lgui)
                     };
 
-                    // Pressing Ctrl+P will print the current board state.
                     if(ctrl_or_cmd && event.is_active(cen::scancodes::p)) {
+                        // Pressing Ctrl+P will print the current board state.
                         board.print();
                     }
 
-                    // Pressing Ctrl+Z will undo the last move.
                     if(ctrl_or_cmd && event.is_active(cen::scancodes::z)) {
+                        // Pressing Ctrl+Z will undo the last move.
                         board.undo();
 
                         if(bot) {
@@ -105,13 +114,14 @@ int main(int argc, char** argv) {
                     }
 
                     if(ctrl_or_cmd && event.is_active(cen::scancodes::e)) {
+                        // Pressing Ctrl+E will print the current evaluation.
                         auto evaluation = engine->evaluate(board);
                         fmt::print("[bongcloud] current evaluation: {:+}\n", evaluation);
                     }
                 }
             }
 
-            if(handler.is<cen::mouse_button_event>()) {
+            else if(handler.is<cen::mouse_button_event>()) {
                 auto& event = handler.get<cen::mouse_button_event>();
 
                 // Make sure it was a left-click.
@@ -119,8 +129,6 @@ int main(int argc, char** argv) {
                     auto x = static_cast<std::size_t>(event.x() * renderer.scale());
                     auto y = static_cast<std::size_t>(event.y() * renderer.scale());
                     auto i = renderer.square_at(board, x, y);
-                    fmt::print("[bongcloud] left-click at ({}, {}) yields square {}\n", x, y, i);
-
                     auto stored = renderer.cursor();
 
                     if(!stored && board[i]) {
@@ -133,17 +141,22 @@ int main(int argc, char** argv) {
         }
 
         if(bot && board.color() == bongcloud::piece::color::black) {
-            if(auto move = engine->generate(board)) {
-                bool success = board.mutate(move->from, move->to);
+            if(future.valid()) {
+                auto zero = std::chrono::milliseconds(0);
+                if(future.wait_for(zero) == std::future_status::ready) {
+                    if(auto move = future.get()) {
+                        bool success = board.mutate(move->from, move->to);
 
-                if(!success) {
-                    throw std::runtime_error("AI tried to play illegal move");
+                        if(!success) {
+                            throw std::runtime_error("AI tried to play illegal move");
+                        }
+                    }
                 }
             }
 
             else {
-                // The bot has no more legal moves.
-                bot = false;
+                auto subroutine = [&]() { return engine->generate(board); };
+                future = std::async(std::launch::async, subroutine);
             }
         }
 
