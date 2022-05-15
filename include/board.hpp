@@ -34,6 +34,9 @@ namespace bongcloud {
             // Setting the boolean to true disables all move checking.
             board(const std::size_t, const bool);
 
+            // Returns a copy of the current board *without* history.
+            board duplicate(void) const;
+
             // Prints out the current board state to stdout.
             void print(void) const;
 

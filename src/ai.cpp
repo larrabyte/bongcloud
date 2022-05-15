@@ -12,6 +12,8 @@ namespace internal {
         9.0, // piece::type::queen
         0.0  // piece::type::king
     };
+
+    constexpr std::size_t reserve_buffer = 30;
 }
 
 namespace bongcloud { // Implementation of classical_ai.
@@ -33,7 +35,7 @@ namespace bongcloud { // Implementation of classical_ai.
         // On average, there are 30 possible legal moves in any given state.
         // We preallocate space here so we don't spend time resizing and copying.
         std::vector<move> moves;
-        moves.reserve(30);
+        moves.reserve(internal::reserve_buffer);
 
         for(std::size_t from = 0; from < board.length * board.length; from++) {
             for(std::size_t to = 0; to < board.length * board.length; to++) {
@@ -69,9 +71,11 @@ namespace bongcloud { // Implementation of classical_ai.
     }
 
     std::optional<move> classical_ai::generate(const bongcloud::board& board) {
+        bongcloud::board local = board.duplicate();
+
         using position = std::pair<move, double>;
-        bongcloud::board local = board;
         std::vector<position> moves;
+        moves.reserve(internal::reserve_buffer);
 
         for(const auto& move : this->moves(local)) {
             local.mutate(move.from, move.to);
@@ -99,16 +103,13 @@ namespace bongcloud { // Implementation of random_ai.
     }
 
     std::optional<move> random_ai::generate(const bongcloud::board& board) {
-        bongcloud::board local = board;
+        bongcloud::board local = board.duplicate();
         std::vector<move> moves;
+        moves.reserve(internal::reserve_buffer);
 
         for(std::size_t from = 0; from < local.length * local.length; from++) {
             for(std::size_t to = 0; to < local.length * local.length; to++) {
-                if(!this->movable(from, to, local)) {
-                    continue;
-                }
-
-                if(local.mutate(from, to)) {
+                if(this->movable(from, to, local) && local.mutate(from, to)) {
                     move m = {from, to};
                     moves.push_back(m);
                     local.undo();

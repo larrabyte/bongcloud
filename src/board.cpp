@@ -29,6 +29,14 @@ bongcloud::board::board(const std::size_t l, const bool a) :
     fmt::print("[bongcloud] initialising board of size {}x{}... (anarchy: {})\n", l, l, a);
 }
 
+bongcloud::board bongcloud::board::duplicate(void) const {
+    bongcloud::board board(length, m_anarchy);
+    board.m_internal = m_internal;
+    board.m_trivial_half_moves = m_trivial_half_moves;
+    board.m_color = m_color;
+    return board;
+}
+
 void bongcloud::board::print(void) const {
     // Start from the top-left square.
     std::size_t rank = 7, file = 0;
