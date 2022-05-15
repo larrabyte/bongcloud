@@ -13,7 +13,8 @@ namespace internal {
         0.0  // piece::type::king
     };
 
-    constexpr std::size_t reserve_buffer = 30;
+    // The average position has about 40 legal moves.
+    constexpr std::size_t reserve_buffer = 40;
 }
 
 namespace bongcloud { // Implementation of classical_ai.
