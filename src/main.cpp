@@ -150,6 +150,9 @@ int main(int argc, char** argv) {
                         if(!success) {
                             throw std::runtime_error("AI tried to play illegal move");
                         }
+                    } else {
+                        // The bot is in checkmate.
+                        bot = false;
                     }
                 }
             }
