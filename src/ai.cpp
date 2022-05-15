@@ -29,20 +29,19 @@ namespace bongcloud { // Implementation of classical_ai.
         return evaluation;
     }
 
-    std::vector<move> classical_ai::moves(const bongcloud::board& board) const {
-        bongcloud::board local = board;
+    std::vector<move> classical_ai::moves(bongcloud::board& board) const {
         std::vector<move> moves;
 
-        for(std::size_t from = 0; from < local.length * local.length; from++) {
-            for(std::size_t to = 0; to < local.length * local.length; to++) {
-                if(!this->movable(from, to, local)) {
+        for(std::size_t from = 0; from < board.length * board.length; from++) {
+            for(std::size_t to = 0; to < board.length * board.length; to++) {
+                if(!this->movable(from, to, board)) {
                     continue;
                 }
 
-                if(local.mutate(from, to)) {
+                if(board.mutate(from, to)) {
                     move m = {from, to};
                     moves.push_back(m);
-                    local.undo();
+                    board.undo();
                 }
             }
         }
@@ -72,15 +71,16 @@ namespace bongcloud { // Implementation of classical_ai.
 
     std::optional<move> classical_ai::generate(const bongcloud::board& board) {
         using position = std::pair<move, double>;
+        bongcloud::board local = board;
         std::vector<position> moves;
 
-        for(const auto& move : this->moves(board)) {
-            bongcloud::board local = board;
+        for(const auto& move : this->moves(local)) {
             local.mutate(move.from, move.to);
             double score = this->minimax(local, m_depth, board.color());
 
             position pair = std::make_pair(move, score);
             moves.push_back(pair);
+            local.undo();
         }
 
         if(moves.empty()) {

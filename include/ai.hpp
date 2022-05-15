@@ -50,7 +50,9 @@ namespace bongcloud {
             double minimax(board&, const std::size_t, const piece::color) const;
 
             // Returns a vector containing all possible moves for a given board.
-            std::vector<move> moves(const board&) const;
+            // This will use the board passed in as a scratch area, however
+            // all moves performed will be undone by the time this function returns.
+            std::vector<move> moves(board&) const;
 
             // The number of layers to search when generating a move.
             const std::size_t m_depth;
