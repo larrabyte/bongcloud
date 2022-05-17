@@ -60,6 +60,11 @@ namespace bongcloud {
             // Undoes the last move.
             void undo(void);
 
+            // Returns a constant reference to the board's cache.
+            const bongcloud::cache& cache(void) const noexcept {
+                return m_cache;
+            }
+
             // Returns a constant reference to the board's history array.
             const std::vector<record>& history(void) const noexcept {
                 return m_history;
@@ -118,7 +123,7 @@ namespace bongcloud {
             std::vector<square> m_internal;
 
             // Tracks the indexes of living pieces (and separately, living kings).
-            cache m_cache;
+            bongcloud::cache m_cache;
 
             // An array of previously made moves.
             std::vector<record> m_history;

@@ -37,10 +37,15 @@ namespace bongcloud { // Implementation of classical_ai.
         std::vector<move> moves;
         moves.reserve(internal::reserve_buffer);
 
-        for(std::size_t from = 0; from < board.length * board.length; ++from) {
+        bool white = board.color() == piece::color::white;
+        const auto& cache = board.cache();
+        const auto& pieces = (white) ? cache.pieces.white : cache.pieces.black;
+        // const auto& targets = (white) ? cache.pieces.black : cache.pieces.white;
+
+        for(const auto piece : pieces) {
             for(std::size_t to = 0; to < board.length * board.length; ++to) {
-                if(this->movable(from, to, board) && board.move(from, to)) {
-                    move m = {from, to};
+                if(this->movable(piece, to, board) && board.move(piece, to)) {
+                    move m = {piece, to};
                     moves.push_back(m);
                     board.undo();
                 }
