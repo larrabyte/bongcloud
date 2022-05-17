@@ -17,12 +17,6 @@ namespace bongcloud {
 
             // An empty destructor implementation.
             virtual ~ai() {};
-
-        protected:
-            // Common subroutine for determining whether a move is trivially allowed.
-            inline bool movable(const std::size_t f, const std::size_t t, const board& b) const noexcept {
-                return f != t && b[f] && b[f]->hue == b.color() && (!b[t] || b[t]->hue != b.color());
-            }
     };
 
     class random_ai final : public ai {
