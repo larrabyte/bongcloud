@@ -128,12 +128,12 @@ int main(int argc, char** argv) {
                 if(event.button() == cen::mouse_button::left && event.pressed()) {
                     auto x = static_cast<std::size_t>(event.x() * renderer.scale());
                     auto y = static_cast<std::size_t>(event.y() * renderer.scale());
-                    auto i = renderer.square_at(board, x, y);
+                    auto i = renderer.square(board, x, y);
                     auto stored = renderer.cursor();
 
                     if(!stored && board[i]) {
                         renderer.cursor(i);
-                    } else if(i == stored || (stored && board.mutate(*stored, i))) {
+                    } else if(i == stored || (stored && board.move(*stored, i))) {
                         renderer.cursor(std::nullopt);
                     }
                 }
@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
                 auto zero = std::chrono::milliseconds(0);
                 if(future.wait_for(zero) == std::future_status::ready) {
                     if(auto move = future.get()) {
-                        bool success = board.mutate(move->from, move->to);
+                        bool success = board.move(move->from, move->to);
 
                         if(!success) {
                             throw std::runtime_error("AI tried to play illegal move");

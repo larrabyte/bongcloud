@@ -15,7 +15,7 @@ namespace bongcloud {
             void render(const board&);
 
             // Returns the index of the square at a given mouse coordinate.
-            std::size_t square_at(const board&, const std::size_t, const std::size_t) const noexcept;
+            std::size_t square(const board&, const std::size_t, const std::size_t) const noexcept;
 
             // Attaches the square and its associated piece to the mouse.
             inline void cursor(std::optional<std::size_t> i) noexcept {

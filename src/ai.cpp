@@ -33,14 +33,13 @@ namespace bongcloud { // Implementation of classical_ai.
     }
 
     std::vector<move> classical_ai::moves(bongcloud::board& board) const {
-        // On average, there are 30 possible legal moves in any given state.
-        // We preallocate space here so we don't spend time resizing and copying.
+        // Preallocate space here so we don't spend time resizing and copying.
         std::vector<move> moves;
         moves.reserve(internal::reserve_buffer);
 
         for(std::size_t from = 0; from < board.length * board.length; ++from) {
             for(std::size_t to = 0; to < board.length * board.length; ++to) {
-                if(this->movable(from, to, board) && board.mutate(from, to)) {
+                if(this->movable(from, to, board) && board.move(from, to)) {
                     move m = {from, to};
                     moves.push_back(m);
                     board.undo();
@@ -64,7 +63,7 @@ namespace bongcloud { // Implementation of classical_ai.
             next = piece::color::black;
 
             for(const auto& move : this->moves(board)) {
-                board.mutate(move.from, move.to);
+                board.move(move.from, move.to);
                 auto contender = this->minimax(board, alpha, beta, depth - 1, next);
                 best = std::max(best, contender);
                 board.undo();
@@ -81,7 +80,7 @@ namespace bongcloud { // Implementation of classical_ai.
             next = piece::color::white;
 
             for(const auto& move : this->moves(board)) {
-                board.mutate(move.from, move.to);
+                board.move(move.from, move.to);
                 auto contender = this->minimax(board, alpha, beta, depth - 1, next);
                 best = std::min(best, contender);
                 board.undo();
@@ -97,14 +96,13 @@ namespace bongcloud { // Implementation of classical_ai.
     }
 
     std::optional<move> classical_ai::generate(const bongcloud::board& board) {
-        bongcloud::board local = board.duplicate();
-
         using position = std::pair<move, double>;
+        bongcloud::board local = board;
         std::vector<position> moves;
         moves.reserve(internal::reserve_buffer);
 
         for(const auto& move : this->moves(local)) {
-            local.mutate(move.from, move.to);
+            local.move(move.from, move.to);
             double inf = std::numeric_limits<double>::infinity();
             double score = this->minimax(local, -inf, inf, m_depth, board.color());
 
@@ -130,13 +128,13 @@ namespace bongcloud { // Implementation of random_ai.
     }
 
     std::optional<move> random_ai::generate(const bongcloud::board& board) {
-        bongcloud::board local = board.duplicate();
+        bongcloud::board local = board;
         std::vector<move> moves;
         moves.reserve(internal::reserve_buffer);
 
         for(std::size_t from = 0; from < local.length * local.length; ++from) {
             for(std::size_t to = 0; to < local.length * local.length; ++to) {
-                if(this->movable(from, to, local) && local.mutate(from, to)) {
+                if(this->movable(from, to, local) && local.move(from, to)) {
                     move m = {from, to};
                     moves.push_back(m);
                     local.undo();

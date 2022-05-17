@@ -7,34 +7,10 @@
 #include <cstddef>
 
 namespace internal {
-    constexpr bongcloud::piece::color color_array[] = {
-        bongcloud::piece::color::black,
-        bongcloud::piece::color::white
-    };
-
-    inline bongcloud::piece::color next_color(const bongcloud::piece::color color) {
-        return color_array[ext::to_underlying(color)];
+    using color = bongcloud::piece::color;
+    inline color next(color c) {
+        return (c == color::white) ? color::black : color::white;
     }
-
-    inline bongcloud::piece::color prev_color(const bongcloud::piece::color color) {
-        return color_array[ext::to_underlying(color)];
-    }
-}
-
-bongcloud::board::board(const std::size_t l, const bool a) :
-    length {l},
-    m_internal {l * l},
-    m_anarchy {a} {
-
-    fmt::print("[bongcloud] initialising board of size {}x{}... (anarchy: {})\n", l, l, a);
-}
-
-bongcloud::board bongcloud::board::duplicate(void) const {
-    bongcloud::board board(length, m_anarchy);
-    board.m_internal = m_internal;
-    board.m_trivial_half_moves = m_trivial_half_moves;
-    board.m_color = m_color;
-    return board;
 }
 
 void bongcloud::board::print(void) const {
@@ -72,18 +48,14 @@ void bongcloud::board::print(void) const {
             fmt::print("{}", c);
         }
 
-        // Advance the rank and file indices appropriately to move on to the next square/rank.
+        // Advance the rank and file indices to move on to the next square.
         if(rank == 0 && file == length - 1) {
             finished = true;
-        }
-
-        else if(++file == length) {
+        } else if(++file == length) {
             rank--;
             file = 0;
             fmt::print("\n[bongcloud] ");
-        }
-
-        else {
+        } else {
             fmt::print(" ");
         }
     }
@@ -111,7 +83,7 @@ bool bongcloud::board::check(const piece::color color) const {
     for(const auto king : kings) {
         for(std::size_t i = 0; i < length * length; ++i) {
             const auto& piece = m_internal[i];
-            if(piece && piece->hue != color && permissible(i, king)) {
+            if(piece && piece->hue != color && this->pseudolegal(i, king)) {
                 return true;
             }
         }
@@ -120,7 +92,7 @@ bool bongcloud::board::check(const piece::color color) const {
     return false;
 }
 
-bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
+bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
     auto& origin = m_internal[from];
     auto& dest = m_internal[to];
 
@@ -128,19 +100,19 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
         throw std::runtime_error("tried to move from square with no piece");
     }
 
-    if(m_trivial_half_moves == 100) {
+    if(m_trivials == 100) {
         // Forced statemate.
         return false;
     }
 
-    mutation latest;
-    latest.trivials = m_trivial_half_moves;
+    record latest;
+    latest.color = m_color;
     latest.move = {from, to};
+    latest.trivials = m_trivials;
 
     bool correct_color = origin->hue == m_color;
     bool cannibal = dest && origin->hue == dest->hue;
-    auto type = permissible(from, to);
-    bool pseudolegal = correct_color && !cannibal && type;
+    auto type = this->pseudolegal(from, to);
 
     if(m_anarchy) {
         // Since most moves are usually considered impossible, we require
@@ -154,28 +126,21 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
         ++dest->moves;
     }
 
-    else if(pseudolegal) {
+    else if(correct_color && !cannibal && type) {
         if(type == piece::move::normal) {
-            // Move the piece forward and
-            // clear the origin square.
             dest = origin;
             origin = std::nullopt;
             ++dest->moves;
         }
 
         else if(type == piece::move::capture) {
-            // Store a copy of the captured piece
-            // in the mutation object before erasing.
             latest.capture = {to, *dest};
-
             dest = origin;
             origin = std::nullopt;
             ++dest->moves;
         }
 
         else if(type == piece::move::en_passant) {
-            // Move the piece at the origin square to the
-            // destination square and update its move count.
             dest = origin;
             ++dest->moves;
 
@@ -189,7 +154,6 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
         }
 
         else if(type == piece::move::short_castle || type == piece::move::long_castle) {
-            // Calculate the appropriate squares to send the king and rook.
             latest.castle = {
                 (type == piece::move::short_castle) ? to + 1 : to - 2,
                 (type == piece::move::short_castle) ? to - 1 : to + 1
@@ -203,34 +167,27 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
             rook_dest = origin;
             origin = std::nullopt;
 
-            if(check(m_color)) {
+            if(this->check(m_color)) {
                 origin = rook_dest;
                 rook_dest = std::nullopt;
                 return false;
             }
 
-            // Update piece positions and increment the move count.
             dest = rook_dest;
             rook_dest = rook_origin;
+            rook_origin = std::nullopt;
             ++dest->moves;
             ++rook_dest->moves;
-
-            // Remove the original king and rook from the board.
-            rook_origin = std::nullopt;
         }
 
         else if(type == piece::move::promotion) {
-            // If there is a piece present, make sure to add a capture entry.
             if(dest) {
                 latest.capture = {to, *dest};
             }
 
-            // Create a new queen with the same move count.
             dest = piece(origin->hue, piece::type::queen);
             dest->moves = origin->moves;
             origin = std::nullopt;
-
-            // Add the promotion entry to the mutation object.
             latest.promotion = dest;
         }
 
@@ -245,17 +202,19 @@ bool bongcloud::board::mutate(const std::size_t from, const std::size_t to) {
         return false;
     }
 
-    m_color = internal::next_color(m_color);
-    m_history.push_back(std::move(latest));
-    auto previous_color = internal::prev_color(m_color);
+    m_history.push_back(latest);
 
-    if(m_anarchy || !check(previous_color)) {
-        bool trivial = dest->variety != piece::type::pawn && type == piece::move::normal;
-        m_trivial_half_moves = (trivial) ? m_trivial_half_moves + 1 : 0;
+    if(m_anarchy || !this->check(m_color)) {
+        bool pawn = dest->variety != piece::type::pawn;
+        bool pacifist = type == piece::move::normal;
+        bool white = m_color == piece::color::white;
+
+        m_trivials = (pawn && pacifist) ? m_trivials + 1 : 0;
+        m_color = (white) ? piece::color::black : piece::color::white;
         return true;
     }
 
-    undo();
+    this->undo();
     return false;
 }
 
@@ -362,8 +321,8 @@ void bongcloud::board::load(const std::string_view string) {
         // TODO: Validate the capture square and make sure it isn't on a square
         // which could be impossible to capture en passant on.
 
-        mutation latest;
-        latest.trivials = m_trivial_half_moves;
+        record latest;
+        latest.trivials = m_trivials;
 
         latest.move = {
             (m_color == color::white) ? capture_square + length : capture_square - length,
@@ -379,19 +338,17 @@ void bongcloud::board::load(const std::string_view string) {
 
     // Handle the half-move clock via string-to-integer conversion.
     // The full-move count is not handled explicitly as we have no use for it.
-    std::from_chars(string.begin() + character, string.end(), m_trivial_half_moves);
+    std::from_chars(string.begin() + character, string.end(), m_trivials);
 
     fmt::print("[bongcloud] board.load():\n");
     this->print();
 }
 
 void bongcloud::board::undo(void) {
-    // Ensure that there is a move to undo.
     if(m_history.size() == 0) {
         return;
     }
 
-    // Retrieve the last move and undo it.
     const auto& last = m_history.back();
     auto& origin = m_internal[last.move.from];
     auto& dest = m_internal[last.move.to];
@@ -417,8 +374,7 @@ void bongcloud::board::undo(void) {
         rook_dest = std::nullopt;
     }
 
-    // Revert to the previous player and delete the last move.
-    m_color = internal::prev_color(m_color);
-    m_trivial_half_moves = last.trivials;
+    m_color = last.color;
+    m_trivials = last.trivials;
     m_history.pop_back();
 }

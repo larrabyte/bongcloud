@@ -20,32 +20,28 @@ namespace bongcloud {
         bongcloud::piece piece;
     };
 
-    struct mutation {
+    struct record {
+        piece::color color;
         bongcloud::move move;
         std::size_t trivials;
         std::optional<bongcloud::move> castle;
-        std::optional<bongcloud::capture> capture;
-        std::optional<bongcloud::piece> promotion;
+        std::optional<capture> capture;
+        std::optional<piece> promotion;
     };
 
     class board {
         public:
-            // The default board constructor, which takes a length and a boolean as parameters.
-            // Setting the boolean to true disables all move checking.
-            board(const std::size_t, const bool);
+            // User-defined constructor for setting initial board parameters.
+            board(const std::size_t l, const bool a) noexcept : length {l}, m_internal {l * l}, m_anarchy {a} {};
 
-            // Returns a copy of the current board *without* history.
-            board duplicate(void) const;
-
-            // Prints out the current board state to stdout.
-            void print(void) const;
+            // Attempts to move a piece from one square to another.
+            bool move(const std::size_t, const std::size_t);
 
             // Returns whether a player is currently in check.
             bool check(const piece::color) const;
 
-            // Moves a piece from one square to another.
-            // Returns true if the move was successful.
-            bool mutate(const std::size_t, const std::size_t);
+            // Prints out the current board state to stdout.
+            void print(void) const;
 
             // Overwrites the current board state using a FEN string.
             void load(const std::string_view);
@@ -54,13 +50,13 @@ namespace bongcloud {
             void undo(void);
 
             // Returns a constant reference to the board's history array.
-            const std::vector<mutation>& history(void) const noexcept {
+            const std::vector<record>& history(void) const noexcept {
                 return m_history;
             }
 
             // Returns the last move made (may be std::nullopt).
-            inline std::optional<move> latest(void) const noexcept {
-                std::optional<move> m;
+            inline std::optional<bongcloud::move> latest(void) const noexcept {
+                std::optional<bongcloud::move> m;
 
                 if(m_history.size() > 0) {
                     m = m_history.back().move;
@@ -104,14 +100,14 @@ namespace bongcloud {
             const std::size_t length;
 
         private:
-            // Returns the type of a move based on piece movement rules.
-            std::optional<piece::move> permissible(const std::size_t, const std::size_t) const;
+            // Returns the type of move (if pseudolegal) based on piece movement rules.
+            std::optional<piece::move> pseudolegal(const std::size_t, const std::size_t) const;
 
             // The board's internal representation.
             std::vector<square> m_internal;
 
             // An array of previously made moves.
-            std::vector<mutation> m_history;
+            std::vector<record> m_history;
 
             // Determines whether any move is legal.
             bool m_anarchy;
@@ -120,6 +116,6 @@ namespace bongcloud {
             piece::color m_color = piece::color::white;
 
             // The number of trivial half-moves made.
-            std::size_t m_trivial_half_moves = 0;
+            std::size_t m_trivials = 0;
     };
 }

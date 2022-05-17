@@ -57,7 +57,7 @@ namespace internal {
     }
 }
 
-std::optional<bongcloud::piece::move> bongcloud::board::permissible(const std::size_t from, const std::size_t to) const {
+std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::size_t from, const std::size_t to) const {
     // Some initial sanity checks.
     const auto& origin = m_internal[from];
     const auto& dest = m_internal[to];
@@ -94,14 +94,7 @@ std::optional<bongcloud::piece::move> bongcloud::board::permissible(const std::s
 
         std::size_t fwd_index = (origin->hue == piece::color::white) ? from + length : from - length;
         const auto& obstructed = m_internal[fwd_index];
-
-        bool jump_forward = {
-            rank_difference == 2 &&
-            file_difference == 0 &&
-            origin->moves == 0 &&
-            !obstructed &&
-            !dest
-        };
+        bool jump_forward = rank_difference == 2 && file_difference == 0 && origin->moves == 0 && !obstructed && !dest;
 
         if(promotion && (step_forward || diagonal_cap)) {
             return piece::move::promotion;
