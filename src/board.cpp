@@ -122,11 +122,6 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
         throw std::runtime_error("tried to move from square with no piece");
     }
 
-    if(m_trivials == 100) {
-        // Forced statemate.
-        return false;
-    }
-
     record latest;
     latest.color = m_color;
     latest.move = {from, to};
@@ -135,6 +130,20 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
     bool correct_color = origin->hue == m_color;
     bool cannibal = dest && origin->hue == dest->hue;
     auto type = this->pseudolegal(from, to);
+    bool authorised = correct_color && !cannibal && type;
+
+    if(m_trivials >= 100 || !(m_anarchy || authorised)) {
+        // 100 trivial ply (50 moves) is a forced stalemate.
+        return false;
+    }
+
+    bool white = m_color == piece::color::white;
+    auto& current = (white) ? m_cache.pieces.white : m_cache.pieces.black;
+    auto& opposing = (white) ? m_cache.pieces.black : m_cache.pieces.white;
+    auto& kings = (white) ? m_cache.kings.white : m_cache.kings.black;
+
+    // Update the cache to keep it in sync with the internal board.
+    ext::replace_once(current.begin(), current.end(), from, to);
 
     if(m_anarchy) {
         // Since most moves are usually considered impossible, we require
@@ -148,7 +157,7 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
         ++dest->moves;
     }
 
-    else if(correct_color && !cannibal && type) {
+    else /* if(authorised) */ {
         if(type == piece::move::normal) {
             dest = origin;
             origin = std::nullopt;
@@ -157,6 +166,7 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
 
         else if(type == piece::move::capture) {
             latest.capture = {to, *dest};
+            std::erase(opposing, to);
             dest = origin;
             origin = std::nullopt;
             ++dest->moves;
@@ -171,15 +181,17 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
             const auto& last = this->latest();
             auto& target = m_internal[last->to];
             latest.capture = {last->to, *target};
+            std::erase(opposing, last->to);
             origin = std::nullopt;
             target = std::nullopt;
         }
 
         else if(type == piece::move::short_castle || type == piece::move::long_castle) {
-            latest.castle = {
-                (type == piece::move::short_castle) ? to + 1 : to - 2,
-                (type == piece::move::short_castle) ? to - 1 : to + 1
-            };
+            if(type == piece::move::short_castle) {
+                latest.castle = {to + 1, to - 1};
+            } else {
+                latest.castle = {to - 2, to + 1};
+            }
 
             auto& rook_origin = m_internal[latest.castle->from];
             auto& rook_dest = m_internal[latest.castle->to];
@@ -189,11 +201,19 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
             rook_dest = origin;
             origin = std::nullopt;
 
-            if(this->check(m_color)) {
+            // Calculate check after the cache is updated - and then immediately rewind.
+            ext::replace_once(kings.begin(), kings.end(), from, latest.castle->to);
+            bool illegal = this->check(m_color);
+            ext::replace_once(kings.begin(), kings.end(), latest.castle->to, from);
+
+            if(illegal) {
                 origin = rook_dest;
                 rook_dest = std::nullopt;
                 return false;
             }
+
+            // We do have to worry about the rook moving. This updates the cache so it stays in sync.
+            ext::replace_once(current.begin(), current.end(), latest.castle->from, latest.castle->to);
 
             dest = rook_dest;
             rook_dest = rook_origin;
@@ -205,6 +225,7 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
         else if(type == piece::move::promotion) {
             if(dest) {
                 latest.capture = {to, *dest};
+                std::erase(opposing, to);
             }
 
             dest = piece(origin->hue, piece::type::queen);
@@ -218,31 +239,8 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
         }
     }
 
-    else {
-        // If the move is not pseudolegal and we aren't in anarchy mode,
-        // then this move must be illegal and we can simply return false.
-        return false;
-    }
-
     m_history.push_back(latest);
-
-    // Update the cache to keep it in sync with the internal board.
-    bool white = m_color == piece::color::white;
-    auto& current = (white) ? m_cache.pieces.white : m_cache.pieces.black;
-    auto& opposing = (white) ? m_cache.pieces.black : m_cache.pieces.white;
-    ext::replace_once(current.begin(), current.end(), from, to);
-
-    if(latest.capture) {
-        // A capture requires the opposing cache be updated as well.
-        std::erase(opposing, to);
-    } else if(latest.castle) {
-        // Castling and capturing are mututally exclusive.
-        // Also note that castling moves two pieces (king and rook).
-        ext::replace_once(current.begin(), current.end(), latest.castle->from, latest.castle->to);
-    }
-
     if(dest->variety == piece::type::king) {
-        auto& kings = (white) ? m_cache.kings.white : m_cache.kings.black;
         ext::replace_once(kings.begin(), kings.end(), from, to);
     }
 
