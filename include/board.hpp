@@ -20,6 +20,12 @@ namespace bongcloud {
         bongcloud::piece piece;
     };
 
+    template<typename T>
+    struct dualvector {
+        std::vector<T> white;
+        std::vector<T> black;
+    };
+
     struct record {
         piece::color color;
         bongcloud::move move;
@@ -27,6 +33,11 @@ namespace bongcloud {
         std::optional<bongcloud::move> castle;
         std::optional<capture> capture;
         std::optional<piece> promotion;
+    };
+
+    struct cache {
+        dualvector<std::size_t> pieces;
+        dualvector<std::size_t> kings;
     };
 
     class board {
@@ -105,6 +116,9 @@ namespace bongcloud {
 
             // The board's internal representation.
             std::vector<square> m_internal;
+
+            // Tracks the indexes of living pieces (and separately, living kings).
+            cache m_cache;
 
             // An array of previously made moves.
             std::vector<record> m_history;
