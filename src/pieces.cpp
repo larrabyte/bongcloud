@@ -105,12 +105,13 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
         }
 
         // HON HON!
-        if(const auto& last = latest()) {
-            bool pawn = m_internal[last->to]->variety == piece::type::pawn;
-            bool jumped = internal::absdiff(last->from, last->to) == length * 2;
-            bool taking = internal::absdiff(to, last->to) == length;
-            bool adjacent = internal::absdiff(from, last->to) == 1;
-            if(pawn && jumped && taking && adjacent) {
+        if(const auto& latest = this->latest()) {
+            bool pawn = m_internal[latest->to]->variety == piece::type::pawn;
+            bool jumped = internal::absdiff(latest->from, latest->to) == length * 2;
+            bool taking = internal::absdiff(to, latest->to) == length;
+            bool adjacent = internal::absdiff(from, latest->to) == 1;
+            bool edge = (from_file == 0 || from_file == length - 1) && (to_file == 0 || to_file == length - 1);
+            if(pawn && jumped && taking && adjacent && !edge) {
                 return piece::move::en_passant;
             }
         }
@@ -206,7 +207,7 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
             bool king_ready = origin->moves == 0;
             bool jump_to_empty = rank_difference == 0 && file_difference == 2 && !dest;
             bool rook_ready = target && target->variety == piece::type::rook && target->moves == 0;
-            bool obstructed = internal::obstructions::rook(*this, from, castle_index, castle_difference - 1);
+            bool obstructed = internal::obstructions::rook(*this, from, castle_index, castle_difference);
 
             if(king_ready && jump_to_empty && rook_ready && !obstructed) {
                 return (castle_short) ? piece::move::short_castle : piece::move::long_castle;
