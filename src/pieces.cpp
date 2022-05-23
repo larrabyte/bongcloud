@@ -58,17 +58,12 @@ namespace internal {
 }
 
 std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::size_t from, const std::size_t to) const {
-    // Some initial sanity checks.
     const auto& origin = m_internal[from];
     const auto& dest = m_internal[to];
 
-    if(!origin) {
-        throw std::runtime_error("tried to move from square with no piece");
-    }
-
-    if(from == to) {
-        throw std::runtime_error("tried to check permissiblity of a non-move");
-    }
+    // Some sanity checks.
+    assert(origin.has_value());
+    assert(from != to);
 
     // Apply piece movement rules.
     std::size_t from_rank = from / length;

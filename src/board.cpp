@@ -97,9 +97,7 @@ bool bongcloud::board::check(const piece::color color) const {
         }
     }
 
-    if(kings.empty()) {
-        throw std::runtime_error("no king(s) on board");
-    }
+    assert(!kings.empty());
 
     // Return true if any king is in check.
     for(const auto king : kings) {
@@ -118,9 +116,7 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
     auto& origin = m_internal[from];
     auto& dest = m_internal[to];
 
-    if(!origin) {
-        throw std::runtime_error("tried to move from square with no piece");
-    }
+    assert(origin.has_value());
 
     record latest;
     latest.color = m_color;
