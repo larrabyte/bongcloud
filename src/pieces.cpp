@@ -194,21 +194,22 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
             return (dest) ? piece::move::capture : piece::move::normal;
         }
 
-        // The king can also castle short (king-side).
-        bool castle_short = from < to;
-        std::size_t castle_index = (castle_short) ? to + 1 : to - 2;
+        // The king can also castle.
+        std::pair<std::size_t, std::size_t> corners = {
+            (m_color == piece::color::white) ? 0 : length * length,
+            (m_color == piece::color::white) ? length - 1 : (length * length) - 1
+        };
 
-        if(rank_difference == 0 && castle_index < length * length) {
-            const auto &target = m_internal[castle_index];
-            std::size_t castle_difference = internal::absdiff(from, castle_index);
+        auto valid = std::make_pair(corners.first + 2, corners.second - 1);
+        if(rank_difference == 0 && file_difference == 2 && !dest && (to == valid.first || to == valid.second)) {
+            std::size_t index = (to == valid.first) ? corners.first : corners.second;
+            std::size_t difference = internal::absdiff(from, index);
+            const auto& target = m_internal[index];
 
-            bool king_ready = origin->moves == 0;
-            bool jump_to_empty = rank_difference == 0 && file_difference == 2 && !dest;
-            bool rook_ready = target && target->variety == piece::type::rook && target->moves == 0;
-            bool obstructed = internal::obstructions::rook(*this, from, castle_index, castle_difference);
-
-            if(king_ready && jump_to_empty && rook_ready && !obstructed) {
-                return (castle_short) ? piece::move::short_castle : piece::move::long_castle;
+            bool first = origin->moves == 0;
+            bool rook = target && target->variety == piece::type::rook && target->moves == 0;
+            if(first && rook && !internal::obstructions::rook(*this, from, to, difference)) {
+                return (from < to) ? piece::move::short_castle : piece::move::long_castle;
             }
         }
 
