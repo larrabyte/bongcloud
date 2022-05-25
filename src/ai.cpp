@@ -115,10 +115,12 @@ namespace bongcloud { // Implementation of classical_ai.
             return std::nullopt;
         }
 
-        auto whitesort = [](const position& lhs, const position& rhs) { return lhs.second > rhs.second; };
-        auto blacksort = [](const position& lhs, const position& rhs) { return lhs.second < rhs.second; };
-        std::sort(moves.begin(), moves.end(), (board.color() == piece::color::white) ? whitesort : blacksort);
-        return moves[0].first;
+        std::sort(moves.begin(), moves.end(), [](const position& lhs, const position& rhs) {
+            return lhs.second > rhs.second;
+        });
+
+        std::size_t index = (board.color() == piece::color::white) ? 0 : moves.size() - 1;
+        return moves[index].first;
     }
 }
 
