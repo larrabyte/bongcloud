@@ -15,33 +15,26 @@ namespace bongcloud {
             // Generates a legal move for the current board's player.
             virtual std::optional<move> generate(const board&) = 0;
 
+            // Returns the number of legal moves after n ply.
+            virtual std::size_t perft(const board&, const std::size_t) = 0;
+
             // An empty destructor implementation.
             virtual ~ai() {};
     };
 
-    class random_ai final : public ai {
-        public:
-            random_ai(const bongcloud::board&) : m_random {m_device()} {};
-            double evaluate(const board&) const;
-            std::optional<move> generate(const bongcloud::board&);
-
-        private:
-            // A (hopefully) true random number generator.
-            std::random_device m_device;
-
-            // A pseudo-random number generator.
-            std::minstd_rand m_random;
-    };
-
     class classical_ai final : public ai {
         public:
-            classical_ai(const bongcloud::board&, const std::size_t s) noexcept : m_depth {s} {};
-            double evaluate(const bongcloud::board&) const;
-            std::optional<move> generate(const bongcloud::board&);
+            classical_ai(const board&, const std::size_t s) noexcept : m_depth {s} {};
+            double evaluate(const board&) const;
+            std::optional<move> generate(const board&);
+            std::size_t perft(const board&, const std::size_t);
 
         private:
             // An implementation of the minimax algorithm.
             double minimax(board&, double, double, const std::size_t, const piece::color) const;
+
+            // An algorithm that counts possible positions recursively.
+            std::size_t positions(board&, const std::size_t) const;
 
             // Returns a vector containing all possible moves for a given board.
             // This will use the board passed in as a scratch area, however

@@ -20,12 +20,6 @@ namespace bongcloud {
         bongcloud::piece piece;
     };
 
-    template<typename T>
-    struct dualvector {
-        std::vector<T> white;
-        std::vector<T> black;
-    };
-
     struct record {
         piece::color color;
         bongcloud::move move;

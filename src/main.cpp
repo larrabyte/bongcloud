@@ -120,6 +120,14 @@ int main(int argc, char** argv) {
                         auto evaluation = engine->evaluate(board);
                         fmt::print("[bongcloud] current evaluation: {:+}\n", evaluation);
                     }
+
+                    if(ctrl_or_cmd && event.is_active(cen::scancodes::r)) {
+                        // Pressing Ctrl+R will print the number of legal positions after n ply.
+                        for(std::size_t i = 1; i < search_depth + 1; ++i) {
+                            auto n = engine->perft(board, i);
+                            fmt::print("[bongcloud] no. of positions after {} ply: {}\n", i, n);
+                        }
+                    }
                 }
             }
 
