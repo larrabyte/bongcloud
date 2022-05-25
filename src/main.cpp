@@ -12,7 +12,7 @@
 namespace defaults {
     constexpr std::size_t board_size = 8;
     constexpr std::size_t square_resolution = 64;
-    constexpr std::size_t search_depth = 2;
+    constexpr std::size_t search_depth = 4;
     constexpr bool anarchy = false;
     constexpr bool bot = false;
 
