@@ -330,9 +330,7 @@ void bongcloud::board::load(const std::string_view string) {
 }
 
 void bongcloud::board::undo(void) {
-    if(m_history.size() == 0) {
-        return;
-    }
+    assert(m_history.size() != 0);
 
     const auto& last = m_history.back();
     auto& origin = m_internal[last.move.from];

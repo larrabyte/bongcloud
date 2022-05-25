@@ -35,7 +35,7 @@ namespace bongcloud {
 
     class classical_ai final : public ai {
         public:
-            classical_ai(const bongcloud::board&, const std::size_t s) : m_depth {s} {};
+            classical_ai(const bongcloud::board&, const std::size_t s) noexcept : m_depth {s} {};
             double evaluate(const bongcloud::board&) const;
             std::optional<move> generate(const bongcloud::board&);
 

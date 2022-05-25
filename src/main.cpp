@@ -106,10 +106,12 @@ int main(int argc, char** argv) {
 
                     if(ctrl_or_cmd && event.is_active(cen::scancodes::z)) {
                         // Pressing Ctrl+Z will undo the last move.
-                        board.undo();
-
-                        if(bot) {
+                        if(board.history().size() > 0) {
                             board.undo();
+
+                            if(bot && board.history().size() > 0) {
+                                board.undo();
+                            }
                         }
                     }
 
