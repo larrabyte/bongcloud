@@ -151,7 +151,8 @@ int main(int argc, char** argv) {
                             throw std::runtime_error("AI tried to play illegal move");
                         }
                     } else {
-                        // The bot is in checkmate.
+                        // The bot has no legal moves.
+                        fmt::print("[bongcloud] no legal moves remaining.\n");
                         bot = false;
                     }
                 }

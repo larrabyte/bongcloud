@@ -35,11 +35,6 @@ namespace bongcloud {
         std::optional<piece> promotion;
     };
 
-    struct cache {
-        dualvector<std::size_t> pieces;
-        dualvector<std::size_t> kings;
-    };
-
     class board {
         public:
             // User-defined constructor for setting initial board parameters.
@@ -59,11 +54,6 @@ namespace bongcloud {
 
             // Undoes the last move.
             void undo(void);
-
-            // Returns a constant reference to the board's cache.
-            const bongcloud::cache& cache(void) const noexcept {
-                return m_cache;
-            }
 
             // Returns a constant reference to the board's history array.
             const std::vector<record>& history(void) const noexcept {
@@ -121,9 +111,6 @@ namespace bongcloud {
 
             // The board's internal representation.
             std::vector<square> m_internal;
-
-            // Tracks the indexes of living pieces (and separately, living kings).
-            bongcloud::cache m_cache;
 
             // An array of previously made moves.
             std::vector<record> m_history;

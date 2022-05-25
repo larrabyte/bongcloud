@@ -54,35 +54,6 @@ void bongcloud::board::print(void) const {
     }
 
     fmt::print("\n");
-
-    // Print out the state of the cache.
-    fmt::print("[bongcloud] index of white pieces: ");
-    for(const auto index : m_cache.pieces.white) {
-        fmt::print("{} ", index);
-    }
-
-    fmt::print("\n");
-
-    fmt::print("[bongcloud] index of white royals: ");
-    for(const auto index : m_cache.kings.white) {
-        fmt::print("{} ", index);
-    }
-
-    fmt::print("\n");
-
-    fmt::print("[bongcloud] index of black pieces: ");
-    for(const auto index : m_cache.pieces.black) {
-        fmt::print("{} ", index);
-    }
-
-    fmt::print("\n");
-
-    fmt::print("[bongcloud] index of black royals: ");
-    for(const auto index : m_cache.kings.black) {
-        fmt::print("{} ", index);
-    }
-
-    fmt::print("\n\n");
 }
 
 bool bongcloud::board::check(const piece::color color) const {
@@ -133,14 +104,6 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
         return false;
     }
 
-    bool white = m_color == piece::color::white;
-    auto& current = (white) ? m_cache.pieces.white : m_cache.pieces.black;
-    auto& opposing = (white) ? m_cache.pieces.black : m_cache.pieces.white;
-    auto& kings = (white) ? m_cache.kings.white : m_cache.kings.black;
-
-    // Update the cache to keep it in sync with the internal board.
-    ext::replace_once(current.begin(), current.end(), from, to);
-
     if(m_anarchy) {
         // Since most moves are usually considered impossible, we require
         // different logic for piece movement when anarchy mode is enabled.
@@ -162,7 +125,6 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
 
         else if(type == piece::move::capture) {
             latest.capture = {to, *dest};
-            std::erase(opposing, to);
             dest = origin;
             origin = std::nullopt;
             ++dest->moves;
@@ -177,7 +139,6 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
             const auto& last = this->latest();
             auto& target = m_internal[last->to];
             latest.capture = {last->to, *target};
-            std::erase(opposing, last->to);
             origin = std::nullopt;
             target = std::nullopt;
         }
@@ -197,19 +158,11 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
             rook_dest = origin;
             origin = std::nullopt;
 
-            // Calculate check after the cache is updated - and then immediately rewind.
-            ext::replace_once(kings.begin(), kings.end(), from, latest.castle->to);
-            bool illegal = this->check(m_color);
-            ext::replace_once(kings.begin(), kings.end(), latest.castle->to, from);
-
-            if(illegal) {
+            if(this->check(m_color)) {
                 origin = rook_dest;
                 rook_dest = std::nullopt;
                 return false;
             }
-
-            // We do have to worry about the rook moving. This updates the cache so it stays in sync.
-            ext::replace_once(current.begin(), current.end(), latest.castle->from, latest.castle->to);
 
             dest = rook_dest;
             rook_dest = rook_origin;
@@ -221,7 +174,6 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
         else if(type == piece::move::promotion) {
             if(dest) {
                 latest.capture = {to, *dest};
-                std::erase(opposing, to);
             }
 
             dest = piece(origin->hue, piece::type::queen);
@@ -236,14 +188,12 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
     }
 
     m_history.push_back(latest);
-    if(dest->variety == piece::type::king) {
-        ext::replace_once(kings.begin(), kings.end(), from, to);
-    }
 
     // If the move is actually legal, finish updating the board state and return.
     if(m_anarchy || !this->check(m_color)) {
         bool pawn = dest->variety != piece::type::pawn;
         bool pacifist = type == piece::move::normal;
+        bool white = m_color == piece::color::white;
         m_trivials = (pawn && pacifist) ? m_trivials + 1 : 0;
         m_color = (white) ? piece::color::black : piece::color::white;
         return true;
@@ -263,42 +213,22 @@ void bongcloud::board::load(const std::string_view string) {
     std::size_t character = 0;
     char c;
 
-    auto assign = [&](const piece::color c, const piece::type t) {
-        auto& p = m_internal[square];
-        p = bongcloud::piece(c, t);
-
-        if(c == color::white) {
-            m_cache.pieces.white.push_back(square);
-            if(t == piece::type::king) {
-                m_cache.kings.white.push_back(square);
-            }
-
-        } else {
-            m_cache.pieces.black.push_back(square);
-            if(t == piece::type::king) {
-                m_cache.kings.black.push_back(square);
-            }
-        }
-
-        ++square;
-    };
-
     // First, we handle piece placement.
     while((c = string.at(character++)) != ' ') {
         switch(c) {
             // Lowercase represent white pieces, uppercase represent black pieces.
-            case 'r': assign(color::white, type::rook); break;
-            case 'n': assign(color::white, type::knight); break;
-            case 'b': assign(color::white, type::bishop); break;
-            case 'q': assign(color::white, type::queen); break;
-            case 'k': assign(color::white, type::king); break;
-            case 'p': assign(color::white, type::pawn); break;
-            case 'R': assign(color::black, type::rook); break;
-            case 'N': assign(color::black, type::knight); break;
-            case 'B': assign(color::black, type::bishop); break;
-            case 'Q': assign(color::black, type::queen); break;
-            case 'K': assign(color::black, type::king); break;
-            case 'P': assign(color::black, type::pawn); break;
+            case 'r': m_internal[square++] = piece(color::white, type::rook); break;
+            case 'n': m_internal[square++] = piece(color::white, type::knight); break;
+            case 'b': m_internal[square++] = piece(color::white, type::bishop); break;
+            case 'q': m_internal[square++] = piece(color::white, type::queen); break;
+            case 'k': m_internal[square++] = piece(color::white, type::king); break;
+            case 'p': m_internal[square++] = piece(color::white, type::pawn); break;
+            case 'R': m_internal[square++] = piece(color::black, type::rook); break;
+            case 'N': m_internal[square++] = piece(color::black, type::knight); break;
+            case 'B': m_internal[square++] = piece(color::black, type::bishop); break;
+            case 'Q': m_internal[square++] = piece(color::black, type::queen); break;
+            case 'K': m_internal[square++] = piece(color::black, type::king); break;
+            case 'P': m_internal[square++] = piece(color::black, type::pawn); break;
 
             // Numbers signify the number of squares to skip.
             case '1': case '2': case '3':
@@ -408,17 +338,6 @@ void bongcloud::board::undo(void) {
     auto& origin = m_internal[last.move.from];
     auto& dest = m_internal[last.move.to];
 
-    // Revert the cache to its previous state.
-    bool white = last.color == piece::color::white;
-    auto& current = (white) ? m_cache.pieces.white : m_cache.pieces.black;
-    auto& opposing = (white) ? m_cache.pieces.black : m_cache.pieces.white;
-    ext::replace_once(current.begin(), current.end(), last.move.to, last.move.from);
-
-    if(dest->variety == piece::type::king) {
-        auto& kings = (white) ? m_cache.kings.white : m_cache.kings.black;
-        ext::replace_once(kings.begin(), kings.end(), last.move.to, last.move.from);
-    }
-
     // Revert the board to its previous state.
     if(last.promotion) {
         dest = piece(last.promotion->hue, piece::type::pawn);
@@ -431,7 +350,6 @@ void bongcloud::board::undo(void) {
     if(last.capture) {
         auto& capture = m_internal[last.capture->index];
         capture = last.capture->piece;
-        opposing.push_back(last.capture->index);
     }
 
     if(last.castle) {
@@ -440,7 +358,6 @@ void bongcloud::board::undo(void) {
         rook_origin = rook_dest;
         rook_origin->moves--;
         rook_dest = std::nullopt;
-        ext::replace_once(current.begin(), current.end(), last.castle->to, last.castle->from);
     }
 
     m_color = last.color;

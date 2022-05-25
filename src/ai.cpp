@@ -37,14 +37,10 @@ namespace bongcloud { // Implementation of classical_ai.
         std::vector<move> moves;
         moves.reserve(internal::reserve_buffer);
 
-        bool white = board.color() == piece::color::white;
-        const auto& cache = board.cache();
-        const auto& pieces = (white) ? cache.pieces.white : cache.pieces.black;
-
-        for(const auto f : pieces) {
-            for(std::size_t t = 0; t < board.length * board.length; ++t) {
-                if(f != t && board.move(f, t)) {
-                    move m = {f, t};
+        for(std::size_t from = 0; from < board.length * board.length; ++from) {
+            for(std::size_t to = 0; to < board.length * board.length; ++to) {
+                if(from != to && board[from] && board.move(from, to)) {
+                    move m = {from, to};
                     moves.push_back(m);
                     board.undo();
                 }
@@ -136,14 +132,10 @@ namespace bongcloud { // Implementation of random_ai.
         std::vector<move> moves;
         moves.reserve(internal::reserve_buffer);
 
-        bool white = board.color() == piece::color::white;
-        const auto& cache = board.cache();
-        const auto& pieces = (white) ? cache.pieces.white : cache.pieces.black;
-
-        for(const auto f : pieces) {
-            for(std::size_t t = 0; t < local.length * local.length; ++t) {
-                if(f != t && board[f] && local.move(f, t)) {
-                    move m = {f, t};
+        for(std::size_t from = 0; from < local.length * local.length; ++from) {
+            for(std::size_t to = 0; to < local.length * local.length; ++to) {
+                if(from != to && local[from] && local.move(from, to)) {
+                    move m = {from, to};
                     moves.push_back(m);
                     local.undo();
                 }

@@ -10,6 +10,8 @@ namespace internal {
 
     namespace obstructions {
         bool bishop(const bongcloud::board& board, const std::size_t origin, const std::size_t from_rank, const std::size_t from_file, const std::size_t to_rank, const std::size_t to_file, std::size_t rank_difference, std::size_t file_difference) noexcept {
+            assert(rank_difference == file_difference);
+
             while(--rank_difference > 0 && --file_difference > 0) {
                 std::size_t index;
 
@@ -44,6 +46,7 @@ namespace internal {
 
         bool rook(const bongcloud::board& board, const std::size_t from, const std::size_t to, std::size_t difference) noexcept {
             std::size_t subtractor = (difference >= board.length) ? board.length : 1;
+            assert((difference > 0 && difference < board.length) || (difference % board.length == 0));
 
             while((difference -= subtractor) > 0) {
                 std::size_t index = (from > to) ? from - difference : from + difference;
@@ -195,7 +198,7 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
         bool castle_short = from < to;
         std::size_t castle_index = (castle_short) ? to + 1 : to - 2;
 
-        if(castle_index < length * length) {
+        if(rank_difference == 0 && castle_index < length * length) {
             const auto &target = m_internal[castle_index];
             std::size_t castle_difference = internal::absdiff(from, castle_index);
 
