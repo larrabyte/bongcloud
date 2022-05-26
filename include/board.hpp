@@ -15,6 +15,11 @@ namespace bongcloud {
         std::size_t to;
     };
 
+    struct index {
+        std::size_t rank;
+        std::size_t file;
+    };
+
     struct capture {
         std::size_t index;
         bongcloud::piece piece;
