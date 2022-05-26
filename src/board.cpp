@@ -88,118 +88,132 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
     auto& dest = m_internal[to];
 
     assert(origin.has_value());
+    assert(from != to);
 
-    record latest;
-    latest.color = m_color;
-    latest.move = {from, to};
-    latest.trivials = m_trivials;
-
-    bool correct_color = origin->hue == m_color;
-    bool cannibal = dest && origin->hue == dest->hue;
-    auto type = this->pseudolegal(from, to);
-    bool authorised = correct_color && !cannibal && type;
-
-    if(m_trivials >= 100 || !(m_anarchy || authorised)) {
-        // 100 trivial ply (50 moves) is a forced stalemate.
+    // First, make sure that there are no trivial conditions preventing a move.
+    // This could be either a forced stalement (50 move rule), moving an enemy piece
+    // or attempting to capture a friendly piece.
+    if(m_trivials >= 100 || origin->hue != m_color || (dest && dest->hue == m_color)) {
         return false;
     }
 
     if(m_anarchy) {
-        // Since most moves are usually considered impossible, we require
-        // different logic for piece movement when anarchy mode is enabled.
+        // Anarchy mode is limited to normal moves and capturing moves,
+        // since regular piece movement rules do not apply.
+        bongcloud::record ffa;
+        ffa.color = m_color;
+        ffa.move = {from, to};
+        ffa.trivials = m_trivials;
+
         if(dest) {
-            latest.capture = {to, *dest};
+            ffa.capture = {to, *dest};
         }
 
         dest = origin;
         origin = std::nullopt;
         ++dest->moves;
+
+        m_history.push_back(ffa);
+        return true;
     }
 
-    else /* if(authorised) */ {
-        if(type == piece::move::normal) {
-            dest = origin;
-            origin = std::nullopt;
-            ++dest->moves;
-        }
+    // Otherwise, check if the move is pseudolegal and move the pieces accordingly.
+    if(auto type = this->pseudolegal(from, to)) {
+        bongcloud::record history;
+        history.color = m_color;
+        history.move = {from, to};
+        history.trivials = m_trivials;
 
-        else if(type == piece::move::capture) {
-            latest.capture = {to, *dest};
-            dest = origin;
-            origin = std::nullopt;
-            ++dest->moves;
+        if(type == piece::move::capture) {
+            history.capture = {to, *dest};
         }
 
         else if(type == piece::move::en_passant) {
-            dest = origin;
-            ++dest->moves;
-
-            // Clear the origin square and the square directly behind,
-            // which is equivalent to a square adjacent to the origin.
-            const auto& last = this->latest();
-            auto& target = m_internal[last->to];
-            latest.capture = {last->to, *target};
-            origin = std::nullopt;
+            const auto& latest = this->latest();
+            auto& target = m_internal[latest->to];
+            history.capture = {latest->to, *target};
             target = std::nullopt;
         }
 
-        else if(type == piece::move::short_castle || type == piece::move::long_castle) {
-            if(type == piece::move::short_castle) {
-                latest.castle = {to + 1, to - 1};
-            } else {
-                latest.castle = {to - 2, to + 1};
-            }
-
-            auto& rook_origin = m_internal[latest.castle->from];
-            auto& rook_dest = m_internal[latest.castle->to];
+        else if(type == piece::move::short_castle) {
+            history.castle = {to + 1, to - 1};
 
             // Check that the king isn't moving through check.
             // We don't have to worry about captures here.
-            rook_dest = origin;
-            origin = std::nullopt;
+            for(std::size_t delta = 1; delta < to - from; ++delta) {
+                auto& trail = m_internal[from + delta - 1];
+                auto& cursor = m_internal[from + delta];
+                cursor = trail;
+                trail = std::nullopt;
 
-            if(this->check(m_color)) {
-                origin = rook_dest;
-                rook_dest = std::nullopt;
-                return false;
+                if(this->check(m_color)) {
+                    origin = cursor;
+                    cursor = std::nullopt;
+                    return false;
+                }
             }
+        }
 
-            dest = rook_dest;
-            rook_dest = rook_origin;
-            rook_origin = std::nullopt;
-            ++dest->moves;
-            ++rook_dest->moves;
+        else if(type == piece::move::long_castle) {
+            history.castle = {to - 2, to + 1};
+
+            // Check that the king isn't moving through check.
+            // We don't have to worry about captures here.
+            for(std::size_t delta = 1; delta < from - to; ++delta) {
+                auto& trail = m_internal[from + delta + 1];
+                auto& cursor = m_internal[from + delta];
+                cursor = trail;
+                trail = std::nullopt;
+
+                if(this->check(m_color)) {
+                    origin = cursor;
+                    cursor = std::nullopt;
+                    return false;
+                }
+            }
         }
 
         else if(type == piece::move::promotion) {
             if(dest) {
-                latest.capture = {to, *dest};
+                history.capture = {to, *dest};
             }
 
-            dest = piece(origin->hue, piece::type::queen);
-            dest->moves = origin->moves;
-            origin = std::nullopt;
-            latest.promotion = dest;
+            // Instead of placing a promoted piece immediately,
+            // we can use the common piece movement code and just set
+            // the origin square to contain the promoted piece.
+            std::size_t moves = origin->moves;
+            origin = piece(origin->hue, piece::type::queen);
+            origin->moves = moves;
+            history.promotion = origin;
         }
 
-        else {
-            throw std::runtime_error("unimplemented movement type");
+        // Every move involves the same sequence of copying the piece
+        // from the origin square to the destination square and then
+        // clearing the origin square and incrementing the move count.
+        dest = origin;
+        origin = std::nullopt;
+        ++dest->moves;
+        m_history.push_back(history);
+
+        // Check that the move just played did not leave the king in check.
+        if(this->check(m_color)) {
+            this->undo();
+            return false;
         }
-    }
 
-    m_history.push_back(latest);
+        // Otherwise, finalise the state of the board.
+        bool trivial = {
+            dest->variety != piece::type::pawn &&
+            type == piece::move::normal
+        };
 
-    // If the move is actually legal, finish updating the board state and return.
-    if(m_anarchy || !this->check(m_color)) {
-        bool pawn = dest->variety != piece::type::pawn;
-        bool pacifist = type == piece::move::normal;
         bool white = m_color == piece::color::white;
-        m_trivials = (pawn && pacifist) ? m_trivials + 1 : 0;
+
+        m_trivials = (trivial) ? m_trivials + 1 : 0;
         m_color = (white) ? piece::color::black : piece::color::white;
         return true;
-    }
+    };
 
-    this->undo();
     return false;
 }
 
