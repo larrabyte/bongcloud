@@ -140,6 +140,11 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
             // we can use the king's position as an anchor and perform arithmetic relative to it.
             history.castle = {((from / length) * length) + length - 1, to - 1};
 
+            // If the king is already in check, we cannot castle.
+            if(this->check(m_color)) {
+                return false;
+            }
+
             // Check that the king isn't moving through check.
             // We don't have to worry about accidental captures here.
             for(std::size_t delta = 1; delta < to - from; ++delta) {
@@ -169,6 +174,11 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
             // Since this has already been validated and confirmed to be pseudolegal,
             // we can use the king's position as an anchor and perform arithmetic relative to it.
             history.castle = {(from / length) * length, to + 1};
+
+            // If the king is already in check, we cannot castle.
+            if(this->check(m_color)) {
+                return false;
+            }
 
             // Check that the king isn't moving through check.
             // We don't have to worry about accidental captures here.
