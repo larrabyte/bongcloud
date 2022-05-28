@@ -34,7 +34,7 @@ void bongcloud::board::print(void) const {
                 default: c = '?'; break;
             }
 
-            if(c != '?' && piece->hue == piece::color::black) {
+            if(c != '?' && piece->hue == piece::color::white) {
                 c = std::toupper(c);
             }
 
