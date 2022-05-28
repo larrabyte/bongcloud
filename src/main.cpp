@@ -72,14 +72,12 @@ int main(int argc, char** argv) {
     auto anarchy = program.get<bool>("anarchy");
     auto bot = program.get<bool>("bot");
 
-    // Initialise the board and its associated renderer.
+    // Initialise game-related objects.
     bongcloud::renderer renderer(square_res, board_size);
     bongcloud::board board(board_size, anarchy);
-    board.load(fen_string);
-
-    // This can be any object as long as it inherits from the abstract AI class.
-    std::unique_ptr<bongcloud::ai> engine(new bongcloud::classical_ai(board, search_depth));
+    bongcloud::ai engine(search_depth);
     std::future<std::optional<bongcloud::move>> future;
+    board.load(fen_string);
 
     cen::event_handler handler;
     bool running = true;
@@ -117,14 +115,14 @@ int main(int argc, char** argv) {
 
                     if(ctrl_or_cmd && event.is_active(cen::scancodes::e)) {
                         // Pressing Ctrl+E will print the current evaluation.
-                        auto evaluation = engine->evaluate(board);
+                        auto evaluation = engine.evaluate(board);
                         fmt::print("[bongcloud] current evaluation: {:+}\n", evaluation);
                     }
 
                     if(ctrl_or_cmd && event.is_active(cen::scancodes::r)) {
                         // Pressing Ctrl+R will print the number of legal positions after n ply.
                         for(std::size_t i = 1; i < search_depth + 1; ++i) {
-                            auto n = engine->perft(board, i);
+                            auto n = engine.perft(board, i);
                             fmt::print("[bongcloud] no. of positions after {} ply: {}\n", i, n);
                         }
                     }
@@ -169,7 +167,7 @@ int main(int argc, char** argv) {
             }
 
             else {
-                auto subroutine = [&]() { return engine->generate(board); };
+                auto subroutine = [&]() { return engine.generate(board); };
                 future = std::async(std::launch::async, subroutine);
             }
         }

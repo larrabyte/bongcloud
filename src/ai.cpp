@@ -17,8 +17,19 @@ namespace internal {
     constexpr std::size_t reserve_buffer = 40;
 }
 
-double bongcloud::classical_ai::evaluate(const bongcloud::board& board) const {
+bongcloud::ai::ai(const std::size_t depth) noexcept : m_depth(depth) {
+    fmt::print("[bongcloud] AI search depth set to {} ply.\n", m_depth);
+}
+
+double bongcloud::ai::evaluate(bongcloud::board& board) const {
+    piece::color color = board.color();
     double evaluation = 0.0;
+
+    if(board.check(color) && this->moves(board).empty()) {
+        // Checkmate is the best outcome!
+        evaluation = std::numeric_limits<double>::infinity();
+       return (color == piece::color::white) ? evaluation : -evaluation;
+    }
 
     for(const auto& piece : board) {
         if(piece) {
@@ -31,25 +42,44 @@ double bongcloud::classical_ai::evaluate(const bongcloud::board& board) const {
     return evaluation;
 }
 
-std::vector<bongcloud::move> bongcloud::classical_ai::moves(bongcloud::board& board) const {
-    // Preallocate space here so we don't spend time resizing and copying.
-    std::vector<move> moves;
+std::optional<bongcloud::move> bongcloud::ai::generate(const bongcloud::board& board) const {
+    // Create a local copy so that we don't modify the passed in board
+    // and have the renderer go crazy trying to render the AI's moves.
+    bongcloud::board local = board;
+
+    using position = std::pair<move, double>;
+    std::vector<position> moves;
     moves.reserve(internal::reserve_buffer);
 
-    for(std::size_t from = 0; from < board.length * board.length; ++from) {
-        for(std::size_t to = 0; to < board.length * board.length; ++to) {
-            if(from != to && board[from] && board.move(from, to)) {
-                move m = {from, to};
-                moves.push_back(m);
-                board.undo();
-            }
-        }
+    for(const auto& move : this->moves(local)) {
+        // Make each move and then determine its score through the minimax algorithm.
+        local.move(move.from, move.to);
+        double inf = std::numeric_limits<double>::infinity();
+        double score = this->minimax(local, -inf, inf, m_depth, local.color());
+
+        position pair = std::make_pair(move, score);
+        moves.push_back(pair);
+        local.undo();
     }
 
-    return moves;
+    if(moves.empty()) {
+        return std::nullopt;
+    }
+
+    std::sort(moves.begin(), moves.end(), [](const position& lhs, const position& rhs) {
+        return lhs.second > rhs.second;
+    });
+
+    std::size_t index = (board.color() == piece::color::white) ? 0 : moves.size() - 1;
+    return moves[index].first;
 }
 
-double bongcloud::classical_ai::minimax(bongcloud::board& board, double alpha, double beta, const std::size_t depth, const piece::color color) const {
+std::size_t bongcloud::ai::perft(const bongcloud::board& board, const std::size_t n) const {
+    bongcloud::board local = board;
+    return this->positions(local, n);
+}
+
+double bongcloud::ai::minimax(bongcloud::board& board, double alpha, double beta, const std::size_t depth, const piece::color color) const {
     if(depth == 0) {
         return this->evaluate(board);
     }
@@ -94,7 +124,7 @@ double bongcloud::classical_ai::minimax(bongcloud::board& board, double alpha, d
     return best;
 }
 
-std::size_t bongcloud::classical_ai::positions(bongcloud::board& board, const std::size_t depth) const {
+std::size_t bongcloud::ai::positions(bongcloud::board& board, const std::size_t depth) const {
     if(depth == 0) {
         return 1;
     }
@@ -109,35 +139,20 @@ std::size_t bongcloud::classical_ai::positions(bongcloud::board& board, const st
     return count;
 }
 
-std::optional<bongcloud::move> bongcloud::classical_ai::generate(const bongcloud::board& board) {
-    using position = std::pair<move, double>;
-    bongcloud::board local = board;
-    std::vector<position> moves;
+std::vector<bongcloud::move> bongcloud::ai::moves(bongcloud::board& board) const {
+    // Preallocate space here so we don't spend time resizing and copying.
+    std::vector<move> moves;
     moves.reserve(internal::reserve_buffer);
 
-    for(const auto& move : this->moves(local)) {
-        local.move(move.from, move.to);
-        double inf = std::numeric_limits<double>::infinity();
-        double score = this->minimax(local, -inf, inf, m_depth, board.color());
-
-        position pair = std::make_pair(move, score);
-        moves.push_back(pair);
-        local.undo();
+    for(std::size_t from = 0; from < board.length * board.length; ++from) {
+        for(std::size_t to = 0; to < board.length * board.length; ++to) {
+            if(from != to && board[from] && board.move(from, to)) {
+                move m = {from, to};
+                moves.push_back(m);
+                board.undo();
+            }
+        }
     }
 
-    if(moves.empty()) {
-        return std::nullopt;
-    }
-
-    std::sort(moves.begin(), moves.end(), [](const position& lhs, const position& rhs) {
-        return lhs.second > rhs.second;
-    });
-
-    std::size_t index = (board.color() == piece::color::white) ? 0 : moves.size() - 1;
-    return moves[index].first;
-}
-
-std::size_t bongcloud::classical_ai::perft(const bongcloud::board& board, const std::size_t n) {
-    bongcloud::board local = board;
-    return this->positions(local, n);
+    return moves;
 }
