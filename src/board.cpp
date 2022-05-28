@@ -45,7 +45,7 @@ void bongcloud::board::print(void) const {
         if(rank == 0 && file == length - 1) {
             finished = true;
         } else if(++file == length) {
-            rank--;
+            --rank;
             file = 0;
             fmt::print("\n[bongcloud] ");
         } else {
@@ -239,43 +239,52 @@ void bongcloud::board::load(const std::string_view string) {
     using color = bongcloud::piece::color;
     using type = bongcloud::piece::type;
 
-    // FEN strings start with piece placement from the A1 square.
-    std::size_t square = 0;
+    // FEN strings start with piece placement from the top-left square.
     std::size_t character = 0;
+    std::size_t rank = length - 1;
+    std::size_t file = 0;
     char c;
 
     // First, we handle piece placement.
     while((c = string.at(character++)) != ' ') {
+        std::size_t square = (rank * length) + file;
+
         switch(c) {
-            // Lowercase represent white pieces, uppercase represent black pieces.
-            case 'r': m_internal[square++] = piece(color::white, type::rook); break;
-            case 'n': m_internal[square++] = piece(color::white, type::knight); break;
-            case 'b': m_internal[square++] = piece(color::white, type::bishop); break;
-            case 'q': m_internal[square++] = piece(color::white, type::queen); break;
-            case 'k': m_internal[square++] = piece(color::white, type::king); break;
-            case 'p': m_internal[square++] = piece(color::white, type::pawn); break;
-            case 'R': m_internal[square++] = piece(color::black, type::rook); break;
-            case 'N': m_internal[square++] = piece(color::black, type::knight); break;
-            case 'B': m_internal[square++] = piece(color::black, type::bishop); break;
-            case 'Q': m_internal[square++] = piece(color::black, type::queen); break;
-            case 'K': m_internal[square++] = piece(color::black, type::king); break;
-            case 'P': m_internal[square++] = piece(color::black, type::pawn); break;
+            // Uppercase represents white pieces, lowercase represents black pieces.
+            case 'R': m_internal[square] = piece(color::white, type::rook); break;
+            case 'N': m_internal[square] = piece(color::white, type::knight); break;
+            case 'B': m_internal[square] = piece(color::white, type::bishop); break;
+            case 'Q': m_internal[square] = piece(color::white, type::queen); break;
+            case 'K': m_internal[square] = piece(color::white, type::king); break;
+            case 'P': m_internal[square] = piece(color::white, type::pawn); break;
+            case 'r': m_internal[square] = piece(color::black, type::rook); break;
+            case 'n': m_internal[square] = piece(color::black, type::knight); break;
+            case 'b': m_internal[square] = piece(color::black, type::bishop); break;
+            case 'q': m_internal[square] = piece(color::black, type::queen); break;
+            case 'k': m_internal[square] = piece(color::black, type::king); break;
+            case 'p': m_internal[square] = piece(color::black, type::pawn); break;
 
             // Numbers signify the number of squares to skip.
             case '1': case '2': case '3':
             case '4': case '5': case '6':
             case '7': case '8': case '9':
-                square += c - '0';
+                file += c - '1';
                 break;
 
             case '/': // A slash moves the cursor to the next rank.
-                square = (((square - 1) / length) * length) + length;
+                file = 8;
                 break;
 
             default: {
                 auto comment = fmt::format("illegal FEN piece type: {}", c);
                 throw std::runtime_error(comment);
             }
+        }
+
+        // If we've reached the end of the rank, move to the next one.
+        if(file++ == length) {
+            file = 0;
+            --rank;
         }
     }
 
