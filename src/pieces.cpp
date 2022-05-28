@@ -246,7 +246,7 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
 
             bool castling = {
                 origin->moves == 0 && target && target->variety == piece::type::rook &&
-                target->moves == 0 && !internal::rook(*this, from, to)
+                target->moves == 0 && !internal::rook(*this, from, index)
             };
 
             if(castling) {

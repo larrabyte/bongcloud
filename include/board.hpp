@@ -30,7 +30,7 @@ namespace bongcloud {
         bongcloud::move move;
         std::size_t trivials;
         std::optional<bongcloud::move> castle;
-        std::optional<capture> capture;
+        std::optional<bongcloud::capture> capture;
         std::optional<piece> promotion;
     };
 

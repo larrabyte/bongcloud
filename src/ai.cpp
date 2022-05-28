@@ -28,7 +28,7 @@ double bongcloud::ai::evaluate(bongcloud::board& board) const {
     if(board.check(color) && this->moves(board).empty()) {
         // Checkmate is the best outcome!
         evaluation = std::numeric_limits<double>::infinity();
-       return (color == piece::color::white) ? evaluation : -evaluation;
+        return (color == piece::color::white) ? evaluation : -evaluation;
     }
 
     for(const auto& piece : board) {
