@@ -229,7 +229,9 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
             std::size_t left = (m_color == piece::color::white) ? 0 : length * length;
             std::size_t right = (m_color == piece::color::white) ? length - 1 : (length * length) - 1;
 
-            if(to != left + 2 || to != right - 1) {
+            // The valid destinations are 2 squares to the right of the left-most square,
+            // or 1 square to the left of the right-most square (depending on color).
+            if(to != left + 2 && to != right - 1) {
                 return std::nullopt;
             };
 

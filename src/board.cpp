@@ -136,10 +136,12 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
         }
 
         else if(type == piece::move::short_castle) {
-            history.castle = {to + 1, to - 1};
+            // Since this has already been validated and confirmed to be pseudolegal,
+            // we can use the king's position as an anchor and perform arithmetic relative to it.
+            history.castle = {((from / length) * length) + length - 1, to - 1};
 
             // Check that the king isn't moving through check.
-            // We don't have to worry about captures here.
+            // We don't have to worry about accidental captures here.
             for(std::size_t delta = 1; delta < to - from; ++delta) {
                 auto& trail = m_internal[from + delta - 1];
                 auto& cursor = m_internal[from + delta];
@@ -152,16 +154,27 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
                     return false;
                 }
             }
+
+            // Since the king is now on the rook's destination square,
+            // we move the king back to its original square before moving the rook.
+            auto& rook = m_internal[history.castle->from];
+            auto& king = m_internal[history.castle->to];
+            origin = king;
+            king = rook;
+            ++king->moves;
+            rook = std::nullopt;
         }
 
         else if(type == piece::move::long_castle) {
-            history.castle = {to - 2, to + 1};
+            // Since this has already been validated and confirmed to be pseudolegal,
+            // we can use the king's position as an anchor and perform arithmetic relative to it.
+            history.castle = {(from / length) * length, to + 1};
 
             // Check that the king isn't moving through check.
-            // We don't have to worry about captures here.
+            // We don't have to worry about accidental captures here.
             for(std::size_t delta = 1; delta < from - to; ++delta) {
-                auto& trail = m_internal[from + delta + 1];
-                auto& cursor = m_internal[from + delta];
+                auto& trail = m_internal[from - delta + 1];
+                auto& cursor = m_internal[from - delta];
                 cursor = trail;
                 trail = std::nullopt;
 
@@ -171,6 +184,15 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
                     return false;
                 }
             }
+
+            // Since the king is now on the rook's destination square,
+            // we move the king to its proper destination before moving the rook.
+            auto& rook = m_internal[history.castle->from];
+            auto& king = m_internal[history.castle->to];
+            origin = king;
+            king = rook;
+            ++king->moves;
+            rook = std::nullopt;
         }
 
         else if(type == piece::move::promotion) {
@@ -202,13 +224,8 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
         }
 
         // Otherwise, finalise the state of the board.
-        bool trivial = {
-            dest->variety != piece::type::pawn &&
-            type == piece::move::normal
-        };
-
+        bool trivial = dest->variety != piece::type::pawn && type == piece::move::normal;
         bool white = m_color == piece::color::white;
-
         m_trivials = (trivial) ? m_trivials + 1 : 0;
         m_color = (white) ? piece::color::black : piece::color::white;
         return true;
@@ -356,7 +373,7 @@ void bongcloud::board::undo(void) {
     }
 
     origin = dest;
-    origin->moves--;
+    --origin->moves;
     dest = std::nullopt;
 
     if(last.capture) {
@@ -368,7 +385,7 @@ void bongcloud::board::undo(void) {
         auto& rook_origin = m_internal[last.castle->from];
         auto& rook_dest = m_internal[last.castle->to];
         rook_origin = rook_dest;
-        rook_origin->moves--;
+        --rook_origin->moves;
         rook_dest = std::nullopt;
     }
 
