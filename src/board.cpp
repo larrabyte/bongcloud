@@ -367,26 +367,23 @@ void bongcloud::board::undo(void) {
     auto& origin = m_internal[last.move.from];
     auto& dest = m_internal[last.move.to];
 
-    // Revert the board to its previous state.
-    if(last.promotion) {
-        dest = piece(last.promotion->hue, piece::type::pawn);
-    }
-
-    origin = dest;
+    // If the move was a promotion, then we don't care about what's on the destination square.
+    origin = (last.promotion) ? piece(last.promotion->hue, piece::type::pawn) : dest;
     --origin->moves;
     dest = std::nullopt;
 
     if(last.capture) {
+        // This is separate because of the possibility of en-passant.
         auto& capture = m_internal[last.capture->index];
         capture = last.capture->piece;
     }
 
     if(last.castle) {
-        auto& rook_origin = m_internal[last.castle->from];
-        auto& rook_dest = m_internal[last.castle->to];
-        rook_origin = rook_dest;
-        --rook_origin->moves;
-        rook_dest = std::nullopt;
+        auto& source = m_internal[last.castle->from];
+        auto& sink = m_internal[last.castle->to];
+        source = sink;
+        --source->moves;
+        sink = std::nullopt;
     }
 
     m_color = last.color;
