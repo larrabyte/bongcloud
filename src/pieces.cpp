@@ -115,7 +115,14 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
             return std::nullopt;
         }
 
-        if(origin->moves == 0 && difference.rank == 2 && difference.file == 0 && !dest) {
+        index source = {from / length, from % length};
+
+        bool pushing = {
+            (source.rank == 1 || source.rank == length - 2) &&
+            difference.rank == 2 && difference.file == 0 && !dest
+        };
+
+        if(pushing) {
             // Pawns can move two squares forward on their first move, assuming a clear path.
             bool white = (origin->hue == piece::color::white);
             std::size_t adjacent = (white) ? from + length : from - length;
@@ -126,7 +133,6 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
             return std::nullopt;
         }
 
-        index source = {from / length, from % length};
         index sink = {to / length, to % length};
 
         if(difference.rank == 1 && difference.file == 0 && !dest) {
@@ -158,8 +164,8 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
                 internal::absdiff(latest->from, latest->to) == length * 2 &&
                 internal::absdiff(to, latest->to) == length &&
                 internal::absdiff(from, latest->to) == 1 &&
-                (source.file != 0 && source.file != length - 1) &&
-                (sink.file != 0 && sink.file != length - 1)
+                !(source.file == 0 && sink.file == length - 1) &&
+                !(source.file == length - 1 && sink.file == 0)
             };
 
             if(takable) {
