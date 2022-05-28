@@ -232,7 +232,7 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
 
         // The king can also castle.
         if(difference.rank == 0 && difference.file == 2 && !dest) {
-            std::size_t left = (m_color == piece::color::white) ? 0 : length * length;
+            std::size_t left = (m_color == piece::color::white) ? 0 : length * (length - 1);
             std::size_t right = (m_color == piece::color::white) ? length - 1 : (length * length) - 1;
 
             // The valid destinations are 2 squares to the right of the left-most square,
