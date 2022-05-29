@@ -55,7 +55,7 @@ namespace bongcloud {
             void undo(void);
 
             // Returns a constant reference to the board's history array.
-            const std::vector<record>& history(void) const noexcept {
+            inline const std::vector<record>& history(void) const noexcept {
                 return m_history;
             }
 

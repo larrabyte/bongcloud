@@ -3,6 +3,7 @@
 #include "board.hpp"
 
 #include <cstddef>
+#include <future>
 
 namespace bongcloud {
     class ai {
@@ -10,7 +11,7 @@ namespace bongcloud {
             // All functions that take non-constant board references will utilise
             // the passed in board as a scratch area - however, all modifications
             // performed will be undone before returning.
-            ai(const std::size_t) noexcept;
+            ai(const std::size_t, const bool) noexcept;
 
             // Returns a floating-point number representing the advantage for a certain player.
             // Positive means an advantage for white, while negative means an advantage for black.
@@ -22,6 +23,15 @@ namespace bongcloud {
             // Returns the number of legal moves after n ply.
             std::size_t perft(const board&, const std::size_t) const;
 
+            // The number of layers to search when generating a move.
+            const std::size_t layers;
+
+            // A future for executing expensive operations in a separate thread.
+            std::future<std::optional<move>> future;
+
+            // Whether the AI is enabled.
+            bool enabled;
+
         private:
             // An implementation of the minimax algorithm.
             double minimax(board&, double, double, const std::size_t, const piece::color) const;
@@ -31,8 +41,5 @@ namespace bongcloud {
 
             // Returns a vector containing all possible moves for a given board.
             std::vector<move> moves(board&) const;
-
-            // The number of layers to search when generating a move.
-            const std::size_t m_depth;
     };
 }

@@ -17,8 +17,10 @@ namespace internal {
     constexpr std::size_t reserve_buffer = 40;
 }
 
-bongcloud::ai::ai(const std::size_t depth) noexcept : m_depth(depth) {
-    fmt::print("[bongcloud] AI search depth set to {} ply.\n", m_depth);
+bongcloud::ai::ai(const std::size_t l, const bool e) noexcept : layers(l), enabled(e) {
+    if(e) {
+        fmt::print("[bongcloud] AI enabled, search depth set to {} ply.\n", layers);
+    }
 }
 
 double bongcloud::ai::evaluate(bongcloud::board& board) const {
@@ -46,18 +48,16 @@ std::optional<bongcloud::move> bongcloud::ai::generate(const bongcloud::board& b
     // Create a local copy so that we don't modify the passed in board
     // and have the renderer go crazy trying to render the AI's moves.
     bongcloud::board local = board;
-
-    using position = std::pair<move, double>;
-    std::vector<position> moves;
+    std::vector<std::pair<move, double>> moves;
     moves.reserve(internal::reserve_buffer);
 
     for(const auto& move : this->moves(local)) {
         // Make each move and then determine its score through the minimax algorithm.
         local.move(move.from, move.to);
         double inf = std::numeric_limits<double>::infinity();
-        double score = this->minimax(local, -inf, inf, m_depth, local.color());
+        double score = this->minimax(local, -inf, inf, layers, local.color());
 
-        position pair = std::make_pair(move, score);
+        auto pair = std::make_pair(move, score);
         moves.push_back(pair);
         local.undo();
     }
@@ -66,7 +66,7 @@ std::optional<bongcloud::move> bongcloud::ai::generate(const bongcloud::board& b
         return std::nullopt;
     }
 
-    std::sort(moves.begin(), moves.end(), [](const position& lhs, const position& rhs) {
+    std::sort(moves.begin(), moves.end(), [](const auto& lhs, const auto& rhs) {
         return lhs.second > rhs.second;
     });
 

@@ -5,7 +5,6 @@
 #include <argparse/argparse.hpp>
 #include <centurion.hpp>
 #include <fmt/core.h>
-#include <memory>
 #include <future>
 #include <chrono>
 
@@ -75,8 +74,7 @@ int main(int argc, char** argv) {
     // Initialise game-related objects.
     bongcloud::renderer renderer(square_res, board_size);
     bongcloud::board board(board_size, anarchy);
-    bongcloud::ai engine(search_depth);
-    std::future<std::optional<bongcloud::move>> future;
+    bongcloud::ai engine(search_depth, bot);
     board.load(fen_string);
 
     cen::event_handler handler;
@@ -107,7 +105,7 @@ int main(int argc, char** argv) {
                         if(board.history().size() > 0) {
                             board.undo();
 
-                            if(bot && board.history().size() > 0) {
+                            if(engine.enabled && board.history().size() > 0) {
                                 board.undo();
                             }
                         }
@@ -121,7 +119,7 @@ int main(int argc, char** argv) {
 
                     if(ctrl_or_cmd && event.is_active(cen::scancodes::r)) {
                         // Pressing Ctrl+R will print the number of legal positions after n ply.
-                        for(std::size_t i = 1; i < search_depth + 1; ++i) {
+                        for(std::size_t i = 1; i < engine.layers + 1; ++i) {
                             auto n = engine.perft(board, i);
                             fmt::print("[bongcloud] no. of positions after {} ply: {}\n", i, n);
                         }
@@ -148,27 +146,31 @@ int main(int argc, char** argv) {
             }
         }
 
-        if(bot && board.color() == bongcloud::piece::color::black) {
-            if(future.valid()) {
+        if(engine.enabled && board.color() == bongcloud::piece::color::black) {
+            if(engine.future.valid()) {
+                // If the future is valid, then the AI could either
+                // have a result for us or still be thinking.
                 auto zero = std::chrono::milliseconds(0);
-                if(future.wait_for(zero) == std::future_status::ready) {
-                    if(auto move = future.get()) {
-                        bool success = board.move(move->from, move->to);
+                bool ready = engine.future.wait_for(zero) == std::future_status::ready;
 
-                        if(!success) {
-                            throw std::runtime_error("AI tried to play illegal move");
-                        }
-                    } else {
+                if(ready) {
+                    if(auto move = engine.future.get()) {
+                        // A move has been generated! Play it.
+                        board.move(move->from, move->to);
+                    }
+
+                    else {
                         // The bot has no legal moves.
                         fmt::print("[bongcloud] no legal moves remaining.\n");
-                        bot = false;
+                        engine.enabled = false;
                     }
                 }
             }
 
             else {
+                // Otherwise, spawn a new thread to evaluate this position.
                 auto subroutine = [&]() { return engine.generate(board); };
-                future = std::async(std::launch::async, subroutine);
+                engine.future = std::async(std::launch::async, subroutine);
             }
         }
 
