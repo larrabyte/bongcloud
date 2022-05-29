@@ -8,7 +8,7 @@
 
 void bongcloud::board::print(void) const {
     // Start from the top-left square.
-    std::size_t rank = 7, file = 0;
+    std::size_t rank = length - 1, file = 0;
     bool finished = false;
 
     fmt::print("[bongcloud] ");
@@ -282,7 +282,7 @@ void bongcloud::board::load(const std::string_view string) {
                 break;
 
             case '/': // A slash moves the cursor to the next rank.
-                file = 8;
+                file = length;
                 break;
 
             default: {
