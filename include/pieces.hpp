@@ -48,4 +48,15 @@ namespace bongcloud {
         // The number of times the piece has moved.
         std::size_t moves = 0;
     };
+
+    namespace constants {
+        constexpr double piece_values[] = {
+            1.0, // piece::type::pawn
+            3.0, // piece::type::knight
+            3.0, // piece::type::bishop
+            5.0, // piece::type::rook
+            9.0, // piece::type::queen
+            0.0  // piece::type::king
+        };
+    }
 }
