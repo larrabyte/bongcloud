@@ -191,7 +191,8 @@ void bongcloud::renderer::render(const bongcloud::board& board) {
 
 std::size_t bongcloud::renderer::square(const bongcloud::board& board, const std::size_t x, const std::size_t y) const noexcept {
     // Compute the square at the given x and y coordinates.
-    std::size_t rank = (m_renderer.output_size().height - y) / m_resolution;
-    std::size_t file = x / m_resolution;
+    cen::iarea screen = m_renderer.output_size();
+    std::size_t rank = (screen.height - (y * m_scale)) / m_resolution;
+    std::size_t file = x * m_scale / m_resolution;
     return (rank * board.length) + file;
 }

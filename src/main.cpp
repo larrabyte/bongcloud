@@ -132,14 +132,14 @@ int main(int argc, char** argv) {
 
                 // Make sure it was a left-click.
                 if(event.button() == cen::mouse_button::left && event.pressed()) {
-                    auto x = static_cast<std::size_t>(event.x() * renderer.scale());
-                    auto y = static_cast<std::size_t>(event.y() * renderer.scale());
-                    auto i = renderer.square(board, x, y);
+                    auto i = renderer.square(board, event.x(), event.y());
                     auto stored = renderer.cursor();
 
                     if(!stored && board[i]) {
                         renderer.cursor(i);
                     } else if(i == stored || (stored && board.move(*stored, i))) {
+                        // Stop piece tracking if we're placing the piece
+                        // back or a successful move was made.
                         renderer.cursor(std::nullopt);
                     }
                 }

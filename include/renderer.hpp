@@ -27,11 +27,6 @@ namespace bongcloud {
                 return m_mouse;
             }
 
-            // Returns the current resolution scale.
-            inline double scale(void) const noexcept {
-                return m_scale;
-            }
-
         private:
             // The SDL libraries.
             const cen::sdl m_sdl;
