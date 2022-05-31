@@ -5,6 +5,7 @@
 #include <bit>
 
 namespace internal {
+    constexpr std::size_t promotion_menu_border = 4;
     constexpr cen::color light_square {0xEC, 0xDB, 0xB9};
     constexpr cen::color dark_square {0xAE, 0x89, 0x68};
     constexpr cen::color light_last_move {0xCE, 0xD2, 0x87};
@@ -186,6 +187,11 @@ void bongcloud::renderer::render(const bongcloud::board& board) {
         m_renderer.render(texture, rect);
     }
 
+    // If a piece selection menu is active, render it.
+    if(m_promotion) {
+        this->promote(*m_promotion, board);
+    }
+
     m_renderer.present();
 }
 
@@ -195,4 +201,33 @@ std::size_t bongcloud::renderer::square(const bongcloud::board& board, const std
     std::size_t rank = (screen.height - (y * m_scale)) / m_resolution;
     std::size_t file = x * m_scale / m_resolution;
     return (rank * board.length) + file;
+}
+
+void bongcloud::renderer::promote(const std::size_t square, const bongcloud::board& board) {
+    std::size_t x = (square % board.length) * m_resolution;
+    std::size_t y = (m_renderer.output_size().height) - (((square / board.length) + 1) * (m_resolution));
+    std::size_t s = std::size(constants::promotion_pieces);
+
+    // m_renderer.draw_rect() only renders the outline of a square.
+    m_renderer.set_color(cen::colors::black);
+    for(std::size_t border = 1; border < internal::promotion_menu_border; ++border) {
+        std::size_t horizontal = m_resolution + (border * 2);
+        std::size_t vertical = (m_resolution * s + (border * 2));
+        cen::irect outline(x - border, y - border, horizontal, vertical);
+        m_renderer.draw_rect(outline);
+    }
+
+    cen::irect primary(x, y, m_resolution, m_resolution * s);
+    m_renderer.set_color(cen::colors::white);
+    m_renderer.fill_rect(primary);
+
+    // Render each piece on top.
+    for(std::size_t i = 0; i < s; ++i) {
+        cen::irect place(x, y + (i * m_resolution), m_resolution, m_resolution);
+        bongcloud::piece piece(board.color(), constants::promotion_pieces[i]);
+
+        auto offset = internal::compute_texture_offset(piece);
+        const auto& texture = *m_textures[offset];
+        m_renderer.render(texture, place);
+    }
 }

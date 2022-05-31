@@ -50,6 +50,15 @@ namespace bongcloud {
     };
 
     namespace constants {
+        // Defines every legal promotion piece.
+        constexpr piece::type promotion_pieces[] = {
+            piece::type::queen,
+            piece::type::knight,
+            piece::type::rook,
+            piece::type::bishop
+        };
+
+        // Defines the values for each piece.
         constexpr double piece_values[] = {
             1.0, // piece::type::pawn
             3.0, // piece::type::knight
