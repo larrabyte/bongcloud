@@ -18,7 +18,6 @@ all: bongcloud
 bongcloud: $(OBJFILES)
 	@$(CXX) $(CFLAGS) $(OBJFILES) -o bin/bongcloud $(LFLAGS)
 	@printf "[linking] binary created.\n"
-	@./bin/bongcloud -b
 
 clean:
 	@rm -f obj/*
