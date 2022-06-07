@@ -43,61 +43,55 @@ namespace bongcloud {
             bool move(const std::size_t, const std::size_t);
 
             // Returns whether a player is currently in check.
-            bool check(const piece::color) const;
+            [[nodiscard]] bool check(const piece::color) const noexcept;
 
             // Prints out the current board state to stdout.
-            void print(void) const;
+            void print(void) const noexcept;
 
             // Overwrites the current board state using a FEN string.
             void load(const std::string_view);
 
             // Undoes the last move.
-            void undo(void);
+            void undo(void) noexcept;
 
             // Returns a constant reference to the board's history array.
-            inline const std::vector<record>& history(void) const noexcept {
+            [[nodiscard]] const std::vector<record>& history(void) const noexcept {
                 return m_history;
             }
 
             // Returns the last move made (may be std::nullopt).
-            inline std::optional<bongcloud::move> latest(void) const noexcept {
-                std::optional<bongcloud::move> m;
-
-                if(m_history.size() > 0) {
-                    m = m_history.back().move;
-                }
-
-                return m;
+            [[nodiscard]] std::optional<bongcloud::move> latest(void) const noexcept {
+                return (m_history.size() > 0) ? std::optional(m_history.back().move) : std::nullopt;
             }
 
             // Returns the color of the player whose turn it is to move.
-            inline piece::color color(void) const noexcept {
+            [[nodiscard]] piece::color color(void) const noexcept {
                 return m_color;
             }
 
             // Provides support for range-based for loops.
-            inline std::vector<square>::iterator begin(void) noexcept {
+            std::vector<square>::iterator begin(void) noexcept {
                 return m_internal.begin();
             }
 
-            inline std::vector<square>::const_iterator begin(void) const noexcept {
+            std::vector<square>::const_iterator begin(void) const noexcept {
                 return m_internal.cbegin();
             }
 
-            inline std::vector<square>::iterator end(void) noexcept {
+            std::vector<square>::iterator end(void) noexcept {
                 return m_internal.end();
             }
 
-            inline std::vector<square>::const_iterator end(void) const noexcept {
+            std::vector<square>::const_iterator end(void) const noexcept {
                 return m_internal.cend();
             }
 
-            // Allows the use of array indexing syntax to access board squares.
-            inline square& operator[] (const std::size_t i) noexcept {
+            // Allow the use of array indexing syntax to access board squares.
+            square& operator[] (const std::size_t i) noexcept {
                 return m_internal[i];
             }
 
-            inline const square& operator[] (const std::size_t i) const noexcept {
+            const square& operator[] (const std::size_t i) const noexcept {
                 return m_internal[i];
             }
 
@@ -106,7 +100,7 @@ namespace bongcloud {
 
         private:
             // Returns the type of move (if pseudolegal) based on piece movement rules.
-            std::optional<piece::move> pseudolegal(const std::size_t, const std::size_t) const;
+            std::optional<piece::move> pseudolegal(const std::size_t, const std::size_t) const noexcept;
 
             // The board's internal representation.
             std::vector<square> m_internal;

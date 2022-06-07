@@ -37,7 +37,7 @@ namespace bongcloud {
         };
 
         // The piece constructor.
-        piece(const piece::color c, const piece::type t) : hue(c), variety(t) {}
+        piece(const piece::color c, const piece::type t) noexcept : hue(c), variety(t) {}
 
         // The color of the piece.
         piece::color hue;

@@ -3,18 +3,7 @@
 
 #include <fmt/core.h>
 
-namespace internal {
-    // The average position has about 40 legal moves.
-    constexpr std::size_t reserve_buffer = 40;
-}
-
-bongcloud::ai::ai(const std::size_t l, const bool e) noexcept : layers(l), enabled(e) {
-    if(e) {
-        fmt::print("[bongcloud] AI enabled, search depth set to {} ply.\n", layers);
-    }
-}
-
-double bongcloud::ai::evaluate(bongcloud::board& board) const {
+double bongcloud::ai::evaluate(bongcloud::board& board) const noexcept {
     piece::color color = board.color();
     double evaluation = 0.0;
 
@@ -35,12 +24,12 @@ double bongcloud::ai::evaluate(bongcloud::board& board) const {
     return evaluation;
 }
 
-std::optional<bongcloud::move> bongcloud::ai::generate(const bongcloud::board& board) const {
+std::optional<bongcloud::move> bongcloud::ai::generate(const bongcloud::board& board) const noexcept {
     // Create a local copy so that we don't modify the passed in board
     // and have the renderer go crazy trying to render the AI's moves.
     bongcloud::board local = board;
     std::vector<std::pair<move, double>> moves;
-    moves.reserve(internal::reserve_buffer);
+    moves.reserve(constants::move_buffer_reserve);
 
     for(const auto& move : this->moves(local)) {
         // Make each move and then determine its score through the minimax algorithm.
@@ -65,12 +54,12 @@ std::optional<bongcloud::move> bongcloud::ai::generate(const bongcloud::board& b
     return moves[index].first;
 }
 
-std::size_t bongcloud::ai::perft(const bongcloud::board& board, const std::size_t n) const {
+std::size_t bongcloud::ai::perft(const bongcloud::board& board, const std::size_t n) const noexcept {
     bongcloud::board local = board;
     return this->positions(local, n);
 }
 
-double bongcloud::ai::minimax(bongcloud::board& board, double alpha, double beta, const std::size_t depth, const piece::color color) const {
+double bongcloud::ai::minimax(bongcloud::board& board, double alpha, double beta, const std::size_t depth, const piece::color color) const noexcept {
     if(depth == 0) {
         return this->evaluate(board);
     }
@@ -115,7 +104,7 @@ double bongcloud::ai::minimax(bongcloud::board& board, double alpha, double beta
     return best;
 }
 
-std::size_t bongcloud::ai::positions(bongcloud::board& board, const std::size_t depth) const {
+std::size_t bongcloud::ai::positions(bongcloud::board& board, const std::size_t depth) const noexcept {
     if(depth == 0) {
         return 1;
     }
@@ -130,10 +119,10 @@ std::size_t bongcloud::ai::positions(bongcloud::board& board, const std::size_t 
     return count;
 }
 
-std::vector<bongcloud::move> bongcloud::ai::moves(bongcloud::board& board) const {
+std::vector<bongcloud::move> bongcloud::ai::moves(bongcloud::board& board) const noexcept {
     // Preallocate space here so we don't spend time resizing and copying.
     std::vector<move> moves;
-    moves.reserve(internal::reserve_buffer);
+    moves.reserve(constants::move_buffer_reserve);
 
     for(std::size_t from = 0; from < board.length * board.length; ++from) {
         for(std::size_t to = 0; to < board.length * board.length; ++to) {

@@ -4,7 +4,7 @@
 #include <fmt/core.h>
 
 namespace internal {
-    inline std::size_t absdiff(const std::size_t a, const std::size_t b) noexcept {
+    std::size_t absdiff(const std::size_t a, const std::size_t b) noexcept {
         return (a > b) ? a - b : b - a;
     }
 
@@ -91,7 +91,7 @@ namespace internal {
     }
 }
 
-std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::size_t from, const std::size_t to) const {
+std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::size_t from, const std::size_t to) const noexcept {
     const auto& origin = m_internal[from];
     const auto& dest = m_internal[to];
 
@@ -258,6 +258,8 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
     }
 
     else {
-        throw std::runtime_error("illegal piece type");
+        // We should never reach this.
+        fmt::print("[bongcloud] encountered unknown piece.\n");
+        std::terminate();
     }
 }

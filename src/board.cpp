@@ -6,83 +6,6 @@
 #include <fmt/core.h>
 #include <cstddef>
 
-void bongcloud::board::print(void) const {
-    // Start from the top-left square.
-    std::size_t rank = length - 1, file = 0;
-    bool finished = false;
-
-    fmt::print("[bongcloud] ");
-
-    while(!finished) {
-        std::size_t index = (rank * length) + file;
-        const auto& piece = m_internal[index];
-
-        if(!piece) {
-            fmt::print("-");
-        }
-
-        else {
-            char c;
-
-            switch(piece->variety) {
-                case piece::type::pawn: c = 'p'; break;
-                case piece::type::knight: c = 'n'; break;
-                case piece::type::bishop: c = 'b'; break;
-                case piece::type::rook: c = 'r'; break;
-                case piece::type::queen: c = 'q'; break;
-                case piece::type::king: c = 'k'; break;
-                default: c = '?'; break;
-            }
-
-            if(c != '?' && piece->hue == piece::color::white) {
-                c = std::toupper(c);
-            }
-
-            fmt::print("{}", c);
-        }
-
-        // Advance the rank and file indices to move on to the next square.
-        if(rank == 0 && file == length - 1) {
-            finished = true;
-        } else if(++file == length) {
-            --rank;
-            file = 0;
-            fmt::print("\n[bongcloud] ");
-        } else {
-            fmt::print(" ");
-        }
-    }
-
-    fmt::print("\n");
-}
-
-bool bongcloud::board::check(const piece::color color) const {
-    // Attempt to find the index of the specified player's king.
-    std::vector<std::size_t> kings;
-
-    for(std::size_t i = 0; i < length * length; ++i) {
-        const auto& piece = m_internal[i];
-        if(piece && piece->hue == color && piece->variety == piece::type::king) {
-            kings.push_back(i);
-            break;
-        }
-    }
-
-    assert(!kings.empty());
-
-    // Return true if any king is in check.
-    for(const auto king : kings) {
-        for(std::size_t i = 0; i < length * length; ++i) {
-            const auto& piece = m_internal[i];
-            if(piece && piece->hue != color && this->pseudolegal(i, king)) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
 bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
     auto& origin = m_internal[from];
     auto& dest = m_internal[to];
@@ -244,6 +167,83 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
     return false;
 }
 
+bool bongcloud::board::check(const piece::color color) const noexcept {
+    // Attempt to find the index of the specified player's king.
+    std::vector<std::size_t> kings;
+
+    for(std::size_t i = 0; i < length * length; ++i) {
+        const auto& piece = m_internal[i];
+        if(piece && piece->hue == color && piece->variety == piece::type::king) {
+            kings.push_back(i);
+            break;
+        }
+    }
+
+    assert(!kings.empty());
+
+    // Return true if any king is in check.
+    for(const auto king : kings) {
+        for(std::size_t i = 0; i < length * length; ++i) {
+            const auto& piece = m_internal[i];
+            if(piece && piece->hue != color && this->pseudolegal(i, king)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+void bongcloud::board::print(void) const noexcept {
+    // Start from the top-left square.
+    std::size_t rank = length - 1, file = 0;
+    bool finished = false;
+
+    fmt::print("[bongcloud] ");
+
+    while(!finished) {
+        std::size_t index = (rank * length) + file;
+        const auto& piece = m_internal[index];
+
+        if(!piece) {
+            fmt::print("-");
+        }
+
+        else {
+            char c;
+
+            switch(piece->variety) {
+                case piece::type::pawn: c = 'p'; break;
+                case piece::type::knight: c = 'n'; break;
+                case piece::type::bishop: c = 'b'; break;
+                case piece::type::rook: c = 'r'; break;
+                case piece::type::queen: c = 'q'; break;
+                case piece::type::king: c = 'k'; break;
+                default: c = '?'; break;
+            }
+
+            if(c != '?' && piece->hue == piece::color::white) {
+                c = std::toupper(c);
+            }
+
+            fmt::print("{}", c);
+        }
+
+        // Advance the rank and file indices to move on to the next square.
+        if(rank == 0 && file == length - 1) {
+            finished = true;
+        } else if(++file == length) {
+            --rank;
+            file = 0;
+            fmt::print("\n[bongcloud] ");
+        } else {
+            fmt::print(" ");
+        }
+    }
+
+    fmt::print("\n");
+}
+
 void bongcloud::board::load(const std::string_view string) {
     using piece = bongcloud::piece;
     using color = bongcloud::piece::color;
@@ -379,7 +379,7 @@ void bongcloud::board::load(const std::string_view string) {
     this->print();
 }
 
-void bongcloud::board::undo(void) {
+void bongcloud::board::undo(void) noexcept {
     assert(m_history.size() != 0);
 
     const auto& last = m_history.back();

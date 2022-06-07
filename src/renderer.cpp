@@ -5,35 +5,6 @@
 #include <bit>
 
 namespace internal {
-    constexpr std::size_t promotion_menu_border = 4;
-    constexpr cen::color light_square {0xEC, 0xDB, 0xB9};
-    constexpr cen::color dark_square {0xAE, 0x89, 0x68};
-    constexpr cen::color light_last_move {0xCE, 0xD2, 0x87};
-    constexpr cen::color dark_last_move {0xA9, 0xA3, 0x56};
-
-    constexpr std::string_view white_textures[] = {
-        "data/wp.bmp",
-        "data/wn.bmp",
-        "data/wb.bmp",
-        "data/wr.bmp",
-        "data/wq.bmp",
-        "data/wk.bmp"
-    };
-
-    constexpr std::string_view black_textures[] = {
-        "data/bp.bmp",
-        "data/bn.bmp",
-        "data/bb.bmp",
-        "data/br.bmp",
-        "data/bq.bmp",
-        "data/bk.bmp"
-    };
-
-    static_assert(
-        std::size(white_textures) == std::size(black_textures),
-        "white and black must have the same number of textures"
-    );
-
     cen::window make_window(const std::size_t resolution) {
         cen::iarea area = {
             static_cast<int>(resolution),
@@ -86,11 +57,11 @@ namespace internal {
     }
 }
 
-bongcloud::renderer::renderer(const std::size_t square_res, const std::size_t board_size) :
-    m_window {internal::make_window(square_res * board_size)},
+bongcloud::renderer::renderer(const std::size_t resolution, const std::size_t size) noexcept :
+    m_window {internal::make_window(resolution * size)},
     m_renderer {internal::make_renderer(m_window)},
     m_scale {internal::compute_scale(m_window, m_renderer)},
-    m_resolution {static_cast<std::size_t>(square_res * m_scale)} {
+    m_resolution {static_cast<std::size_t>(resolution * m_scale)} {
 
     cen::iarea scaled = m_renderer.output_size();
     fmt::print("[bongcloud] resolution scale factor: {}\n", m_scale);
@@ -98,20 +69,20 @@ bongcloud::renderer::renderer(const std::size_t square_res, const std::size_t bo
     fmt::print("[bongcloud] screen resolution set to: {}x{}\n", scaled.width, scaled.height);
     m_window.show();
 
-    std::size_t rounded_size = 1 << std::bit_width(std::size(internal::white_textures));
+    std::size_t rounded_size = 1 << std::bit_width(std::size(constants::white_textures));
     std::size_t maximum_index = rounded_size * 2;
     m_textures.reserve(maximum_index);
 
     for(std::size_t i = 0; i < maximum_index; ++i) {
-        bool oob_white = i >= std::size(internal::white_textures) && i < rounded_size;
-        bool oob_black = i >= std::size(internal::black_textures) + rounded_size;
+        bool oob_white = i >= std::size(constants::white_textures) && i < rounded_size;
+        bool oob_black = i >= std::size(constants::black_textures) + rounded_size;
 
         if(oob_white || oob_black) {
             m_textures.push_back(std::nullopt);
             continue;
         }
 
-        const auto path = (i < rounded_size) ? internal::white_textures[i] : internal::black_textures[i - rounded_size];
+        const auto path = (i < rounded_size) ? constants::white_textures[i] : constants::black_textures[i - rounded_size];
         fmt::print("[bongcloud] loading texture at {}...\n", path);
         cen::surface surface(path.data());
         cen::texture texture = m_renderer.make_texture(surface);
@@ -119,7 +90,7 @@ bongcloud::renderer::renderer(const std::size_t square_res, const std::size_t bo
     }
 }
 
-void bongcloud::renderer::render(const bongcloud::board& board) {
+void bongcloud::renderer::render(const bongcloud::board& board) noexcept {
     m_renderer.clear_with(cen::colors::black);
 
     std::size_t y = m_renderer.output_size().height - m_resolution;
@@ -141,8 +112,8 @@ void bongcloud::renderer::render(const bongcloud::board& board) {
 
         cen::color color = {
             (green) ?
-            (dark) ? internal::dark_last_move : internal::light_last_move :
-            (dark) ? internal::dark_square : internal::light_square
+            (dark) ? constants::dark_last_move : constants::light_last_move :
+            (dark) ? constants::dark_square : constants::light_square
         };
 
         // Render the square.
@@ -203,14 +174,14 @@ std::size_t bongcloud::renderer::square(const bongcloud::board& board, const std
     return (rank * board.length) + file;
 }
 
-void bongcloud::renderer::promote(const std::size_t square, const bongcloud::board& board) {
+void bongcloud::renderer::promote(const std::size_t square, const bongcloud::board& board) noexcept {
     std::size_t x = (square % board.length) * m_resolution;
     std::size_t y = (m_renderer.output_size().height) - (((square / board.length) + 1) * (m_resolution));
     std::size_t s = std::size(constants::promotion_pieces);
 
     // m_renderer.draw_rect() only renders the outline of a square.
     m_renderer.set_color(cen::colors::black);
-    for(std::size_t border = 1; border < internal::promotion_menu_border; ++border) {
+    for(std::size_t border = 1; border < constants::promotion_menu_border; ++border) {
         std::size_t horizontal = m_resolution + (border * 2);
         std::size_t vertical = (m_resolution * s + (border * 2));
         cen::irect outline(x - border, y - border, horizontal, vertical);

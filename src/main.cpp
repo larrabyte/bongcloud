@@ -75,6 +75,11 @@ int main(int argc, char** argv) {
     bongcloud::renderer renderer(square_res, board_size);
     bongcloud::board board(board_size, anarchy);
     bongcloud::ai engine(search_depth, bot);
+
+    if(bot) {
+        fmt::print("[bongcloud] AI enabled, search depth set to {} ply.\n", search_depth);
+    }
+
     board.load(fen_string);
 
     cen::event_handler handler;
