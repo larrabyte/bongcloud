@@ -16,7 +16,7 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
     // First, make sure that there are no trivial conditions preventing a move.
     // This could be either a forced stalement (50 move rule), moving an enemy piece
     // or attempting to capture a friendly piece.
-    if(m_trivials >= 100 || origin->hue != m_color || (dest && dest->hue == m_color)) {
+    if(m_trivials >= constants::trivial_force_draw || origin->hue != m_color || (dest && dest->hue == m_color)) {
         return false;
     }
 
@@ -196,7 +196,8 @@ bool bongcloud::board::check(const piece::color color) const noexcept {
 
 void bongcloud::board::print(void) const noexcept {
     // Start from the top-left square.
-    std::size_t rank = length - 1, file = 0;
+    std::size_t rank = length - 1;
+    std::size_t file = 0;
     bool finished = false;
 
     fmt::print("[bongcloud] ");
@@ -380,7 +381,7 @@ void bongcloud::board::load(const std::string_view string) {
 }
 
 void bongcloud::board::undo(void) noexcept {
-    assert(m_history.size() != 0);
+    assert(!m_history.empty());
 
     const auto& last = m_history.back();
     auto& origin = m_internal[last.move.from];

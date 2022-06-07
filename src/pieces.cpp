@@ -1,4 +1,5 @@
 #include "pieces.hpp"
+#include "extras.hpp"
 #include "board.hpp"
 
 #include <fmt/core.h>
@@ -172,9 +173,6 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
                 return piece::move::en_passant;
             }
         }
-
-        // If we are here, then the move must be illegal.
-        return std::nullopt;
     }
 
     else if(origin->variety == piece::type::knight) {
@@ -187,8 +185,6 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
         if(allowed) {
             return (dest) ? piece::move::capture : piece::move::normal;
         }
-
-        return std::nullopt;
     }
 
     else if(origin->variety == piece::type::bishop) {
@@ -196,8 +192,6 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
         if(difference.rank == difference.file && !internal::bishop(*this, from, to)) {
             return (dest) ? piece::move::capture : piece::move::normal;
         }
-
-        return std::nullopt;
     }
 
     else if(origin->variety == piece::type::rook) {
@@ -205,8 +199,6 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
         if((difference.rank == 0 || difference.file == 0) && !internal::rook(*this, from, to)) {
             return (dest) ? piece::move::capture : piece::move::normal;
         }
-
-        return std::nullopt;
     }
 
     else if(origin->variety == piece::type::queen) {
@@ -216,11 +208,9 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
         }
 
         // Otherwise if the queen is moving in a straight line, it must obey rook movement rules.
-        else if((difference.rank == 0 || difference.file == 0) && !internal::rook(*this, from, to)) {
+        if((difference.rank == 0 || difference.file == 0) && !internal::rook(*this, from, to)) {
             return (dest) ? piece::move::capture : piece::move::normal;
         }
-
-        return std::nullopt;
     }
 
     else if(origin->variety == piece::type::king) {
@@ -253,13 +243,7 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
                 return (from < to) ? piece::move::short_castle : piece::move::long_castle;
             }
         }
-
-        return std::nullopt;
     }
 
-    else {
-        // We should never reach this.
-        fmt::print("[bongcloud] encountered unknown piece.\n");
-        std::terminate();
-    }
+    return std::nullopt;
 }

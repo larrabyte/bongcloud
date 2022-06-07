@@ -117,4 +117,9 @@ namespace bongcloud {
             // The number of trivial half-moves made.
             std::size_t m_trivials = 0;
     };
+
+    namespace constants {
+        // The number of trivial half-moves until a forced draw.
+        constexpr std::size_t trivial_force_draw = 100;
+    }
 }

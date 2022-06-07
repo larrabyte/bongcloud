@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include <exception>
 
 namespace ext {
     template<typename T>
@@ -16,5 +17,9 @@ namespace ext {
                 return;
             }
         }
+    }
+
+    [[noreturn]] inline void unreachable(void) noexcept {
+        std::terminate();
     }
 }

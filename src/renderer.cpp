@@ -33,10 +33,10 @@ namespace internal {
             auto x = ext::to_underlying(bongcloud::piece::type::last);
             std::size_t e = 0;
 
-            if(x == 0) {
-                return e;
+            if(x != 0) {
+                --x;
             } else {
-                x--;
+                return e;
             }
 
             for(std::size_t i = 0; i < std::bit_width(x); ++i) {
@@ -44,7 +44,7 @@ namespace internal {
             }
 
             x += 1;
-            while(x >>= 1) {
+            while((x >>= 1) != 0) {
                 ++e;
             }
 
@@ -94,7 +94,8 @@ void bongcloud::renderer::render(const bongcloud::board& board) noexcept {
     m_renderer.clear_with(cen::colors::black);
 
     std::size_t y = m_renderer.output_size().height - m_resolution;
-    std::size_t i = 0, x = 0;
+    std::size_t i = 0;
+    std::size_t x = 0;
 
     for(const auto& piece : board) {
         // Construct a Centurion rectangle to represent this square.

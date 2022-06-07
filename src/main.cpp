@@ -58,11 +58,8 @@ int main(int argc, char** argv) {
         .default_value(defaults::bot)
         .implicit_value(!defaults::bot);
 
-    try {
-        program.parse_args(argc, argv);
-    } catch (const std::runtime_error& err) {
-        std::exit(1);
-    }
+    // Let this throw if there are any runtime errors.
+    program.parse_args(argc, argv);
 
     auto board_size = program.get<std::size_t>("size");
     auto square_res = program.get<std::size_t>("resolution");
@@ -107,10 +104,10 @@ int main(int argc, char** argv) {
 
                     if(ctrl_or_cmd && event.is_active(cen::scancodes::z)) {
                         // Pressing Ctrl+Z will undo the last move.
-                        if(board.history().size() > 0) {
+                        if(!board.history().empty()) {
                             board.undo();
 
-                            if(engine.enabled && board.history().size() > 0) {
+                            if(engine.enabled && !board.history().empty()) {
                                 board.undo();
                             }
                         }
