@@ -14,18 +14,16 @@ namespace internal {
 
         bongcloud::index source = {from / board.length, from % board.length};
         bongcloud::index sink = {to / board.length, to % board.length};
-        bongcloud::index delta = {1, 1};
-        std::size_t index;
 
-        bongcloud::index offset = {
-            internal::absdiff(source.rank, sink.rank),
+        // Make sure that the bishop is moving diagonally.
+        assert(
+            internal::absdiff(source.rank, sink.rank) ==
             internal::absdiff(source.file, sink.file)
-        };
+        );
 
         // The destination square is to the top-right of the origin square.
         if(source.rank < sink.rank && source.file < sink.file) {
-            for(; delta.rank < offset.rank; ++delta.rank, ++delta.file) {
-                index = from + (delta.rank * board.length) + delta.file;
+            for(std::size_t index = from + board.length + 1; index != to; index += board.length + 1) {
                 if(board[index]) {
                     return true;
                 }
@@ -34,8 +32,7 @@ namespace internal {
 
         // The destination square is to the bottom-right of the origin square.
         else if(source.rank > sink.rank && source.file < sink.file) {
-            for(; delta.rank < offset.rank; ++delta.rank, ++delta.file) {
-                index = from - (delta.rank * board.length) + delta.file;
+            for(std::size_t index = from - board.length + 1; index != to; index -= board.length - 1) {
                 if(board[index]) {
                     return true;
                 }
@@ -44,8 +41,7 @@ namespace internal {
 
         // The destination square is to the bottom-left of the origin square.
         else if(source.rank > sink.rank && source.file > sink.file) {
-            for(; delta.rank < offset.rank; ++delta.rank, ++delta.file) {
-                index = from - (delta.rank * board.length) - delta.file;
+            for(std::size_t index = from - board.length - 1; index != to; index -= board.length + 1) {
                 if(board[index]) {
                     return true;
                 }
@@ -54,8 +50,7 @@ namespace internal {
 
         // The destination square is to the top-left of the origin square.
         else {
-            for(; delta.rank < offset.rank; ++delta.rank, ++delta.file) {
-                index = from + (delta.rank * board.length) - delta.file;
+            for(std::size_t index = from + board.length - 1; index != to; index += board.length - 1) {
                 if(board[index]) {
                     return true;
                 }
