@@ -5,11 +5,11 @@ SRCFILES := $(wildcard src/*.cpp)
 OBJFILES := $(SRCFILES:src/%.cpp=obj/%.o)
 DEPFILES := $(SRCFILES:src/%.cpp=obj/%.d)
 
-WARNINGS  := -Wall -Wextra -Wpedantic
+WARNINGS  := -Wall -Wextra -Wpedantic -Wshadow -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wconversion -Wsign-conversion -Weffc++
 INCLUDES  := -Iinclude -Icenturion/src -Iargparse/include $(shell sdl2-config --cflags)
 LIBRARIES := $(shell sdl2-config --libs) -lSDL2_image -lSDL2_mixer -lSDL2_ttf -lfmt
 
-TFLAGS := -checks=clang-analyzer-\*,concurrency-\*,misc-\*,performance-\*,-misc-no-recursion,portability-\*,readability-\*,-readability-function-cognitive-complexity,-concurrency-mt-unsafe
+TFLAGS := -checks=clang-analyzer-\*,-clang-diagnostic-implicit-int-float-conversion,concurrency-\*,misc-\*,performance-\*,-misc-no-recursion,portability-\*,readability-\*,-readability-function-cognitive-complexity,-concurrency-mt-unsafe
 CFLAGS := $(WARNINGS) $(INCLUDES) -MD -MP -std=c++20 -O3 -flto -DNDEBUG
 LFLAGS := $(LIBRARIES)
 

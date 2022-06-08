@@ -134,7 +134,12 @@ int main(int argc, char** argv) {
 
                 // Make sure it was a left-click.
                 if(event.button() == cen::mouse_button::left && event.pressed()) {
-                    auto i = renderer.square(board, event.x(), event.y());
+                    auto i = renderer.square(
+                        board,
+                        static_cast<std::size_t>(event.x()),
+                        static_cast<std::size_t>(event.y())
+                    );
+
                     auto stored = renderer.cursor();
 
                     if(!stored && board[i]) {

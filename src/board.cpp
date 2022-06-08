@@ -14,8 +14,8 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
     assert(from != to);
 
     // First, make sure that there are no trivial conditions preventing a move.
-    // This could be either a forced stalement (50 move rule), moving an enemy piece
-    // or attempting to capture a friendly piece.
+    // This could be either a forced stalement (50 move rule), attempting to
+    // move an enemy piece or attempting to capture a friendly piece.
     if(m_trivials >= constants::trivial_force_draw || origin->hue != m_color || (dest && dest->hue == m_color)) {
         return false;
     }
@@ -224,7 +224,8 @@ void bongcloud::board::print(void) const noexcept {
             }
 
             if(c != '?' && piece->hue == piece::color::white) {
-                c = std::toupper(c);
+                // Casting is OK since all possible values of c are valid char values.
+                c = static_cast<char>(std::toupper(c));
             }
 
             fmt::print("{}", c);
@@ -279,7 +280,7 @@ void bongcloud::board::load(const std::string_view string) {
             case '1': case '2': case '3':
             case '4': case '5': case '6':
             case '7': case '8': case '9':
-                file += c - '1';
+                file += static_cast<std::size_t>(c - '1');
                 break;
 
             case '/': // A slash moves the cursor to the next rank.
@@ -350,9 +351,11 @@ void bongcloud::board::load(const std::string_view string) {
     if(string.at(character) == '-') {
         character += 2;
     } else {
-        const char file = string.at(character++);
-        const char rank = string.at(character++);
-        std::size_t capture_square = ((rank - '1') * length) + (file - 'a');
+        char file_char = string.at(character++);
+        char rank_char = string.at(character++);
+        auto file_number = static_cast<std::size_t>(file_char - 'a');
+        auto rank_number = static_cast<std::size_t>(rank_char - '1');
+        auto capture_square = (rank_number * length) + file_number;
 
         // TODO: Validate the capture square and make sure it isn't on a square
         // which could be impossible to capture en passant on.

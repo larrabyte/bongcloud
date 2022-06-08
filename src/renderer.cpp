@@ -93,13 +93,17 @@ bongcloud::renderer::renderer(const std::size_t resolution, const std::size_t si
 void bongcloud::renderer::render(const bongcloud::board& board) noexcept {
     m_renderer.clear_with(cen::colors::black);
 
-    std::size_t y = m_renderer.output_size().height - m_resolution;
+    std::size_t y = static_cast<std::size_t>(m_renderer.output_size().height) - m_resolution;
     std::size_t i = 0;
     std::size_t x = 0;
 
     for(const auto& piece : board) {
-        // Construct a Centurion rectangle to represent this square.
-        cen::irect rect(x, y, m_resolution, m_resolution);
+        cen::irect rect = {
+            static_cast<int>(x),
+            static_cast<int>(y),
+            static_cast<int>(m_resolution),
+            static_cast<int>(m_resolution)
+        };
 
         // Compute whether the square should be light or dark or highlighted.
         const auto& last = board.latest();
@@ -147,8 +151,8 @@ void bongcloud::renderer::render(const bongcloud::board& board) noexcept {
             // Set the top-left of the rectangle to the middle of the square.
             static_cast<int>(mouse.x() * m_scale - (m_resolution / 2)),
             static_cast<int>(mouse.y() * m_scale - (m_resolution / 2)),
-            m_resolution,
-            m_resolution
+            static_cast<int>(m_resolution),
+            static_cast<int>(m_resolution)
         );
 
         const auto& piece = board[*m_mouse];
@@ -169,15 +173,19 @@ void bongcloud::renderer::render(const bongcloud::board& board) noexcept {
 
 std::size_t bongcloud::renderer::square(const bongcloud::board& board, const std::size_t x, const std::size_t y) const noexcept {
     // Compute the square at the given x and y coordinates.
-    cen::iarea screen = m_renderer.output_size();
-    std::size_t rank = (screen.height - (y * m_scale)) / m_resolution;
-    std::size_t file = x * m_scale / m_resolution;
+    auto screen_height = static_cast<std::size_t>(m_renderer.output_size().height);
+    auto scaled_y = static_cast<std::size_t>(y * m_scale);
+    auto scaled_x = static_cast<std::size_t>(x * m_scale);
+
+    std::size_t rank = (screen_height - scaled_y) / m_resolution;
+    std::size_t file = scaled_x / m_resolution;
     return (rank * board.length) + file;
 }
 
 void bongcloud::renderer::promote(const std::size_t square, const bongcloud::board& board) noexcept {
+    std::size_t h = static_cast<std::size_t>(m_renderer.output_size().height);
     std::size_t x = (square % board.length) * m_resolution;
-    std::size_t y = (m_renderer.output_size().height) - (((square / board.length) + 1) * (m_resolution));
+    std::size_t y = h - (((square / board.length) + 1) * (m_resolution));
     std::size_t s = std::size(constants::promotion_pieces);
 
     // m_renderer.draw_rect() only renders the outline of a square.
@@ -185,19 +193,37 @@ void bongcloud::renderer::promote(const std::size_t square, const bongcloud::boa
     for(std::size_t border = 1; border < constants::promotion_menu_border; ++border) {
         std::size_t horizontal = m_resolution + (border * 2);
         std::size_t vertical = (m_resolution * s + (border * 2));
-        cen::irect outline(x - border, y - border, horizontal, vertical);
+
+        cen::irect outline = {
+            static_cast<int>(x - border),
+            static_cast<int>(y - border),
+            static_cast<int>(horizontal),
+            static_cast<int>(vertical)
+        };
+
         m_renderer.draw_rect(outline);
     }
 
-    cen::irect primary(x, y, m_resolution, m_resolution * s);
+    cen::irect primary = {
+        static_cast<int>(x),
+        static_cast<int>(y),
+        static_cast<int>(m_resolution),
+        static_cast<int>(m_resolution * s)
+    };
+
     m_renderer.set_color(cen::colors::white);
     m_renderer.fill_rect(primary);
 
     // Render each piece on top.
     for(std::size_t i = 0; i < s; ++i) {
-        cen::irect place(x, y + (i * m_resolution), m_resolution, m_resolution);
-        bongcloud::piece piece(board.color(), constants::promotion_pieces[i]);
+        cen::irect place = {
+            static_cast<int>(x),
+            static_cast<int>(y + (i * m_resolution)),
+            static_cast<int>(m_resolution),
+            static_cast<int>(m_resolution)
+        };
 
+        bongcloud::piece piece(board.color(), constants::promotion_pieces[i]);
         auto offset = internal::compute_texture_offset(piece);
         const auto& texture = *m_textures[offset];
         m_renderer.render(texture, place);
