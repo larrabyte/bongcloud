@@ -378,9 +378,6 @@ void bongcloud::board::load(const std::string_view string) {
     // Handle the half-move clock via string-to-integer conversion.
     // The full-move count is not handled explicitly as we have no use for it.
     std::from_chars(string.begin() + character, string.end(), m_trivials);
-
-    fmt::print("[bongcloud] FEN string loaded, new board state:\n");
-    this->print();
 }
 
 void bongcloud::board::undo(void) noexcept {
