@@ -20,6 +20,80 @@ namespace defaults {
     const std::string fen_8x8 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 }
 
+namespace routines {
+    namespace board {
+        void print(const bongcloud::board& board) noexcept {
+            board.print();
+        }
+
+        void undo(const bongcloud::ai& engine, bongcloud::board& board) noexcept {
+            if(!board.history().empty()) {
+                board.undo();
+
+                if(engine.enabled && !board.history().empty()) {
+                    board.undo();
+                }
+            }
+        }
+
+        void clicked(bongcloud::renderer& renderer, bongcloud::board& board, const std::size_t x, const std::size_t y) noexcept {
+            auto i = renderer.square(board, x, y);
+            auto stored = renderer.cursor();
+
+            if(!stored && board[i]) {
+                renderer.cursor(i);
+            } else if(i == stored || (stored && board.move(*stored, i))) {
+                // Stop piece tracking if we're placing the piece
+                // back or a successful move was made.
+                renderer.cursor(std::nullopt);
+            }
+        }
+    }
+
+    namespace ai {
+        [[noreturn]] void perft(const bongcloud::ai& engine, bongcloud::board& board) noexcept {
+            // Run performance testing and then exit the program.
+            for(std::size_t i = 1; i < engine.layers + 1; ++i) {
+                auto n = engine.perft(board, i);
+                fmt::print("[bongcloud] no. of positions after {} ply: {}\n", i, n);
+            }
+
+            std::terminate();
+        }
+
+        void evaluate(const bongcloud::ai& engine, bongcloud::board& board) noexcept {
+            auto evaluation = engine.evaluate(board);
+            fmt::print("[bongcloud] current evaluation: {:+}\n", evaluation);
+        }
+
+        void generate(bongcloud::ai& engine, bongcloud::board& board) noexcept {
+            if(engine.future.valid()) {
+                // If the future is valid, then the AI could either
+                // have a result for us or still be thinking.
+                auto zero = std::chrono::milliseconds(0);
+                if(engine.future.wait_for(zero) == std::future_status::ready) {
+                    if(auto move = engine.future.get()) {
+                        // A move has been generated! Play it.
+                        board.move(move->from, move->to);
+                    }
+
+                    else {
+                        // The bot has no legal moves.
+                        fmt::print("[bongcloud] no legal moves remaining.\n");
+                        engine.enabled = false;
+                    }
+                }
+            }
+
+            else {
+                // Otherwise, spawn a new thread to evaluate this position.
+                auto subroutine = [&]() { return engine.generate(board); };
+                engine.future = std::async(std::launch::async, subroutine);
+            }
+        }
+    }
+}
+
 int main(int argc, char** argv) {
     // Retrieve any additional parameters from the command line if present.
     argparse::ArgumentParser program("bongcloud");
@@ -86,12 +160,7 @@ int main(int argc, char** argv) {
     }
 
     if(perft) {
-        for(std::size_t i = 1; i < engine.layers + 1; ++i) {
-            auto n = engine.perft(board, i);
-            fmt::print("[bongcloud] no. of positions after {} ply: {}\n", i, n);
-        }
-
-        return 0;
+        routines::ai::perft(engine, board);
     }
 
     bongcloud::renderer renderer(square_res, board_size);
@@ -105,88 +174,32 @@ int main(int argc, char** argv) {
             }
 
             else if(handler.is<cen::keyboard_event>()) {
-                auto& event = handler.get<cen::keyboard_event>();
-
-                if(event.pressed()) {
-                    bool ctrl_or_cmd = {
-                        event.is_active(cen::key_mod::lctrl) ||
-                        event.is_active(cen::key_mod::lgui)
-                    };
-
-                    if(ctrl_or_cmd && event.is_active(cen::scancodes::p)) {
-                        // Pressing Ctrl+P will print the current board state.
-                        board.print();
-                    }
-
-                    if(ctrl_or_cmd && event.is_active(cen::scancodes::z)) {
-                        // Pressing Ctrl+Z will undo the last move.
-                        if(!board.history().empty()) {
-                            board.undo();
-
-                            if(engine.enabled && !board.history().empty()) {
-                                board.undo();
-                            }
+                if(auto& event = handler.get<cen::keyboard_event>(); event.pressed()) {
+                    // Make sure that either the Left Control or Left GUI keys are being pressed.
+                    if(event.is_active(cen::key_mod::lctrl) || event.is_active(cen::key_mod::lgui)) {
+                        if(event.is_active(cen::scancodes::p)) {
+                            routines::board::print(board);
+                        } else if(event.is_active(cen::scancodes::z)) {
+                            routines::board::undo(engine, board);
+                        } else if(event.is_active(cen::scancodes::e)) {
+                            routines::ai::evaluate(engine, board);
                         }
-                    }
-
-                    if(ctrl_or_cmd && event.is_active(cen::scancodes::e)) {
-                        // Pressing Ctrl+E will print the current evaluation.
-                        auto evaluation = engine.evaluate(board);
-                        fmt::print("[bongcloud] current evaluation: {:+}\n", evaluation);
                     }
                 }
             }
 
             else if(handler.is<cen::mouse_button_event>()) {
-                auto& event = handler.get<cen::mouse_button_event>();
-
-                // Make sure it was a left-click.
-                if(event.button() == cen::mouse_button::left && event.pressed()) {
-                    auto i = renderer.square(
-                        board,
-                        static_cast<std::size_t>(event.x()),
-                        static_cast<std::size_t>(event.y())
-                    );
-
-                    auto stored = renderer.cursor();
-
-                    if(!stored && board[i]) {
-                        renderer.cursor(i);
-                    } else if(i == stored || (stored && board.move(*stored, i))) {
-                        // Stop piece tracking if we're placing the piece
-                        // back or a successful move was made.
-                        renderer.cursor(std::nullopt);
-                    }
+                // Make sure it the left-mouse button was pressed.
+                if(auto& event = handler.get<cen::mouse_button_event>(); event.button() == cen::mouse_button::left && event.pressed()) {
+                    auto x = static_cast<std::size_t>(event.x());
+                    auto y = static_cast<std::size_t>(event.y());
+                    routines::board::clicked(renderer, board, x, y);
                 }
             }
         }
 
         if(engine.enabled && board.color() == bongcloud::piece::color::black) {
-            if(engine.future.valid()) {
-                // If the future is valid, then the AI could either
-                // have a result for us or still be thinking.
-                auto zero = std::chrono::milliseconds(0);
-                bool ready = engine.future.wait_for(zero) == std::future_status::ready;
-
-                if(ready) {
-                    if(auto move = engine.future.get()) {
-                        // A move has been generated! Play it.
-                        board.move(move->from, move->to);
-                    }
-
-                    else {
-                        // The bot has no legal moves.
-                        fmt::print("[bongcloud] no legal moves remaining.\n");
-                        engine.enabled = false;
-                    }
-                }
-            }
-
-            else {
-                // Otherwise, spawn a new thread to evaluate this position.
-                auto subroutine = [&]() { return engine.generate(board); };
-                engine.future = std::async(std::launch::async, subroutine);
-            }
+            routines::ai::generate(engine, board);
         }
 
         renderer.render(board);
