@@ -6,6 +6,23 @@
 #include <fmt/core.h>
 #include <cstddef>
 
+namespace internal {
+    std::size_t perft(bongcloud::board& board, const std::size_t depth) noexcept {
+        if(depth == 0) {
+            return 1;
+        }
+
+        std::size_t count = 0;
+        for(const auto& move : board.moves()) {
+            board.move(move.from, move.to);
+            count += perft(board, depth - 1);
+            board.undo();
+        }
+
+        return count;
+    }
+}
+
 bool bongcloud::board::move(const std::size_t from, const std::size_t to) noexcept {
     auto& origin = m_internal[from];
     auto& dest = m_internal[to];
@@ -177,6 +194,28 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) noexce
     };
 
     return false;
+}
+
+std::vector<bongcloud::move> bongcloud::board::moves(void) noexcept {
+    // Preallocate space here so we don't spend time resizing and copying.
+    std::vector<bongcloud::move> moves;
+    moves.reserve(constants::move_buffer_reserve);
+
+    for(std::size_t from = 0; from < length * length; ++from) {
+        for(std::size_t to = 0; to < length * length; ++to) {
+            if(from != to && m_internal[from] && this->move(from, to)) {
+                bongcloud::move m = {from, to};
+                moves.push_back(m);
+                this->undo();
+            }
+        }
+    }
+
+    return moves;
+}
+
+std::size_t bongcloud::board::positions(const std::size_t depth) noexcept {
+    return internal::perft(*this, depth);
 }
 
 bool bongcloud::board::check(const piece::color color) const noexcept {

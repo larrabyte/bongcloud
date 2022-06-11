@@ -18,8 +18,4 @@ namespace ext {
             }
         }
     }
-
-    [[noreturn]] inline void unreachable(void) noexcept {
-        std::terminate();
-    }
 }

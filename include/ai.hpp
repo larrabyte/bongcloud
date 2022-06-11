@@ -35,16 +35,5 @@ namespace bongcloud {
         private:
             // An implementation of the minimax algorithm.
             double minimax(board&, double, double, const std::size_t, const piece::color) const noexcept;
-
-            // An algorithm that counts possible positions recursively.
-            std::size_t positions(board&, const std::size_t) const noexcept;
-
-            // Returns a vector containing all possible moves for a given board.
-            std::vector<move> moves(board&) const noexcept;
     };
-
-    namespace constants {
-        // The average position has about 40 legal moves.
-        constexpr std::size_t move_buffer_reserve = 40;
-    }
 }

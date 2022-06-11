@@ -56,16 +56,6 @@ namespace routines {
     }
 
     namespace ai {
-        [[noreturn]] void perft(const bongcloud::ai& engine, bongcloud::board& board) noexcept {
-            // Run performance testing and then exit the program.
-            for(std::size_t i = 1; i < engine.layers + 1; ++i) {
-                auto n = engine.perft(board, i);
-                fmt::print("[bongcloud] no. of positions after {} ply: {}\n", i, n);
-            }
-
-            std::terminate();
-        }
-
         void evaluate(const bongcloud::ai& engine, bongcloud::board& board) noexcept {
             auto evaluation = engine.evaluate(board);
             fmt::print("[bongcloud] current evaluation: {:+}\n", evaluation);
@@ -165,7 +155,13 @@ int main(int argc, char** argv) {
     }
 
     if(perft) {
-        routines::ai::perft(engine, board);
+        // Run performance testing and then exit the program.
+        for(std::size_t i = 1; i < engine.layers + 1; ++i) {
+            auto n = board.positions(i);
+            fmt::print("[bongcloud] no. of positions after {} ply: {}\n", i, n);
+        }
+
+        return 0;
     }
 
     bongcloud::renderer renderer(square_res, board_size);

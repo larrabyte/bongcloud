@@ -42,6 +42,12 @@ namespace bongcloud {
             // Attempts to move a piece from one square to another.
             bool move(const std::size_t, const std::size_t) noexcept;
 
+            // Generates a list of all legal moves for the current player.
+            [[nodiscard]] std::vector<bongcloud::move> moves(void) noexcept;
+
+            // An algorithm that counts possible positions recursively.
+            [[nodiscard]] std::size_t positions(const std::size_t) noexcept;
+
             // Returns whether a player is currently in check.
             [[nodiscard]] bool check(const piece::color) const noexcept;
 
@@ -121,5 +127,8 @@ namespace bongcloud {
     namespace constants {
         // The number of trivial half-moves until a forced draw.
         constexpr std::size_t trivial_force_draw = 100;
+
+        // The average position has about 40 legal moves.
+        constexpr std::size_t move_buffer_reserve = 40;
     }
 }
