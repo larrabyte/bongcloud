@@ -36,14 +36,16 @@ namespace routines {
             }
         }
 
-        void clicked(bongcloud::renderer& renderer, bongcloud::board& board, const std::size_t x, const std::size_t y) noexcept {
-            auto i = renderer.square(board, x, y);
-
-            if(!renderer.clicked_square && board[i]) {
-                renderer.clicked_square = i;
+        void clicked(bongcloud::renderer& renderer, bongcloud::board& board, const bongcloud::ai& engine, const std::size_t x, const std::size_t y) noexcept {
+            using namespace std::chrono_literals;
+            if(engine.future.valid() && engine.future.wait_for(0ms) != std::future_status::ready) {
+                return;
             }
 
-            else {
+            auto i = renderer.square(board, x, y);
+            if(!renderer.clicked_square && board[i]) {
+                renderer.clicked_square = i;
+            } else {
                 if(renderer.clicked_square) {
                     board.move(*renderer.clicked_square, i);
                 }
@@ -73,8 +75,8 @@ namespace routines {
             if(engine.future.valid()) {
                 // If the future is valid, then the AI could either
                 // have a result for us or still be thinking.
-                auto zero = std::chrono::milliseconds(0);
-                if(engine.future.wait_for(zero) == std::future_status::ready) {
+                using namespace std::chrono_literals;
+                if(engine.future.wait_for(0ms) == std::future_status::ready) {
                     if(auto move = engine.future.get()) {
                         // A move has been generated! Play it.
                         board.move(move->from, move->to);
@@ -196,7 +198,7 @@ int main(int argc, char** argv) {
                 if(auto& event = handler.get<cen::mouse_button_event>(); event.button() == cen::mouse_button::left && event.pressed()) {
                     auto x = static_cast<std::size_t>(event.x());
                     auto y = static_cast<std::size_t>(event.y());
-                    routines::board::clicked(renderer, board, x, y);
+                    routines::board::clicked(renderer, board, engine, x, y);
                 }
             }
         }
