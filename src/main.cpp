@@ -68,14 +68,7 @@ namespace routines {
                 using namespace std::chrono_literals;
                 if(engine.future.wait_for(0ms) == std::future_status::ready) {
                     if(auto move = engine.future.get()) {
-                        // A move has been generated! Play it.
                         board.move(move->from, move->to);
-                    }
-
-                    else {
-                        // The bot has no legal moves.
-                        fmt::print("[bongcloud] no legal moves remaining.\n");
-                        engine.enabled = false;
                     }
                 }
             }

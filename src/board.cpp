@@ -89,7 +89,7 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) noexce
                 history.castle = {((from / length) * length) + length - 1, to - 1};
 
                 // If the king is already in check, we cannot castle.
-                if(this->check(m_color)) {
+                if(this->check()) {
                     return false;
                 }
 
@@ -101,7 +101,7 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) noexce
                     cursor = trail;
                     trail = std::nullopt;
 
-                    if(this->check(m_color)) {
+                    if(this->check()) {
                         origin = cursor;
                         cursor = std::nullopt;
                         return false;
@@ -125,7 +125,7 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) noexce
                 history.castle = {(from / length) * length, to + 1};
 
                 // If the king is already in check, we cannot castle.
-                if(this->check(m_color)) {
+                if(this->check()) {
                     return false;
                 }
 
@@ -137,7 +137,7 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) noexce
                     cursor = trail;
                     trail = std::nullopt;
 
-                    if(this->check(m_color)) {
+                    if(this->check()) {
                         origin = cursor;
                         cursor = std::nullopt;
                         return false;
@@ -180,7 +180,7 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) noexce
         m_history.push_back(history);
 
         // Check that the move just played did not leave the king in check.
-        if(this->check(m_color)) {
+        if(this->check()) {
             this->undo();
             return false;
         }
@@ -218,13 +218,13 @@ std::size_t bongcloud::board::positions(const std::size_t depth) noexcept {
     return internal::perft(*this, depth);
 }
 
-bool bongcloud::board::check(const piece::color color) const noexcept {
+bool bongcloud::board::check(void) const noexcept {
     // Attempt to find the index of the specified player's king.
     std::vector<std::size_t> kings;
 
     for(std::size_t i = 0; i < length * length; ++i) {
         const auto& piece = m_internal[i];
-        if(piece && piece->hue == color && piece->variety == piece::type::king) {
+        if(piece && piece->hue == m_color && piece->variety == piece::type::king) {
             kings.push_back(i);
             break;
         }
@@ -236,7 +236,7 @@ bool bongcloud::board::check(const piece::color color) const noexcept {
     for(const auto king : kings) {
         for(std::size_t i = 0; i < length * length; ++i) {
             const auto& piece = m_internal[i];
-            if(piece && piece->hue != color && this->pseudolegal(i, king)) {
+            if(piece && piece->hue != m_color && this->pseudolegal(i, king)) {
                 return true;
             }
         }

@@ -4,13 +4,12 @@
 #include <fmt/core.h>
 
 double bongcloud::ai::evaluate(bongcloud::board& board) const noexcept {
-    piece::color color = board.color();
     double evaluation = 0.0;
 
-    if(board.check(color) && board.moves().empty()) {
+    if(board.check() && board.moves().empty()) {
         // Checkmate is the best outcome!
         evaluation = std::numeric_limits<double>::infinity();
-        return (color == piece::color::white) ? evaluation : -evaluation;
+        return (board.color() == piece::color::white) ? evaluation : -evaluation;
     }
 
     for(const auto& piece : board) {

@@ -49,7 +49,7 @@ namespace bongcloud {
             [[nodiscard]] std::size_t positions(const std::size_t) noexcept;
 
             // Returns whether a player is currently in check.
-            [[nodiscard]] bool check(const piece::color) const noexcept;
+            [[nodiscard]] bool check(void) const noexcept;
 
             // Prints out the current board state to stdout.
             void print(void) const noexcept;
