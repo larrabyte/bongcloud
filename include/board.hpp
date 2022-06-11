@@ -51,6 +51,12 @@ namespace bongcloud {
             // Returns whether a player is currently in check.
             [[nodiscard]] bool check(void) const noexcept;
 
+            // Returns whether a player has been checkmated.
+            [[nodiscard]] bool checkmate(void) noexcept;
+
+            // Returns whether a player has been stalemated.
+            [[nodiscard]] bool stalemate(void) noexcept;
+
             // Prints out the current board state to stdout.
             void print(void) const noexcept;
 

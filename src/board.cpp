@@ -245,6 +245,14 @@ bool bongcloud::board::check(void) const noexcept {
     return false;
 }
 
+bool bongcloud::board::checkmate(void) noexcept {
+    return this->check() && this->moves().empty();
+}
+
+bool bongcloud::board::stalemate(void) noexcept {
+    return !this->check() && this->moves().empty();
+}
+
 void bongcloud::board::print(void) const noexcept {
     // Start from the top-left square.
     std::size_t rank = length - 1;

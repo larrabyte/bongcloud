@@ -192,8 +192,18 @@ int main(int argc, char** argv) {
             }
         }
 
-        if(engine.enabled && board.color() == bongcloud::piece::color::black) {
-            routines::ai::generate(engine, board);
+        if(engine.enabled) {
+            if(board.color() == bongcloud::piece::color::black) {
+                routines::ai::generate(engine, board);
+            }
+
+            if(board.checkmate()) {
+                fmt::print("[bongcloud] checkmate!\n");
+                engine.enabled = false;
+            } else if(board.stalemate()) {
+                fmt::print("[bongcloud] stalemate!\n");
+                engine.enabled = false;
+            }
         }
 
         renderer.render(board);
