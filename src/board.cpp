@@ -6,7 +6,7 @@
 #include <fmt/core.h>
 #include <cstddef>
 
-bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
+bool bongcloud::board::move(const std::size_t from, const std::size_t to) noexcept {
     auto& origin = m_internal[from];
     auto& dest = m_internal[to];
 

@@ -40,7 +40,7 @@ namespace bongcloud {
             board(const std::size_t l, const bool a) noexcept : length {l}, m_internal {l * l}, m_anarchy {a} {};
 
             // Attempts to move a piece from one square to another.
-            bool move(const std::size_t, const std::size_t);
+            bool move(const std::size_t, const std::size_t) noexcept;
 
             // Returns whether a player is currently in check.
             [[nodiscard]] bool check(const piece::color) const noexcept;
