@@ -147,7 +147,7 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
                 // we can use the common piece movement code and just set
                 // the origin square to contain the promoted piece.
                 std::size_t moves = origin->moves;
-                origin = piece(origin->hue, piece::type::queen);
+                origin = {origin->hue, piece::type::queen};
                 origin->moves = moves;
                 history.promotion = origin;
                 break;
@@ -275,18 +275,18 @@ void bongcloud::board::load(const std::string_view string) {
 
         switch(c) {
             // Uppercase represents white pieces, lowercase represents black pieces.
-            case 'R': m_internal[square] = piece(color::white, type::rook); break;
-            case 'N': m_internal[square] = piece(color::white, type::knight); break;
-            case 'B': m_internal[square] = piece(color::white, type::bishop); break;
-            case 'Q': m_internal[square] = piece(color::white, type::queen); break;
-            case 'K': m_internal[square] = piece(color::white, type::king); break;
-            case 'P': m_internal[square] = piece(color::white, type::pawn); break;
-            case 'r': m_internal[square] = piece(color::black, type::rook); break;
-            case 'n': m_internal[square] = piece(color::black, type::knight); break;
-            case 'b': m_internal[square] = piece(color::black, type::bishop); break;
-            case 'q': m_internal[square] = piece(color::black, type::queen); break;
-            case 'k': m_internal[square] = piece(color::black, type::king); break;
-            case 'p': m_internal[square] = piece(color::black, type::pawn); break;
+            case 'R': m_internal[square] = {color::white, type::rook}; break;
+            case 'N': m_internal[square] = {color::white, type::knight}; break;
+            case 'B': m_internal[square] = {color::white, type::bishop}; break;
+            case 'Q': m_internal[square] = {color::white, type::queen}; break;
+            case 'K': m_internal[square] = {color::white, type::king}; break;
+            case 'P': m_internal[square] = {color::white, type::pawn}; break;
+            case 'r': m_internal[square] = {color::black, type::rook}; break;
+            case 'n': m_internal[square] = {color::black, type::knight}; break;
+            case 'b': m_internal[square] = {color::black, type::bishop}; break;
+            case 'q': m_internal[square] = {color::black, type::queen}; break;
+            case 'k': m_internal[square] = {color::black, type::king}; break;
+            case 'p': m_internal[square] = {color::black, type::pawn}; break;
 
             // Numbers signify the number of squares to skip.
             case '1': case '2': case '3':
@@ -400,7 +400,7 @@ void bongcloud::board::undo(void) noexcept {
     auto& dest = m_internal[last.move.to];
 
     // If the move was a promotion, then we don't care about what's on the destination square.
-    origin = (last.promotion) ? piece(last.promotion->hue, piece::type::pawn) : dest;
+    origin = (last.promotion) ? piece {last.promotion->hue, piece::type::pawn} : dest;
     --origin->moves;
     dest = std::nullopt;
 

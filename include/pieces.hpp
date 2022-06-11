@@ -36,9 +36,6 @@ namespace bongcloud {
             last = promotion
         };
 
-        // The piece constructor.
-        piece(const piece::color c, const piece::type t) noexcept : hue(c), variety(t) {}
-
         // The color of the piece.
         piece::color hue;
 

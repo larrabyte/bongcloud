@@ -17,25 +17,11 @@ namespace bongcloud {
             // Returns the index of the square at a given mouse coordinate.
             std::size_t square(const board&, const std::size_t, const std::size_t) const noexcept;
 
-            // Assigns a square for piece selection menu rendering.
-            void promotion(std::optional<std::size_t> i) noexcept {
-                m_promotion = i;
-            }
+            // The index of the hidden square.
+            std::optional<std::size_t> clicked_square;
 
-            // Returns the index of the square currently being used as a piece selection menu.
-            [[nodiscard]] std::optional<std::size_t> promotion(void) const noexcept {
-                return m_promotion;
-            }
-
-            // Attaches the square and its associated piece to the mouse.
-            void cursor(std::optional<std::size_t> i) noexcept {
-                m_mouse = i;
-            }
-
-            // Returns the index of the square attached to the mouse.
-            [[nodiscard]] std::optional<std::size_t> cursor(void) const noexcept {
-                return m_mouse;
-            }
+            // The index of the piece selection menu square.
+            std::optional<std::size_t> promotion_square;
 
         private:
             // Renders a piece selection menu to the screen at the square index passed in.
@@ -53,12 +39,6 @@ namespace bongcloud {
 
             // Piece texture array.
             std::vector<std::optional<cen::texture>> m_textures;
-
-            // The index of the hidden square.
-            std::optional<std::size_t> m_mouse;
-
-            // The index of the piece selection menu square.
-            std::optional<std::size_t> m_promotion;
 
             // Resolution scale factor.
             double m_scale;

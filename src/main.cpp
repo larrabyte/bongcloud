@@ -38,14 +38,17 @@ namespace routines {
 
         void clicked(bongcloud::renderer& renderer, bongcloud::board& board, const std::size_t x, const std::size_t y) noexcept {
             auto i = renderer.square(board, x, y);
-            auto stored = renderer.cursor();
 
-            if(!stored && board[i]) {
-                renderer.cursor(i);
-            } else if(i == stored || (stored && board.move(*stored, i))) {
-                // Stop piece tracking if we're placing the piece
-                // back or a successful move was made.
-                renderer.cursor(std::nullopt);
+            if(!renderer.clicked_square && board[i]) {
+                renderer.clicked_square = i;
+            }
+
+            else {
+                if(renderer.clicked_square) {
+                    board.move(*renderer.clicked_square, i);
+                }
+
+                renderer.clicked_square = std::nullopt;
             }
         }
     }

@@ -28,7 +28,7 @@ namespace internal {
     }
 
     std::size_t compute_texture_offset(const bongcloud::piece& piece) {
-        constexpr auto offset = [] {
+        constexpr auto offset = []() {
             // https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2.
             auto x = ext::to_underlying(bongcloud::piece::type::last);
             std::size_t e = 0;
@@ -127,7 +127,7 @@ void bongcloud::renderer::render(const bongcloud::board& board) noexcept {
 
         // Get the appropriate texture for the piece on the square (if present) and render it.
         // Assume that the piece's texture is always present.
-        if(piece && i != m_mouse) {
+        if(piece && i != clicked_square) {
             auto offset = internal::compute_texture_offset(*piece);
             const auto& texture = *m_textures[offset];
             m_renderer.render(texture, rect);
@@ -143,7 +143,7 @@ void bongcloud::renderer::render(const bongcloud::board& board) noexcept {
     }
 
     // If a cursor square is specified, render it last.
-    if(m_mouse) {
+    if(clicked_square) {
         cen::mouse mouse;
         mouse.update();
 
@@ -155,7 +155,7 @@ void bongcloud::renderer::render(const bongcloud::board& board) noexcept {
             static_cast<int>(m_resolution)
         );
 
-        const auto& piece = board[*m_mouse];
+        const auto& piece = board[*clicked_square];
         auto offset = internal::compute_texture_offset(*piece);
 
         // Assume that the texture is always present.
@@ -164,8 +164,8 @@ void bongcloud::renderer::render(const bongcloud::board& board) noexcept {
     }
 
     // If a piece selection menu is active, render it.
-    if(m_promotion) {
-        this->promote(*m_promotion, board);
+    if(promotion_square) {
+        this->promote(*promotion_square, board);
     }
 
     m_renderer.present();
@@ -223,7 +223,7 @@ void bongcloud::renderer::promote(const std::size_t square, const bongcloud::boa
             static_cast<int>(m_resolution)
         };
 
-        bongcloud::piece piece(board.color(), constants::promotion_pieces[i]);
+        bongcloud::piece piece = {board.color(), constants::promotion_pieces[i]};
         auto offset = internal::compute_texture_offset(piece);
         const auto& texture = *m_textures[offset];
         m_renderer.render(texture, place);
