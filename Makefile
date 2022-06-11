@@ -5,7 +5,7 @@ SRCFILES := $(wildcard src/*.cpp)
 OBJFILES := $(SRCFILES:src/%.cpp=obj/%.o)
 DEPFILES := $(SRCFILES:src/%.cpp=obj/%.d)
 
-WARNINGS  := -Wall -Wextra -Wpedantic -Wshadow -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wconversion -Wsign-conversion -Weffc++
+WARNINGS  := -Wall -Wextra -Wpedantic -Wshadow -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wconversion -Wsign-conversion -Weffc++ -Wswitch
 INCLUDES  := -Iinclude -Icenturion/src -Iargparse/include $(shell sdl2-config --cflags)
 LIBRARIES := $(shell sdl2-config --libs) -lSDL2_image -lSDL2_mixer -lSDL2_ttf -lfmt
 

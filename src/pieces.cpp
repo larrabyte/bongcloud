@@ -100,143 +100,157 @@ std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::s
         internal::absdiff(from % length, to % length)
     };
 
-    if(origin->variety == piece::type::pawn) {
-        bool forward = {
-            (origin->hue == piece::color::white && from < to) ||
-            (origin->hue == piece::color::black && from > to)
-        };
+    switch(origin->variety) {
+        case piece::type::pawn: {
+            bool forward = {
+                (origin->hue == piece::color::white && from < to) ||
+                (origin->hue == piece::color::black && from > to)
+            };
 
-        if(!forward) {
-            // Pawns can't move backwards.
-            return std::nullopt;
-        }
+            if(!forward) {
+                // Pawns can't move backwards.
+                return std::nullopt;
+            }
 
-        index source = {from / length, from % length};
+            index source = {from / length, from % length};
 
-        bool pushing = {
-            (source.rank == 1 || source.rank == length - 2) &&
-            difference.rank == 2 && difference.file == 0 && !dest
-        };
+            bool pushing = {
+                (source.rank == 1 || source.rank == length - 2) &&
+                difference.rank == 2 && difference.file == 0 && !dest
+            };
 
-        if(pushing) {
-            // Pawns can move two squares forward on their first move, assuming a clear path.
-            bool white = (origin->hue == piece::color::white);
-            std::size_t adjacent = (white) ? from + length : from - length;
-            if(!m_internal[adjacent]) {
+            if(pushing) {
+                // Pawns can move two squares forward on their first move, assuming a clear path.
+                bool white = (origin->hue == piece::color::white);
+                std::size_t adjacent = (white) ? from + length : from - length;
+                if(!m_internal[adjacent]) {
+                    return piece::move::normal;
+                }
+
+                return std::nullopt;
+            }
+
+            index sink = {to / length, to % length};
+
+            if(difference.rank == 1 && difference.file == 0 && !dest) {
+                // Pawns can always move one square forward if not blocked.
+                // If a pawn has managed to reach the end of the board, it is promoted instead.
+                if(sink.rank == 0 || sink.rank == length - 1) {
+                    return piece::move::promotion;
+                }
+
                 return piece::move::normal;
             }
 
-            return std::nullopt;
-        }
+            if(difference.rank == 1 && difference.file == 1 && dest) {
+                // Pawns can also diagonally capture if there is a piece present.
+                if(sink.rank == 0 || sink.rank == length - 1) {
+                    return piece::move::promotion;
+                }
 
-        index sink = {to / length, to % length};
-
-        if(difference.rank == 1 && difference.file == 0 && !dest) {
-            // Pawns can always move one square forward if not blocked.
-            // If a pawn has managed to reach the end of the board, it is promoted instead.
-            if(sink.rank == 0 || sink.rank == length - 1) {
-                return piece::move::promotion;
+                return piece::move::capture;
             }
 
-            return piece::move::normal;
-        }
+            if(const auto& latest = this->latest()) {
+                // En-passant capture is possible only if...
+                // - The last move was a 2-square pawn move.
+                // - The target square is behind the pawn to be captured.
+                // - The attacking pawn is adjacent to the target pawn.
+                bool takable = {
+                    m_internal[latest->to]->variety == piece::type::pawn &&
+                    internal::absdiff(latest->from, latest->to) == length * 2 &&
+                    internal::absdiff(to, latest->to) == length &&
+                    internal::absdiff(from, latest->to) == 1 &&
+                    !(source.file == 0 && sink.file == length - 1) &&
+                    !(source.file == length - 1 && sink.file == 0)
+                };
 
-        if(difference.rank == 1 && difference.file == 1 && dest) {
-            // Pawns can also diagonally capture if there is a piece present.
-            if(sink.rank == 0 || sink.rank == length - 1) {
-                return piece::move::promotion;
+                if(takable) {
+                    return piece::move::en_passant;
+                }
             }
 
-            return piece::move::capture;
+            break;
         }
 
-        if(const auto& latest = this->latest()) {
-            // En-passant capture is possible only if...
-            // - The last move was a 2-square pawn move.
-            // - The target square is behind the pawn to be captured.
-            // - The attacking pawn is adjacent to the target pawn.
-            bool takable = {
-                m_internal[latest->to]->variety == piece::type::pawn &&
-                internal::absdiff(latest->from, latest->to) == length * 2 &&
-                internal::absdiff(to, latest->to) == length &&
-                internal::absdiff(from, latest->to) == 1 &&
-                !(source.file == 0 && sink.file == length - 1) &&
-                !(source.file == length - 1 && sink.file == 0)
+        case piece::type::knight: {
+            // Knights can move in an L-shape (2 units in one direction, 1 unit in the other).
+            bool allowed = {
+                (difference.rank == 1 && difference.file == 2) ||
+                (difference.rank == 2 && difference.file == 1)
             };
 
-            if(takable) {
-                return piece::move::en_passant;
+            if(allowed) {
+                return (dest) ? piece::move::capture : piece::move::normal;
             }
-        }
-    }
 
-    else if(origin->variety == piece::type::knight) {
-        // Knights can move in an L-shape (2 units in one direction, 1 unit in the other).
-        bool allowed = {
-            (difference.rank == 1 && difference.file == 2) ||
-            (difference.rank == 2 && difference.file == 1)
-        };
-
-        if(allowed) {
-            return (dest) ? piece::move::capture : piece::move::normal;
-        }
-    }
-
-    else if(origin->variety == piece::type::bishop) {
-        // Make sure the bishop is moving diagonally and not obstructed.
-        if(difference.rank == difference.file && !internal::bishop(*this, from, to)) {
-            return (dest) ? piece::move::capture : piece::move::normal;
-        }
-    }
-
-    else if(origin->variety == piece::type::rook) {
-        // Make sure the rook is travelling in a straight, unobstructed line.
-        if((difference.rank == 0 || difference.file == 0) && !internal::rook(*this, from, to)) {
-            return (dest) ? piece::move::capture : piece::move::normal;
-        }
-    }
-
-    else if(origin->variety == piece::type::queen) {
-        // If the queen is moving in a diagonal pattern, it must obey bishop movement rules.
-        if(difference.rank == difference.file && !internal::bishop(*this, from, to)) {
-            return (dest) ? piece::move::capture : piece::move::normal;
+            break;
         }
 
-        // Otherwise if the queen is moving in a straight line, it must obey rook movement rules.
-        if((difference.rank == 0 || difference.file == 0) && !internal::rook(*this, from, to)) {
-            return (dest) ? piece::move::capture : piece::move::normal;
-        }
-    }
-
-    else if(origin->variety == piece::type::king) {
-        // The king can move in any direction (but only for one square).
-        // This is equivalent to ORing the rank and file difference and comparing with 1.
-        if((difference.rank | difference.file) == 1) {
-            return (dest) ? piece::move::capture : piece::move::normal;
-        }
-
-        // The king can also castle.
-        if(difference.rank == 0 && difference.file == 2 && !dest) {
-            std::size_t left = (m_color == piece::color::white) ? 0 : length * (length - 1);
-            std::size_t right = (m_color == piece::color::white) ? length - 1 : (length * length) - 1;
-
-            // The valid destinations are 2 squares to the right of the left-most square,
-            // or 1 square to the left of the right-most square (depending on color).
-            if(to != left + 2 && to != right - 1) {
-                return std::nullopt;
-            };
-
-            std::size_t index = (to == left + 2) ? left : right;
-            const auto& target = m_internal[index];
-
-            bool castling = {
-                origin->moves == 0 && target && target->variety == piece::type::rook &&
-                target->moves == 0 && !internal::rook(*this, from, index)
-            };
-
-            if(castling) {
-                return (from < to) ? piece::move::short_castle : piece::move::long_castle;
+        case piece::type::bishop: {
+            // Make sure the bishop is moving diagonally and not obstructed.
+            if(difference.rank == difference.file && !internal::bishop(*this, from, to)) {
+                return (dest) ? piece::move::capture : piece::move::normal;
             }
+
+            break;
+        }
+
+        case piece::type::rook: {
+            // Make sure the rook is travelling in a straight, unobstructed line.
+            if((difference.rank == 0 || difference.file == 0) && !internal::rook(*this, from, to)) {
+                return (dest) ? piece::move::capture : piece::move::normal;
+            }
+
+            break;
+        }
+
+        case piece::type::queen: {
+            // If the queen is moving in a diagonal pattern, it must obey bishop movement rules.
+            if(difference.rank == difference.file && !internal::bishop(*this, from, to)) {
+                return (dest) ? piece::move::capture : piece::move::normal;
+            }
+
+            // Otherwise if the queen is moving in a straight line, it must obey rook movement rules.
+            if((difference.rank == 0 || difference.file == 0) && !internal::rook(*this, from, to)) {
+                return (dest) ? piece::move::capture : piece::move::normal;
+            }
+
+            break;
+        }
+
+        case piece::type::king: {
+            // The king can move in any direction (but only for one square).
+            // This is equivalent to ORing the rank and file difference and comparing with 1.
+            if((difference.rank | difference.file) == 1) {
+                return (dest) ? piece::move::capture : piece::move::normal;
+            }
+
+            // The king can also castle.
+            if(difference.rank == 0 && difference.file == 2 && !dest) {
+                std::size_t left = (m_color == piece::color::white) ? 0 : length * (length - 1);
+                std::size_t right = (m_color == piece::color::white) ? length - 1 : (length * length) - 1;
+
+                // The valid destinations are 2 squares to the right of the left-most square,
+                // or 1 square to the left of the right-most square (depending on color).
+                if(to != left + 2 && to != right - 1) {
+                    return std::nullopt;
+                };
+
+                std::size_t index = (to == left + 2) ? left : right;
+                const auto& target = m_internal[index];
+
+                bool castling = {
+                    origin->moves == 0 && target && target->variety == piece::type::rook &&
+                    target->moves == 0 && !internal::rook(*this, from, index)
+                };
+
+                if(castling) {
+                    return (from < to) ? piece::move::short_castle : piece::move::long_castle;
+                }
+            }
+
+            break;
         }
     }
 

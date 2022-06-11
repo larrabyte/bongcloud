@@ -47,99 +47,111 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) {
         history.move = {from, to};
         history.trivials = m_trivials;
 
-        if(type == piece::move::capture) {
-            history.capture = {to, *dest};
-        }
-
-        else if(type == piece::move::en_passant) {
-            const auto& latest = this->latest();
-            auto& target = m_internal[latest->to];
-            history.capture = {latest->to, *target};
-            target = std::nullopt;
-        }
-
-        else if(type == piece::move::short_castle) {
-            // Since this has already been validated and confirmed to be pseudolegal,
-            // we can use the king's position as an anchor and perform arithmetic relative to it.
-            history.castle = {((from / length) * length) + length - 1, to - 1};
-
-            // If the king is already in check, we cannot castle.
-            if(this->check(m_color)) {
-                return false;
+        switch(*type) {
+            case piece::move::normal: {
+                // Nothing special occurs on a normal move.
+                break;
             }
 
-            // Check that the king isn't moving through check.
-            // We don't have to worry about accidental captures here.
-            for(std::size_t delta = 1; delta < to - from; ++delta) {
-                auto& trail = m_internal[from + delta - 1];
-                auto& cursor = m_internal[from + delta];
-                cursor = trail;
-                trail = std::nullopt;
-
-                if(this->check(m_color)) {
-                    origin = cursor;
-                    cursor = std::nullopt;
-                    return false;
-                }
-            }
-
-            // Since the king is now on the rook's destination square,
-            // we move the king back to its original square before moving the rook.
-            auto& rook = m_internal[history.castle->from];
-            auto& king = m_internal[history.castle->to];
-            origin = king;
-            king = rook;
-            ++king->moves;
-            rook = std::nullopt;
-        }
-
-        else if(type == piece::move::long_castle) {
-            // Since this has already been validated and confirmed to be pseudolegal,
-            // we can use the king's position as an anchor and perform arithmetic relative to it.
-            history.castle = {(from / length) * length, to + 1};
-
-            // If the king is already in check, we cannot castle.
-            if(this->check(m_color)) {
-                return false;
-            }
-
-            // Check that the king isn't moving through check.
-            // We don't have to worry about accidental captures here.
-            for(std::size_t delta = 1; delta < from - to; ++delta) {
-                auto& trail = m_internal[from - delta + 1];
-                auto& cursor = m_internal[from - delta];
-                cursor = trail;
-                trail = std::nullopt;
-
-                if(this->check(m_color)) {
-                    origin = cursor;
-                    cursor = std::nullopt;
-                    return false;
-                }
-            }
-
-            // Since the king is now on the rook's destination square,
-            // we move the king to its proper destination before moving the rook.
-            auto& rook = m_internal[history.castle->from];
-            auto& king = m_internal[history.castle->to];
-            origin = king;
-            king = rook;
-            ++king->moves;
-            rook = std::nullopt;
-        }
-
-        else if(type == piece::move::promotion) {
-            if(dest) {
+            case piece::move::capture: {
                 history.capture = {to, *dest};
+                break;
             }
 
-            // Instead of placing a promoted piece immediately,
-            // we can use the common piece movement code and just set
-            // the origin square to contain the promoted piece.
-            std::size_t moves = origin->moves;
-            origin = piece(origin->hue, piece::type::queen);
-            origin->moves = moves;
-            history.promotion = origin;
+            case piece::move::en_passant: {
+                const auto& latest = this->latest();
+                auto& target = m_internal[latest->to];
+                history.capture = {latest->to, *target};
+                target = std::nullopt;
+                break;
+            }
+
+            case piece::move::short_castle: {
+                // Since this has already been validated and confirmed to be pseudolegal,
+                // we can use the king's position as an anchor and perform arithmetic relative to it.
+                history.castle = {((from / length) * length) + length - 1, to - 1};
+
+                // If the king is already in check, we cannot castle.
+                if(this->check(m_color)) {
+                    return false;
+                }
+
+                // Check that the king isn't moving through check.
+                // We don't have to worry about accidental captures here.
+                for(std::size_t delta = 1; delta < to - from; ++delta) {
+                    auto& trail = m_internal[from + delta - 1];
+                    auto& cursor = m_internal[from + delta];
+                    cursor = trail;
+                    trail = std::nullopt;
+
+                    if(this->check(m_color)) {
+                        origin = cursor;
+                        cursor = std::nullopt;
+                        return false;
+                    }
+                }
+
+                // Since the king is now on the rook's destination square,
+                // we move the king back to its original square before moving the rook.
+                auto& rook = m_internal[history.castle->from];
+                auto& king = m_internal[history.castle->to];
+                origin = king;
+                king = rook;
+                ++king->moves;
+                rook = std::nullopt;
+                break;
+            }
+
+            case piece::move::long_castle: {
+                // Since this has already been validated and confirmed to be pseudolegal,
+                // we can use the king's position as an anchor and perform arithmetic relative to it.
+                history.castle = {(from / length) * length, to + 1};
+
+                // If the king is already in check, we cannot castle.
+                if(this->check(m_color)) {
+                    return false;
+                }
+
+                // Check that the king isn't moving through check.
+                // We don't have to worry about accidental captures here.
+                for(std::size_t delta = 1; delta < from - to; ++delta) {
+                    auto& trail = m_internal[from - delta + 1];
+                    auto& cursor = m_internal[from - delta];
+                    cursor = trail;
+                    trail = std::nullopt;
+
+                    if(this->check(m_color)) {
+                        origin = cursor;
+                        cursor = std::nullopt;
+                        return false;
+                    }
+                }
+
+                // Since the king is now on the rook's destination square,
+                // we move the king to its proper destination before moving the rook.
+                auto& rook = m_internal[history.castle->from];
+                auto& king = m_internal[history.castle->to];
+                origin = king;
+                king = rook;
+                ++king->moves;
+                rook = std::nullopt;
+                break;
+            }
+
+            case piece::move::promotion: {
+                if(dest) {
+                    history.capture = {to, *dest};
+                }
+
+                // Instead of placing a promoted piece immediately,
+                // we can use the common piece movement code and just set
+                // the origin square to contain the promoted piece.
+                std::size_t moves = origin->moves;
+                origin = piece(origin->hue, piece::type::queen);
+                origin->moves = moves;
+                history.promotion = origin;
+                break;
+            }
         }
 
         // Every move involves the same sequence of copying the piece
