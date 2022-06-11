@@ -46,7 +46,7 @@ namespace routines {
             if(!renderer.clicked_square && board[i]) {
                 renderer.clicked_square = i;
             } else {
-                if(renderer.clicked_square) {
+                if(renderer.clicked_square != i) {
                     board.move(*renderer.clicked_square, i);
                 }
 
