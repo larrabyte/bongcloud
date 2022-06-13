@@ -65,7 +65,7 @@ namespace bongcloud {
 
         // A list of paths to the white piece textures.
         // Textures are ordered in the same way as the piece enum.
-        constexpr std::string_view white_textures[] = {
+        constexpr std::array white_textures = {
             "data/wp.bmp",
             "data/wn.bmp",
             "data/wb.bmp",
@@ -76,7 +76,7 @@ namespace bongcloud {
 
         // A list of paths to the black piece textures.
         // Textures are ordered in the same way as the piece enum.
-        constexpr std::string_view black_textures[] = {
+        constexpr std::array black_textures = {
             "data/bp.bmp",
             "data/bn.bmp",
             "data/bb.bmp",
@@ -86,8 +86,13 @@ namespace bongcloud {
         };
 
         static_assert(
-            std::size(white_textures) == std::size(black_textures),
+            white_textures.size() == black_textures.size(),
             "white and black must have the same number of textures"
+        );
+
+        static_assert(
+            white_textures.size() == ext::to_underlying(piece::type::last) + 1,
+            "each piece type must have an associated texture"
         );
     }
 }

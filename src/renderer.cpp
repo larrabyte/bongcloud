@@ -84,7 +84,7 @@ bongcloud::renderer::renderer(const std::size_t resolution, const std::size_t si
 
         const auto path = (i < rounded_size) ? constants::white_textures[i] : constants::black_textures[i - rounded_size];
         fmt::print("[bongcloud] loading texture at {}...\n", path);
-        cen::surface surface(path.data());
+        cen::surface surface(path);
         cen::texture texture = m_renderer.make_texture(surface);
         m_textures.push_back(std::move(texture));
     }

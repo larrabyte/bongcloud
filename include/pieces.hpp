@@ -7,7 +7,7 @@
 
 namespace bongcloud {
     struct piece {
-        // Defines every colour of piece available.
+        // Defines every color of piece available.
         enum class color : std::size_t {
             white,
             black,
@@ -51,7 +51,7 @@ namespace bongcloud {
 
     namespace constants {
         // Defines every legal promotion piece.
-        constexpr piece::type promotion_pieces[] = {
+        constexpr std::array promotion_pieces = {
             piece::type::queen,
             piece::type::knight,
             piece::type::rook,
@@ -59,7 +59,7 @@ namespace bongcloud {
         };
 
         // Defines the values for each piece.
-        constexpr double piece_values[] = {
+        constexpr std::array piece_values = {
             1.0, // piece::type::pawn
             3.0, // piece::type::knight
             3.0, // piece::type::bishop
@@ -69,13 +69,18 @@ namespace bongcloud {
         };
 
         // Names for each piece color.
-        constexpr const char* color_titles[] = {
+        constexpr std::array color_titles = {
             "white",
             "black"
         };
 
         static_assert(
-            std::size(color_titles) == ext::to_underlying(piece::color::last) + 1,
+            piece_values.size() == ext::to_underlying(piece::type::last) + 1,
+            "each piece type must have an associated value"
+        );
+
+        static_assert(
+            color_titles.size() == ext::to_underlying(piece::color::last) + 1,
             "each piece color must have an associated name"
         );
     }
