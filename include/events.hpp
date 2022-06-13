@@ -50,6 +50,6 @@ namespace bongcloud {
             bongcloud::renderer& m_renderer;
 
             // Whether the event loop is still active.
-            bool m_running;
+            bool m_running = true;
     };
 }
