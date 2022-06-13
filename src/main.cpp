@@ -1,4 +1,5 @@
 #include "renderer.hpp"
+#include "extras.hpp"
 #include "board.hpp"
 #include "ai.hpp"
 
@@ -52,6 +53,28 @@ namespace routines {
 
                 renderer.clicked_square = std::nullopt;
             }
+        }
+
+        void checkmate(const bongcloud::board& board) noexcept {
+            cen::message_box box;
+            box.set_title("Checkmate!");
+
+            auto index = ext::to_underlying(board.color());
+            auto color = bongcloud::constants::color_titles[index];
+            auto message = fmt::format("Game: {} is checkmated.", color);
+            box.set_message(message);
+            box.set_type(cen::message_box_type::information);
+            box.show();
+            return;
+        }
+
+        void stalemate(void) noexcept {
+            cen::message_box box;
+            box.set_title("Stalemate!");
+            box.set_message("Game: stalemate.");
+            box.set_type(cen::message_box_type::information);
+            box.show();
+            return;
         }
     }
 
@@ -159,7 +182,9 @@ int main(int argc, char** argv) {
 
     bongcloud::renderer renderer(square_res, board_size);
     cen::event_handler handler;
+
     bool running = true;
+    bool finished = false;
 
     while(running) {
         while(handler.poll()) {
@@ -192,21 +217,23 @@ int main(int argc, char** argv) {
             }
         }
 
-        if(engine.enabled) {
-            if(board.color() == bongcloud::piece::color::black) {
-                routines::ai::generate(engine, board);
-            }
-
-            if(board.checkmate()) {
-                fmt::print("[bongcloud] checkmate!\n");
-                engine.enabled = false;
-            } else if(board.stalemate()) {
-                fmt::print("[bongcloud] stalemate!\n");
-                engine.enabled = false;
-            }
+        if(engine.enabled && board.color() == bongcloud::piece::color::black) {
+            routines::ai::generate(engine, board);
         }
 
         renderer.render(board);
+
+        if(!finished) {
+            if(board.checkmate()) {
+                routines::board::checkmate(board);
+                engine.enabled = false;
+                finished = true;
+            } else if(board.stalemate()) {
+                routines::board::stalemate();
+                engine.enabled = false;
+                finished = true;
+            }
+        }
     }
 
     return 0;

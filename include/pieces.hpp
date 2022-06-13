@@ -1,6 +1,9 @@
 #pragma once
 
+#include "extras.hpp"
+
 #include <cstddef>
+#include <array>
 
 namespace bongcloud {
     struct piece {
@@ -64,5 +67,16 @@ namespace bongcloud {
             9.0, // piece::type::queen
             0.0  // piece::type::king
         };
+
+        // Names for each piece color.
+        constexpr const char* color_titles[] = {
+            "white",
+            "black"
+        };
+
+        static_assert(
+            std::size(color_titles) == ext::to_underlying(piece::color::last) + 1,
+            "each piece color must have an associated name"
+        );
     }
 }
