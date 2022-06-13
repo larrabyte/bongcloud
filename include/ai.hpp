@@ -11,7 +11,7 @@ namespace bongcloud {
             // All functions that take non-constant board references will utilise
             // the passed in board as a scratch area - however, all modifications
             // performed will be undone before returning.
-            ai(const std::size_t l, const bool b) noexcept : layers {l}, enabled {b} {}
+            ai(const std::size_t, const bool) noexcept;
 
             // Returns a floating-point number representing the advantage for a certain player.
             // Positive means an advantage for white, while negative means an advantage for black.

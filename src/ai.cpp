@@ -3,10 +3,16 @@
 
 #include <fmt/core.h>
 
+bongcloud::ai::ai(const std::size_t s, const bool e) noexcept : layers {s}, enabled {e} {
+    if(e) {
+        fmt::print("[bongcloud] AI enabled, search depth set to {} ply.\n", s);
+    }
+}
+
 double bongcloud::ai::evaluate(bongcloud::board& board) const noexcept {
     double evaluation = 0.0;
 
-    if(board.checkmate()) {
+    if(board.state() == board::status::checkmate) {
         // Checkmate is the best outcome!
         evaluation = std::numeric_limits<double>::infinity();
         return (board.color() == piece::color::white) ? evaluation : -evaluation;

@@ -36,6 +36,12 @@ namespace bongcloud {
 
     class board {
         public:
+            enum class status : std::size_t {
+                normal,
+                checkmate,
+                stalemate
+            };
+
             // User-defined constructor for setting initial board parameters.
             board(const std::size_t l, const bool a) noexcept : length {l}, m_internal {l * l}, m_anarchy {a} {};
 
@@ -51,11 +57,8 @@ namespace bongcloud {
             // Returns whether a player is currently in check.
             [[nodiscard]] bool check(void) const noexcept;
 
-            // Returns whether a player has been checkmated.
-            [[nodiscard]] bool checkmate(void) noexcept;
-
-            // Returns whether a player has been stalemated.
-            [[nodiscard]] bool stalemate(void) noexcept;
+            // Returns the state of the board (normal, checkmate, stalemate).
+            [[nodiscard]] status state(void) noexcept;
 
             // Prints out the current board state to stdout.
             void print(void) const noexcept;
