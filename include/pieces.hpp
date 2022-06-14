@@ -70,8 +70,8 @@ namespace bongcloud {
 
         // Names for each piece color.
         constexpr std::array color_titles = {
-            "white",
-            "black"
+            "white", // piece::color::white
+            "black"  // piece::color::black
         };
 
         static_assert(

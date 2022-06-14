@@ -26,11 +26,11 @@ void event_dispatcher::on_keyboard_event(const cen::keyboard_event& event) noexc
         }
 
         else if(event.is_active(cen::scancodes::z)) {
-            if(!m_board.history().empty()) {
+            if(!m_board.history().empty() && (!m_engine.enabled || !m_engine.future.valid())) {
                 popup = false;
                 m_board.undo();
 
-                if(m_engine.enabled && !m_board.history().empty()) {
+                if(m_engine.enabled) {
                     m_board.undo();
                 }
             }
