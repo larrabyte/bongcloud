@@ -250,7 +250,7 @@ bool bongcloud::board::checkmate(void) noexcept {
 }
 
 bool bongcloud::board::stalemate(void) noexcept {
-    return this->check() && !this->moves().empty();
+    return this->moves().empty() && !this->check();
 }
 
 void bongcloud::board::print(void) const noexcept {
