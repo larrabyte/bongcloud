@@ -123,24 +123,22 @@ int main(int argc, char** argv) {
 
         renderer.render(board);
 
-        if(auto status = board.state(); !dispatcher.popup && status != bongcloud::board::status::normal) {
-            cen::message_box box;
-            dispatcher.popup = true;
-
-            if(status == bongcloud::board::status::checkmate) {
-                box.set_title("Checkmate!");
+        if(!dispatcher.popup) {
+            if(board.checkmate()) {
+                dispatcher.popup = true;
+                auto title = "Checkmate!";
                 auto index = ext::to_underlying(board.color());
                 auto color = bongcloud::constants::color_titles[index];
                 auto message = fmt::format("Game: {} was checkmated.", color);
-                box.set_message(message);
+                cen::message_box::show(title, message);
             }
 
-            else if(status == bongcloud::board::status::stalemate) {
-                box.set_title("Stalemate!");
-                box.set_message("Game: draw by stalemate.");
+            else if(board.stalemate()) {
+                dispatcher.popup = true;
+                auto title = "Stalemate!";
+                auto message = "Game: draw by stalemate.";
+                cen::message_box::show(title, message);
             }
-
-            box.show();
         }
     }
 

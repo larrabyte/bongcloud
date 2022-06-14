@@ -245,14 +245,12 @@ bool bongcloud::board::check(void) const noexcept {
     return false;
 }
 
-bongcloud::board::status bongcloud::board::state(void) noexcept {
-    using status = bongcloud::board::status;
+bool bongcloud::board::checkmate(void) noexcept {
+    return this->check() && this->moves().empty();
+}
 
-    if(this->moves().empty()) {
-        return (this->check()) ? status::checkmate : status::stalemate;
-    }
-
-    return status::normal;
+bool bongcloud::board::stalemate(void) noexcept {
+    return this->check() && !this->moves().empty();
 }
 
 void bongcloud::board::print(void) const noexcept {

@@ -12,7 +12,7 @@ bongcloud::ai::ai(const std::size_t s, const bool e) noexcept : layers {s}, enab
 double bongcloud::ai::evaluate(bongcloud::board& board) const noexcept {
     double evaluation = 0.0;
 
-    if(board.state() == board::status::checkmate) {
+    if(board.checkmate()) {
         // Checkmate is the best outcome!
         evaluation = std::numeric_limits<double>::infinity();
         return (board.color() == piece::color::white) ? evaluation : -evaluation;
