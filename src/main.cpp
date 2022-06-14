@@ -126,17 +126,18 @@ int main(int argc, char** argv) {
         if(!dispatcher.popup) {
             if(board.checkmate()) {
                 dispatcher.popup = true;
-                auto title = "Checkmate!";
                 auto index = ext::to_underlying(board.color());
-                auto color = bongcloud::constants::color_titles[index];
-                auto message = fmt::format("Game: {} was checkmated.", color);
+                auto& titles = bongcloud::constants::color_titles;
+
+                std::string title = "Checkmate!";
+                std::string message = fmt::format("Game: {} was checkmated.", titles[index]);
                 cen::message_box::show(title, message);
             }
 
             else if(board.stalemate()) {
                 dispatcher.popup = true;
-                auto title = "Stalemate!";
-                auto message = "Game: draw by stalemate.";
+                std::string title = "Stalemate!";
+                std::string message = "Game: draw by stalemate.";
                 cen::message_box::show(title, message);
             }
         }
