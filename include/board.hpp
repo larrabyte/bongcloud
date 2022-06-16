@@ -1,5 +1,6 @@
 #pragma once
 
+#include "extras.hpp"
 #include "pieces.hpp"
 
 #include <centurion.hpp>
@@ -10,6 +11,27 @@
 namespace bcl {
     // A square is just an optional piece.
     using square = std::optional<piece>;
+
+    template<typename T>
+    struct pair {
+        std::array<T, 2> underlying;
+
+        [[nodiscard]] constexpr T& white(void) const noexcept { return underlying[0]; }
+        [[nodiscard]] constexpr T& black(void) const noexcept { return underlying[1]; }
+
+        [[nodiscard]] constexpr T& operator[](const piece::color c) noexcept {
+            return underlying[ext::to_underlying(c)];
+        }
+
+        [[nodiscard]] constexpr const T& operator[](const piece::color c) const noexcept {
+            return underlying[ext::to_underlying(c)];
+        }
+    };
+
+    struct rights {
+        bool kingside;
+        bool queenside;
+    };
 
     struct move {
         std::size_t from;
@@ -30,6 +52,7 @@ namespace bcl {
         piece::color color;
         bcl::move move;
         std::size_t trivials;
+        bcl::pair<bcl::rights> rights;
         std::optional<bcl::move> castle;
         std::optional<bcl::capture> capture;
         std::optional<piece> promotion;
@@ -37,7 +60,7 @@ namespace bcl {
 
     class board {
         public:
-            board(const std::size_t l, const bool a) noexcept : length {l}, m_internal {l * l}, m_anarchy {a} {};
+            board(const std::size_t l, const bool a) noexcept : length {l}, m_internal {l * l}, m_anarchy {a} {}
 
             // Attempts to move a piece from one square to another.
             bool move(const std::size_t, const std::size_t) noexcept;
@@ -119,6 +142,9 @@ namespace bcl {
 
             // An array of previously made moves.
             std::vector<record> m_history;
+
+            // Castling rights for each player.
+            pair<rights> m_rights;
 
             // Determines whether any move is legal.
             bool m_anarchy;

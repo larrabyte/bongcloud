@@ -237,15 +237,17 @@ std::optional<bcl::piece::move> bcl::board::pseudolegal(const std::size_t from, 
                     return std::nullopt;
                 };
 
+                const auto& rights = m_rights[origin->hue];
                 std::size_t index = (to == left + 2) ? left : right;
+                const auto& side = (to == left + 2) ? rights.kingside : rights.queenside;
                 const auto& target = m_internal[index];
 
-                bool castling = {
-                    origin->moves == 0 && target && target->variety == piece::type::rook &&
-                    target->moves == 0 && !internal::rook(*this, from, index)
+                bool castleable = {
+                    target && target->variety == piece::type::rook &&
+                    !internal::rook(*this, from, index) && side
                 };
 
-                if(castling) {
+                if(castleable) {
                     return (from < to) ? piece::move::short_castle : piece::move::long_castle;
                 }
             }

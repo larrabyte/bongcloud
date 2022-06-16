@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
 
         renderer.render(board);
 
-        if(!dispatcher.popup) {
+        /* if(!dispatcher.popup) {
             if(board.checkmate()) {
                 dispatcher.popup = true;
                 auto index = ext::to_underlying(board.color());
@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
                 std::string message = "Game: draw by stalemate.";
                 cen::message_box::show(title, message);
             }
-        }
+        } */
     }
 
     return 0;

@@ -8,7 +8,7 @@
 namespace bcl {
     struct piece {
         // Defines every color of piece available.
-        enum class color : std::size_t {
+        enum class color : unsigned char {
             white,
             black,
             first = white,
@@ -16,7 +16,7 @@ namespace bcl {
         };
 
         // Defines every type of piece available.
-        enum class type : std::size_t {
+        enum class type : unsigned char {
             pawn,
             knight,
             bishop,
@@ -28,7 +28,7 @@ namespace bcl {
         };
 
         // Defines every type of move possible.
-        enum class move : std::size_t {
+        enum class move : unsigned char {
             normal,
             capture,
             en_passant,
@@ -40,13 +40,10 @@ namespace bcl {
         };
 
         // The color of the piece.
-        piece::color hue;
+        piece::color hue : 1;
 
         // The type of the piece.
-        piece::type variety;
-
-        // The number of times the piece has moved.
-        std::size_t moves = 0;
+        piece::type variety : 7;
     };
 
     namespace constants {

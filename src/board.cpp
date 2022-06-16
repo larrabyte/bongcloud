@@ -4,6 +4,7 @@
 
 #include <centurion.hpp>
 #include <fmt/core.h>
+#include <algorithm>
 #include <cstddef>
 
 namespace internal {
@@ -31,7 +32,7 @@ bool bcl::board::move(const std::size_t from, const std::size_t to) noexcept {
     assert(from != to);
 
     // First, make sure that there are no trivial conditions preventing a move.
-    // This could be either a forced stalement (50 move rule), attempting to
+    // This could be either a forced stalemate (50 move rule), attempting to
     // move an enemy piece or attempting to capture a friendly piece.
     if(m_trivials >= constants::trivial_force_draw || origin->hue != m_color || (dest && dest->hue == m_color)) {
         return false;
@@ -51,8 +52,6 @@ bool bcl::board::move(const std::size_t from, const std::size_t to) noexcept {
 
         dest = origin;
         origin = std::nullopt;
-        ++dest->moves;
-
         m_history.push_back(ffa);
         return true;
     }
@@ -63,14 +62,40 @@ bool bcl::board::move(const std::size_t from, const std::size_t to) noexcept {
         history.color = m_color;
         history.move = {from, to};
         history.trivials = m_trivials;
+        history.rights = m_rights;
 
         switch(*type) {
             case piece::move::normal: {
-                // Nothing special occurs on a normal move.
+                if(origin->variety == piece::type::rook) {
+                    if(from == 0 || from == length * (length - 1)) {
+                        m_rights[origin->hue].kingside = false;
+                    } else if(from == length - 1 || from == (length * length) - 1) {
+                        m_rights[origin->hue].queenside = false;
+                    }
+                }
+
+                else if(origin->variety == piece::type::king) {
+                    m_rights[origin->hue].kingside = false;
+                    m_rights[origin->hue].queenside = false;
+                }
+
                 break;
             }
 
             case piece::move::capture: {
+                if(origin->variety == piece::type::rook) {
+                    if(from == 0 || from == length * (length - 1)) {
+                        m_rights[origin->hue].kingside = false;
+                    } else if(from == length - 1 || from == (length * length) - 1) {
+                        m_rights[origin->hue].queenside = false;
+                    }
+                }
+
+                else if(origin->variety == piece::type::king) {
+                    m_rights[origin->hue].kingside = false;
+                    m_rights[origin->hue].queenside = false;
+                }
+
                 history.capture = {to, *dest};
                 break;
             }
@@ -112,9 +137,9 @@ bool bcl::board::move(const std::size_t from, const std::size_t to) noexcept {
                 // we move the king back to its original square before moving the rook.
                 auto& rook = m_internal[history.castle->from];
                 auto& king = m_internal[history.castle->to];
+                m_rights[origin->hue].kingside = false;
                 origin = king;
                 king = rook;
-                ++king->moves;
                 rook = std::nullopt;
                 break;
             }
@@ -148,9 +173,9 @@ bool bcl::board::move(const std::size_t from, const std::size_t to) noexcept {
                 // we move the king to its proper destination before moving the rook.
                 auto& rook = m_internal[history.castle->from];
                 auto& king = m_internal[history.castle->to];
+                m_rights[origin->hue].queenside = false;
                 origin = king;
                 king = rook;
-                ++king->moves;
                 rook = std::nullopt;
                 break;
             }
@@ -163,9 +188,7 @@ bool bcl::board::move(const std::size_t from, const std::size_t to) noexcept {
                 // Instead of placing a promoted piece immediately,
                 // we can use the common piece movement code and just set
                 // the origin square to contain the promoted piece.
-                std::size_t moves = origin->moves;
                 origin = {origin->hue, piece::type::queen};
-                origin->moves = moves;
                 history.promotion = origin;
                 break;
             }
@@ -176,7 +199,6 @@ bool bcl::board::move(const std::size_t from, const std::size_t to) noexcept {
         // clearing the origin square and incrementing the move count.
         dest = origin;
         origin = std::nullopt;
-        ++dest->moves;
         m_history.push_back(history);
 
         // Check that the move just played did not leave the king in check.
@@ -370,39 +392,28 @@ void bcl::board::load(const std::string_view string) {
         }
     }
 
-    // Next, handle castling rights.
-    // Array corresponds to: white short, white long, black short, black long.
-    std::array<std::optional<std::size_t>, 4> forbidden_castles = {
-        0, length - 1, length * (length - 1), (length * length) - 1
-    };
-
     // Advance the character cursor since the previous
     // switch would have left it on a space character.
     ++character;
 
+    // Next, handle castling rights.
+    m_rights[color::white].kingside = false;
+    m_rights[color::white].queenside = false;
+    m_rights[color::black].kingside = false;
+    m_rights[color::black].queenside = false;
+
     while((c = string.at(character++)) != ' ') {
         switch(c) {
-            case 'K': forbidden_castles[0] = std::nullopt; break;
-            case 'Q': forbidden_castles[1] = std::nullopt; break;
-            case 'k': forbidden_castles[2] = std::nullopt; break;
-            case 'q': forbidden_castles[3] = std::nullopt; break;
+            case 'K': m_rights[color::white].kingside = true; break;
+            case 'Q': m_rights[color::white].queenside = true; break;
+            case 'k': m_rights[color::black].kingside = true; break;
+            case 'q': m_rights[color::black].queenside = true; break;
             case '-': break;
 
             default: {
                 auto comment = fmt::format("illegal character encountered while parsing castling rights: {}", c);
                 throw std::runtime_error(comment);
             }
-        }
-    }
-
-    for(auto index : forbidden_castles) {
-        if(!index) {
-            continue;
-        }
-
-        auto& piece = m_internal[*index];
-        if(piece && piece->variety == piece::type::rook) {
-            piece->moves = 1;
         }
     }
 
@@ -448,7 +459,6 @@ void bcl::board::undo(void) noexcept {
 
     // If the move was a promotion, then we don't care about what's on the destination square.
     origin = (last.promotion) ? piece {last.promotion->hue, piece::type::pawn} : dest;
-    --origin->moves;
     dest = std::nullopt;
 
     if(last.capture) {
@@ -461,10 +471,10 @@ void bcl::board::undo(void) noexcept {
         auto& source = m_internal[last.castle->from];
         auto& sink = m_internal[last.castle->to];
         source = sink;
-        --source->moves;
         sink = std::nullopt;
     }
 
+    m_rights = last.rights;
     m_color = last.color;
     m_trivials = last.trivials;
     m_history.pop_back();
