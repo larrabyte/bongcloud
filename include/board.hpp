@@ -3,6 +3,7 @@
 #include "pieces.hpp"
 
 #include <centurion.hpp>
+#include <optional>
 #include <cstddef>
 #include <vector>
 
@@ -36,7 +37,6 @@ namespace bcl {
 
     class board {
         public:
-            // User-defined constructor for setting initial board parameters.
             board(const std::size_t l, const bool a) noexcept : length {l}, m_internal {l * l}, m_anarchy {a} {};
 
             // Attempts to move a piece from one square to another.

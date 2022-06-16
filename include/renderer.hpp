@@ -1,14 +1,17 @@
 #pragma once
 
+#include "extras.hpp"
 #include "board.hpp"
 
 #include <centurion.hpp>
+#include <optional>
 #include <cstddef>
+#include <vector>
+#include <array>
 
 namespace bcl {
     class renderer {
         public:
-            // The renderer's constructor.
             renderer(const std::size_t, const std::size_t) noexcept;
 
             // Renders a board to the screen.
@@ -52,16 +55,16 @@ namespace bcl {
         constexpr std::size_t promotion_menu_border = 4;
 
         // The color code of the standard light square.
-        constexpr cen::color light_square {0xEC, 0xDB, 0xB9};
+        constexpr cen::color light_square = {0xEC, 0xDB, 0xB9};
 
         // The color code of the standard dark square.
-        constexpr cen::color dark_square {0xAE, 0x89, 0x68};
+        constexpr cen::color dark_square = {0xAE, 0x89, 0x68};
 
         // The color code of the light-square move highlight.
-        constexpr cen::color light_last_move {0xCE, 0xD2, 0x87};
+        constexpr cen::color light_last_move = {0xCE, 0xD2, 0x87};
 
         // The color code of the dark-square move highlight.
-        constexpr cen::color dark_last_move {0xA9, 0xA3, 0x56};
+        constexpr cen::color dark_last_move = {0xA9, 0xA3, 0x56};
 
         // A list of paths to the white piece textures.
         // Textures are ordered in the same way as the piece enum.

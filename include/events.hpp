@@ -9,7 +9,6 @@
 namespace bcl {
     class event_dispatcher {
         public:
-            // The event dispatcher's default constructor.
             event_dispatcher(board&, ai&, renderer&) noexcept;
 
             // Called when a quit event is dispatched.
@@ -45,9 +44,9 @@ namespace bcl {
             dispatcher m_dispatcher;
 
             // References to game objects (that can be used by event-handling functions).
-            bcl::board& m_board;
-            bcl::ai& m_engine;
-            bcl::renderer& m_renderer;
+            board& m_board;
+            ai& m_engine;
+            renderer& m_renderer;
 
             // Whether the event loop is still active.
             bool m_running = true;

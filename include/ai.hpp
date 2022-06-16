@@ -2,6 +2,7 @@
 
 #include "board.hpp"
 
+#include <optional>
 #include <cstddef>
 #include <future>
 
