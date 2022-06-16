@@ -5,7 +5,7 @@
 #include <bit>
 
 namespace internal {
-    cen::window make_window(const std::size_t resolution) {
+    cen::window make_window(const std::size_t resolution) noexcept {
         cen::iarea area = {
             static_cast<int>(resolution),
             static_cast<int>(resolution)
@@ -15,19 +15,19 @@ namespace internal {
         return cen::window("bongcloud", area, flags);
     }
 
-    cen::renderer make_renderer(cen::window& window) {
+    cen::renderer make_renderer(cen::window& window) noexcept {
         std::uint32_t flags = cen::renderer::accelerated;
         return window.make_renderer(flags);
     }
 
-    double compute_scale(const cen::window& window, const cen::renderer& renderer) {
+    double compute_scale(const cen::window& window, const cen::renderer& renderer) noexcept {
         // It is assumed that the scale factor is the same vertically and horizontally.
         auto renderer_width = static_cast<double>(renderer.output_size().width);
         auto window_width = static_cast<double>(window.width());
         return renderer_width / window_width;
     }
 
-    std::size_t compute_texture_offset(const bcl::piece& piece) {
+    std::size_t compute_texture_offset(const bcl::piece& piece) noexcept {
         constexpr auto offset = []() {
             // https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2.
             auto x = ext::to_underlying(bcl::piece::type::last);
