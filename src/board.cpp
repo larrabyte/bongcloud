@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <cstddef>
 
-namespace internal {
+namespace detail {
     std::size_t perft(bcl::board& board, const std::size_t depth) noexcept {
         if(depth == 0) {
             return 1;
@@ -209,9 +209,8 @@ bool bcl::board::move(const std::size_t from, const std::size_t to) noexcept {
 
         // Otherwise, finalise the state of the board.
         bool trivial = dest->variety != piece::type::pawn && type == piece::move::normal;
-        bool white = m_color == piece::color::white;
         m_trivials = (trivial) ? m_trivials + 1 : 0;
-        m_color = (white) ? piece::color::black : piece::color::white;
+        m_color = ext::flip(m_color);
         return true;
     };
 
@@ -237,7 +236,7 @@ std::vector<bcl::move> bcl::board::moves(void) noexcept {
 }
 
 std::size_t bcl::board::positions(const std::size_t depth) noexcept {
-    return internal::perft(*this, depth);
+    return detail::perft(*this, depth);
 }
 
 bool bcl::board::check(void) const noexcept {
@@ -328,7 +327,6 @@ void bcl::board::print(void) const noexcept {
 }
 
 void bcl::board::load(const std::string_view string) {
-    using piece = bcl::piece;
     using color = bcl::piece::color;
     using type = bcl::piece::type;
 

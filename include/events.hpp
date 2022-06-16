@@ -26,7 +26,7 @@ namespace bcl {
             }
 
             // Returns whether the event loop should continue to run.
-            [[nodiscard]] bool running(void) const noexcept {
+            bool running(void) const noexcept {
                 return m_running;
             }
 

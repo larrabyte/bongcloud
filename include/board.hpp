@@ -16,14 +16,14 @@ namespace bcl {
     struct pair {
         std::array<T, 2> underlying;
 
-        [[nodiscard]] constexpr T& white(void) const noexcept { return underlying[0]; }
-        [[nodiscard]] constexpr T& black(void) const noexcept { return underlying[1]; }
+        constexpr T& white(void) const noexcept { return underlying[0]; }
+        constexpr T& black(void) const noexcept { return underlying[1]; }
 
-        [[nodiscard]] constexpr T& operator[](const piece::color c) noexcept {
+        constexpr T& operator[](const piece::color c) noexcept {
             return underlying[ext::to_underlying(c)];
         }
 
-        [[nodiscard]] constexpr const T& operator[](const piece::color c) const noexcept {
+        constexpr const T& operator[](const piece::color c) const noexcept {
             return underlying[ext::to_underlying(c)];
         }
     };
@@ -66,19 +66,19 @@ namespace bcl {
             bool move(const std::size_t, const std::size_t) noexcept;
 
             // Generates a list of all legal moves for the current player.
-            [[nodiscard]] std::vector<bcl::move> moves(void) noexcept;
+            std::vector<bcl::move> moves(void) noexcept;
 
             // An algorithm that counts possible positions recursively.
-            [[nodiscard]] std::size_t positions(const std::size_t) noexcept;
+            std::size_t positions(const std::size_t) noexcept;
 
             // Returns whether the player is currently in check.
-            [[nodiscard]] bool check(void) const noexcept;
+            bool check(void) const noexcept;
 
             // Returns whether the player has been checkmated.
-            [[nodiscard]] bool checkmate(void) noexcept;
+            bool checkmate(void) noexcept;
 
             // Returns whether the player has been stalemated.
-            [[nodiscard]] bool stalemate(void) noexcept;
+            bool stalemate(void) noexcept;
 
             // Prints out the current board state to stdout.
             void print(void) const noexcept;
@@ -90,17 +90,17 @@ namespace bcl {
             void undo(void) noexcept;
 
             // Returns a constant reference to the board's history array.
-            [[nodiscard]] const std::vector<record>& history(void) const noexcept {
+            const std::vector<record>& history(void) const noexcept {
                 return m_history;
             }
 
             // Returns the last move made (may be std::nullopt).
-            [[nodiscard]] std::optional<bcl::move> latest(void) const noexcept {
+            std::optional<bcl::move> latest(void) const noexcept {
                 return (m_history.size() > 0) ? std::optional(m_history.back().move) : std::nullopt;
             }
 
             // Returns the color of the player whose turn it is to move.
-            [[nodiscard]] piece::color color(void) const noexcept {
+            piece::color color(void) const noexcept {
                 return m_color;
             }
 

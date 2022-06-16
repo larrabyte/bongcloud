@@ -4,11 +4,13 @@
 
 namespace ext {
     template<typename T>
+    requires std::is_enum_v<T>
     constexpr std::underlying_type_t<T> to_underlying(T t) noexcept {
         return static_cast<std::underlying_type_t<T>>(t);
     }
 
     template<typename T>
+    requires std::is_enum_v<T> && std::is_integral_v<std::underlying_type_t<T>>
     constexpr T flip(T t) noexcept {
         auto v = to_underlying(t);
         return static_cast<T>(v ^ 0b1);

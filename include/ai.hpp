@@ -16,13 +16,13 @@ namespace bcl {
 
             // Returns a floating-point number representing the advantage for a certain player.
             // Positive means an advantage for white, while negative means an advantage for black.
-            [[nodiscard]] double evaluate(board&) const noexcept;
+            double evaluate(board&) const noexcept;
 
             // Generates a legal move for the current board's player.
-            [[nodiscard]] std::optional<move> generate(const board&) const noexcept;
+            std::optional<move> generate(const board&) const noexcept;
 
             // Returns the number of legal moves after n ply.
-            [[nodiscard]] std::size_t perft(const board&, const std::size_t) const noexcept;
+            std::size_t perft(const board&, const std::size_t) const noexcept;
 
             // The number of layers to search when generating a move.
             const std::size_t layers;

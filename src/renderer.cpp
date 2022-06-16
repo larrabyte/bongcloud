@@ -4,7 +4,7 @@
 #include <fmt/core.h>
 #include <bit>
 
-namespace internal {
+namespace detail {
     cen::window make_window(const std::size_t resolution) noexcept {
         cen::iarea area = {
             static_cast<int>(resolution),
@@ -27,11 +27,13 @@ namespace internal {
         return renderer_width / window_width;
     }
 
-    std::size_t compute_texture_offset(const bcl::piece& piece) noexcept {
+    std::underlying_type_t<bcl::piece::type> compute_texture_offset(const bcl::piece& piece) noexcept {
+        using piece_type = std::underlying_type_t<bcl::piece::type>;
+
         constexpr auto offset = []() {
             // https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2.
             auto x = ext::to_underlying(bcl::piece::type::last);
-            std::size_t e = 0;
+            piece_type e = 0;
 
             if(x != 0) {
                 --x;
@@ -39,7 +41,7 @@ namespace internal {
                 return e;
             }
 
-            for(std::size_t i = 0; i < std::bit_width(x); ++i) {
+            for(piece_type i = 0; i < std::bit_width(x); ++i) {
                 x |= x >> (1 << i);
             }
 
@@ -53,14 +55,14 @@ namespace internal {
 
         auto color = ext::to_underlying(piece.hue);
         auto type = ext::to_underlying(piece.variety);
-        return (color << offset) | type;
+        return static_cast<piece_type>((color << offset) | type);
     }
 }
 
 bcl::renderer::renderer(const std::size_t resolution, const std::size_t size) noexcept :
-    m_window {internal::make_window(resolution * size)},
-    m_renderer {internal::make_renderer(m_window)},
-    m_scale {internal::compute_scale(m_window, m_renderer)},
+    m_window {detail::make_window(resolution * size)},
+    m_renderer {detail::make_renderer(m_window)},
+    m_scale {detail::compute_scale(m_window, m_renderer)},
     m_resolution {static_cast<std::size_t>(resolution * m_scale)} {
 
     cen::iarea scaled = m_renderer.output_size();
@@ -128,7 +130,7 @@ void bcl::renderer::render(const bcl::board& board) noexcept {
         // Get the appropriate texture for the piece on the square (if present) and render it.
         // Assume that the piece's texture is always present.
         if(piece && i != clicked_square) {
-            auto offset = internal::compute_texture_offset(*piece);
+            auto offset = detail::compute_texture_offset(*piece);
             const auto& texture = *m_textures[offset];
             m_renderer.render(texture, rect);
         }
@@ -156,7 +158,7 @@ void bcl::renderer::render(const bcl::board& board) noexcept {
         );
 
         const auto& piece = board[*clicked_square];
-        auto offset = internal::compute_texture_offset(*piece);
+        auto offset = detail::compute_texture_offset(*piece);
 
         // Assume that the texture is always present.
         const auto& texture = *m_textures[offset];
@@ -224,7 +226,7 @@ void bcl::renderer::promote(const std::size_t square, const bcl::board& board) n
         };
 
         bcl::piece piece = {board.color(), constants::promotion_pieces[i]};
-        auto offset = internal::compute_texture_offset(piece);
+        auto offset = detail::compute_texture_offset(piece);
         const auto& texture = *m_textures[offset];
         m_renderer.render(texture, place);
     }

@@ -4,7 +4,7 @@
 
 #include <fmt/core.h>
 
-namespace internal {
+namespace detail {
     std::size_t absdiff(const std::size_t a, const std::size_t b) noexcept {
         return (a > b) ? a - b : b - a;
     }
@@ -17,8 +17,8 @@ namespace internal {
 
         // Make sure that the bishop is moving diagonally.
         assert(
-            internal::absdiff(source.rank, sink.rank) ==
-            internal::absdiff(source.file, sink.file)
+            detail::absdiff(source.rank, sink.rank) ==
+            detail::absdiff(source.file, sink.file)
         );
 
         // The destination square is to the top-right of the origin square.
@@ -61,7 +61,7 @@ namespace internal {
     }
 
     bool rook(const bcl::board& board, const std::size_t from, const std::size_t to) noexcept {
-        std::size_t difference = internal::absdiff(from, to);
+        std::size_t difference = detail::absdiff(from, to);
         std::size_t subtractor = (difference >= board.length) ? board.length : 1;
 
         assert(from != to);
@@ -96,8 +96,8 @@ std::optional<bcl::piece::move> bcl::board::pseudolegal(const std::size_t from, 
     assert(from != to);
 
     index difference = {
-        internal::absdiff(from / length, to / length),
-        internal::absdiff(from % length, to % length)
+        detail::absdiff(from / length, to / length),
+        detail::absdiff(from % length, to % length)
     };
 
     switch(origin->variety) {
@@ -158,9 +158,9 @@ std::optional<bcl::piece::move> bcl::board::pseudolegal(const std::size_t from, 
                 // - The attacking pawn is adjacent to the target pawn.
                 bool takable = {
                     m_internal[latest->to]->variety == piece::type::pawn &&
-                    internal::absdiff(latest->from, latest->to) == length * 2 &&
-                    internal::absdiff(to, latest->to) == length &&
-                    internal::absdiff(from, latest->to) == 1 &&
+                    detail::absdiff(latest->from, latest->to) == length * 2 &&
+                    detail::absdiff(to, latest->to) == length &&
+                    detail::absdiff(from, latest->to) == 1 &&
                     !(source.file == 0 && sink.file == length - 1) &&
                     !(source.file == length - 1 && sink.file == 0)
                 };
@@ -189,7 +189,7 @@ std::optional<bcl::piece::move> bcl::board::pseudolegal(const std::size_t from, 
 
         case piece::type::bishop: {
             // Make sure the bishop is moving diagonally and not obstructed.
-            if(difference.rank == difference.file && !internal::bishop(*this, from, to)) {
+            if(difference.rank == difference.file && !detail::bishop(*this, from, to)) {
                 return (dest) ? piece::move::capture : piece::move::normal;
             }
 
@@ -198,7 +198,7 @@ std::optional<bcl::piece::move> bcl::board::pseudolegal(const std::size_t from, 
 
         case piece::type::rook: {
             // Make sure the rook is travelling in a straight, unobstructed line.
-            if((difference.rank == 0 || difference.file == 0) && !internal::rook(*this, from, to)) {
+            if((difference.rank == 0 || difference.file == 0) && !detail::rook(*this, from, to)) {
                 return (dest) ? piece::move::capture : piece::move::normal;
             }
 
@@ -207,12 +207,12 @@ std::optional<bcl::piece::move> bcl::board::pseudolegal(const std::size_t from, 
 
         case piece::type::queen: {
             // If the queen is moving in a diagonal pattern, it must obey bishop movement rules.
-            if(difference.rank == difference.file && !internal::bishop(*this, from, to)) {
+            if(difference.rank == difference.file && !detail::bishop(*this, from, to)) {
                 return (dest) ? piece::move::capture : piece::move::normal;
             }
 
             // Otherwise if the queen is moving in a straight line, it must obey rook movement rules.
-            if((difference.rank == 0 || difference.file == 0) && !internal::rook(*this, from, to)) {
+            if((difference.rank == 0 || difference.file == 0) && !detail::rook(*this, from, to)) {
                 return (dest) ? piece::move::capture : piece::move::normal;
             }
 
@@ -244,7 +244,7 @@ std::optional<bcl::piece::move> bcl::board::pseudolegal(const std::size_t from, 
 
                 bool castleable = {
                     target && target->variety == piece::type::rook &&
-                    !internal::rook(*this, from, index) && side
+                    !detail::rook(*this, from, index) && side
                 };
 
                 if(castleable) {
