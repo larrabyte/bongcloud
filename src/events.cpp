@@ -49,16 +49,16 @@ void bcl::event_dispatcher::on_mouse_button_event(const cen::mouse_button_event&
             auto y = static_cast<std::size_t>(event.y());
             auto i = m_renderer.square(m_board, x, y);
 
-            if(!m_renderer.clicked_square && m_board[i]) {
-                m_renderer.clicked_square = i;
-            }
-
-            else {
+            if(m_renderer.clicked_square) {
                 if(m_renderer.clicked_square != i) {
                     m_board.move(*m_renderer.clicked_square, i);
                 }
 
                 m_renderer.clicked_square = std::nullopt;
+            }
+
+            else if(m_board[i]) {
+                m_renderer.clicked_square = i;
             }
         }
     }
