@@ -3,13 +3,13 @@
 
 #include <fmt/core.h>
 
-bongcloud::ai::ai(const std::size_t s, const bool e) noexcept : layers {s}, enabled {e} {
+bcl::ai::ai(const std::size_t s, const bool e) noexcept : layers {s}, enabled {e} {
     if(e) {
         fmt::print("[bongcloud] AI enabled, search depth set to {} ply.\n", s);
     }
 }
 
-double bongcloud::ai::evaluate(bongcloud::board& board) const noexcept {
+double bcl::ai::evaluate(bcl::board& board) const noexcept {
     double evaluation = 0.0;
 
     if(board.checkmate()) {
@@ -29,10 +29,10 @@ double bongcloud::ai::evaluate(bongcloud::board& board) const noexcept {
     return evaluation;
 }
 
-std::optional<bongcloud::move> bongcloud::ai::generate(const bongcloud::board& board) const noexcept {
+std::optional<bcl::move> bcl::ai::generate(const bcl::board& board) const noexcept {
     // Create a local copy so that we don't modify the passed in board
     // and have the renderer go crazy trying to render the AI's moves.
-    bongcloud::board local = board;
+    bcl::board local = board;
     std::vector<std::pair<move, double>> moves;
     moves.reserve(constants::move_buffer_reserve);
 
@@ -59,7 +59,7 @@ std::optional<bongcloud::move> bongcloud::ai::generate(const bongcloud::board& b
     return moves[index].first;
 }
 
-double bongcloud::ai::minimax(bongcloud::board& board, double alpha, double beta, const std::size_t depth, const piece::color color) const noexcept {
+double bcl::ai::minimax(bcl::board& board, double alpha, double beta, const std::size_t depth, const piece::color color) const noexcept {
     if(depth == 0) {
         return this->evaluate(board);
     }

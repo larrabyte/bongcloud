@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <array>
 
-namespace bongcloud {
+namespace bcl {
     struct piece {
         // Defines every color of piece available.
         enum class color : std::size_t {

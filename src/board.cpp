@@ -7,7 +7,7 @@
 #include <cstddef>
 
 namespace internal {
-    std::size_t perft(bongcloud::board& board, const std::size_t depth) noexcept {
+    std::size_t perft(bcl::board& board, const std::size_t depth) noexcept {
         if(depth == 0) {
             return 1;
         }
@@ -23,7 +23,7 @@ namespace internal {
     }
 }
 
-bool bongcloud::board::move(const std::size_t from, const std::size_t to) noexcept {
+bool bcl::board::move(const std::size_t from, const std::size_t to) noexcept {
     auto& origin = m_internal[from];
     auto& dest = m_internal[to];
 
@@ -40,7 +40,7 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) noexce
     if(m_anarchy) {
         // Anarchy mode is limited to normal moves and capturing moves,
         // since regular piece movement rules do not apply.
-        bongcloud::record ffa;
+        bcl::record ffa;
         ffa.color = m_color;
         ffa.move = {from, to};
         ffa.trivials = m_trivials;
@@ -59,7 +59,7 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) noexce
 
     // Otherwise, check if the move is pseudolegal and move the pieces accordingly.
     if(auto type = this->pseudolegal(from, to)) {
-        bongcloud::record history;
+        bcl::record history;
         history.color = m_color;
         history.move = {from, to};
         history.trivials = m_trivials;
@@ -196,15 +196,15 @@ bool bongcloud::board::move(const std::size_t from, const std::size_t to) noexce
     return false;
 }
 
-std::vector<bongcloud::move> bongcloud::board::moves(void) noexcept {
+std::vector<bcl::move> bcl::board::moves(void) noexcept {
     // Preallocate space here so we don't spend time resizing and copying.
-    std::vector<bongcloud::move> moves;
+    std::vector<bcl::move> moves;
     moves.reserve(constants::move_buffer_reserve);
 
     for(std::size_t from = 0; from < length * length; ++from) {
         for(std::size_t to = 0; to < length * length; ++to) {
             if(from != to && m_internal[from] && this->move(from, to)) {
-                bongcloud::move m = {from, to};
+                bcl::move m = {from, to};
                 moves.push_back(m);
                 this->undo();
             }
@@ -214,11 +214,11 @@ std::vector<bongcloud::move> bongcloud::board::moves(void) noexcept {
     return moves;
 }
 
-std::size_t bongcloud::board::positions(const std::size_t depth) noexcept {
+std::size_t bcl::board::positions(const std::size_t depth) noexcept {
     return internal::perft(*this, depth);
 }
 
-bool bongcloud::board::check(void) const noexcept {
+bool bcl::board::check(void) const noexcept {
     // Attempt to find the index of the specified player's king.
     std::vector<std::size_t> kings;
 
@@ -245,15 +245,15 @@ bool bongcloud::board::check(void) const noexcept {
     return false;
 }
 
-bool bongcloud::board::checkmate(void) noexcept {
+bool bcl::board::checkmate(void) noexcept {
     return this->check() && this->moves().empty();
 }
 
-bool bongcloud::board::stalemate(void) noexcept {
+bool bcl::board::stalemate(void) noexcept {
     return this->moves().empty() && !this->check();
 }
 
-void bongcloud::board::print(void) const noexcept {
+void bcl::board::print(void) const noexcept {
     // Start from the top-left square.
     std::size_t rank = length - 1;
     std::size_t file = 0;
@@ -305,10 +305,10 @@ void bongcloud::board::print(void) const noexcept {
     fmt::print("\n");
 }
 
-void bongcloud::board::load(const std::string_view string) {
-    using piece = bongcloud::piece;
-    using color = bongcloud::piece::color;
-    using type = bongcloud::piece::type;
+void bcl::board::load(const std::string_view string) {
+    using piece = bcl::piece;
+    using color = bcl::piece::color;
+    using type = bcl::piece::type;
 
     // FEN strings start with piece placement from the top-left square.
     std::size_t character = 0;
@@ -439,7 +439,7 @@ void bongcloud::board::load(const std::string_view string) {
     std::from_chars(string.begin() + character, string.end(), m_trivials);
 }
 
-void bongcloud::board::undo(void) noexcept {
+void bcl::board::undo(void) noexcept {
     assert(!m_history.empty());
 
     const auto& last = m_history.back();

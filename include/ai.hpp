@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <future>
 
-namespace bongcloud {
+namespace bcl {
     class ai {
         public:
             // All functions that take non-constant board references will utilise

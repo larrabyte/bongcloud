@@ -27,10 +27,10 @@ namespace internal {
         return renderer_width / window_width;
     }
 
-    std::size_t compute_texture_offset(const bongcloud::piece& piece) {
+    std::size_t compute_texture_offset(const bcl::piece& piece) {
         constexpr auto offset = []() {
             // https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2.
-            auto x = ext::to_underlying(bongcloud::piece::type::last);
+            auto x = ext::to_underlying(bcl::piece::type::last);
             std::size_t e = 0;
 
             if(x != 0) {
@@ -57,7 +57,7 @@ namespace internal {
     }
 }
 
-bongcloud::renderer::renderer(const std::size_t resolution, const std::size_t size) noexcept :
+bcl::renderer::renderer(const std::size_t resolution, const std::size_t size) noexcept :
     m_window {internal::make_window(resolution * size)},
     m_renderer {internal::make_renderer(m_window)},
     m_scale {internal::compute_scale(m_window, m_renderer)},
@@ -90,7 +90,7 @@ bongcloud::renderer::renderer(const std::size_t resolution, const std::size_t si
     }
 }
 
-void bongcloud::renderer::render(const bongcloud::board& board) noexcept {
+void bcl::renderer::render(const bcl::board& board) noexcept {
     m_renderer.clear_with(cen::colors::black);
 
     std::size_t y = static_cast<std::size_t>(m_renderer.output_size().height) - m_resolution;
@@ -171,7 +171,7 @@ void bongcloud::renderer::render(const bongcloud::board& board) noexcept {
     m_renderer.present();
 }
 
-std::size_t bongcloud::renderer::square(const bongcloud::board& board, const std::size_t x, const std::size_t y) const noexcept {
+std::size_t bcl::renderer::square(const bcl::board& board, const std::size_t x, const std::size_t y) const noexcept {
     // Compute the square at the given x and y coordinates.
     auto screen_height = static_cast<std::size_t>(m_renderer.output_size().height);
     auto scaled_y = static_cast<std::size_t>(y * m_scale);
@@ -182,7 +182,7 @@ std::size_t bongcloud::renderer::square(const bongcloud::board& board, const std
     return (rank * board.length) + file;
 }
 
-void bongcloud::renderer::promote(const std::size_t square, const bongcloud::board& board) noexcept {
+void bcl::renderer::promote(const std::size_t square, const bcl::board& board) noexcept {
     std::size_t h = static_cast<std::size_t>(m_renderer.output_size().height);
     std::size_t x = (square % board.length) * m_resolution;
     std::size_t y = h - (((square / board.length) + 1) * (m_resolution));
@@ -223,7 +223,7 @@ void bongcloud::renderer::promote(const std::size_t square, const bongcloud::boa
             static_cast<int>(m_resolution)
         };
 
-        bongcloud::piece piece = {board.color(), constants::promotion_pieces[i]};
+        bcl::piece piece = {board.color(), constants::promotion_pieces[i]};
         auto offset = internal::compute_texture_offset(piece);
         const auto& texture = *m_textures[offset];
         m_renderer.render(texture, place);

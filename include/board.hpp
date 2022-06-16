@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <vector>
 
-namespace bongcloud {
+namespace bcl {
     // A square is just an optional piece.
     using square = std::optional<piece>;
 
@@ -22,15 +22,15 @@ namespace bongcloud {
 
     struct capture {
         std::size_t index;
-        bongcloud::piece piece;
+        bcl::piece piece;
     };
 
     struct record {
         piece::color color;
-        bongcloud::move move;
+        bcl::move move;
         std::size_t trivials;
-        std::optional<bongcloud::move> castle;
-        std::optional<bongcloud::capture> capture;
+        std::optional<bcl::move> castle;
+        std::optional<bcl::capture> capture;
         std::optional<piece> promotion;
     };
 
@@ -43,7 +43,7 @@ namespace bongcloud {
             bool move(const std::size_t, const std::size_t) noexcept;
 
             // Generates a list of all legal moves for the current player.
-            [[nodiscard]] std::vector<bongcloud::move> moves(void) noexcept;
+            [[nodiscard]] std::vector<bcl::move> moves(void) noexcept;
 
             // An algorithm that counts possible positions recursively.
             [[nodiscard]] std::size_t positions(const std::size_t) noexcept;
@@ -72,7 +72,7 @@ namespace bongcloud {
             }
 
             // Returns the last move made (may be std::nullopt).
-            [[nodiscard]] std::optional<bongcloud::move> latest(void) const noexcept {
+            [[nodiscard]] std::optional<bcl::move> latest(void) const noexcept {
                 return (m_history.size() > 0) ? std::optional(m_history.back().move) : std::nullopt;
             }
 

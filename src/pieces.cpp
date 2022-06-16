@@ -9,11 +9,11 @@ namespace internal {
         return (a > b) ? a - b : b - a;
     }
 
-    bool bishop(const bongcloud::board& board, const std::size_t from, const std::size_t to) noexcept {
+    bool bishop(const bcl::board& board, const std::size_t from, const std::size_t to) noexcept {
         assert(from != to);
 
-        bongcloud::index source = {from / board.length, from % board.length};
-        bongcloud::index sink = {to / board.length, to % board.length};
+        bcl::index source = {from / board.length, from % board.length};
+        bcl::index sink = {to / board.length, to % board.length};
 
         // Make sure that the bishop is moving diagonally.
         assert(
@@ -60,7 +60,7 @@ namespace internal {
         return false;
     }
 
-    bool rook(const bongcloud::board& board, const std::size_t from, const std::size_t to) noexcept {
+    bool rook(const bcl::board& board, const std::size_t from, const std::size_t to) noexcept {
         std::size_t difference = internal::absdiff(from, to);
         std::size_t subtractor = (difference >= board.length) ? board.length : 1;
 
@@ -87,7 +87,7 @@ namespace internal {
     }
 }
 
-std::optional<bongcloud::piece::move> bongcloud::board::pseudolegal(const std::size_t from, const std::size_t to) const noexcept {
+std::optional<bcl::piece::move> bcl::board::pseudolegal(const std::size_t from, const std::size_t to) const noexcept {
     const auto& origin = m_internal[from];
     const auto& dest = m_internal[to];
 

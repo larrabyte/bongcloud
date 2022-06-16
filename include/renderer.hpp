@@ -5,7 +5,7 @@
 #include <centurion.hpp>
 #include <cstddef>
 
-namespace bongcloud {
+namespace bcl {
     class renderer {
         public:
             // The renderer's constructor.

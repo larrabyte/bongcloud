@@ -78,8 +78,8 @@ int main(int argc, char** argv) {
     auto bot = program.get<bool>("bot");
     auto perft = program.get<bool>("perft");
 
-    bongcloud::board board(board_size, anarchy);
-    bongcloud::ai engine(search_depth, bot);
+    bcl::board board(board_size, anarchy);
+    bcl::ai engine(search_depth, bot);
     board.load(fen_string);
 
     // This must be done at the start to
@@ -96,8 +96,8 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    bongcloud::renderer renderer(square_res, board_size);
-    bongcloud::event_dispatcher dispatcher(board, engine, renderer);
+    bcl::renderer renderer(square_res, board_size);
+    bcl::event_dispatcher dispatcher(board, engine, renderer);
 
     while(dispatcher.running()) {
         dispatcher.poll();
@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
             if(board.checkmate()) {
                 dispatcher.popup = true;
                 auto index = ext::to_underlying(board.color());
-                auto& titles = bongcloud::constants::color_titles;
+                auto& titles = bcl::constants::color_titles;
 
                 std::string title = "Checkmate!";
                 std::string message = fmt::format("Game: {} was checkmated.", titles[index]);

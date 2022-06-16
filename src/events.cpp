@@ -3,9 +3,7 @@
 #include <fmt/core.h>
 #include <cstddef>
 
-using namespace bongcloud;
-
-event_dispatcher::event_dispatcher(board& b, ai& e, renderer& r) noexcept :
+bcl::event_dispatcher::event_dispatcher(board& b, ai& e, renderer& r) noexcept :
     m_board {b},
     m_engine {e},
     m_renderer {r} {
@@ -15,11 +13,11 @@ event_dispatcher::event_dispatcher(board& b, ai& e, renderer& r) noexcept :
     m_dispatcher.bind<cen::mouse_button_event>().to<&event_dispatcher::on_mouse_button_event>(this);
 }
 
-void event_dispatcher::on_quit_event(const cen::quit_event& event) noexcept {
+void bcl::event_dispatcher::on_quit_event(const cen::quit_event& event) noexcept {
     m_running = false;
 }
 
-void event_dispatcher::on_keyboard_event(const cen::keyboard_event& event) noexcept {
+void bcl::event_dispatcher::on_keyboard_event(const cen::keyboard_event& event) noexcept {
     if(event.pressed() && event.is_active(cen::key_mod::lctrl | cen::key_mod::lgui)) {
         if(event.is_active(cen::scancodes::p)) {
             m_board.print();
@@ -42,7 +40,7 @@ void event_dispatcher::on_keyboard_event(const cen::keyboard_event& event) noexc
     }
 }
 
-void event_dispatcher::on_mouse_button_event(const cen::mouse_button_event& event) noexcept {
+void bcl::event_dispatcher::on_mouse_button_event(const cen::mouse_button_event& event) noexcept {
     using namespace std::chrono_literals;
 
     if(event.pressed() && event.button() == cen::mouse_button::left) {

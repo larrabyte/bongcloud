@@ -6,7 +6,7 @@
 
 #include <centurion.hpp>
 
-namespace bongcloud {
+namespace bcl {
     class event_dispatcher {
         public:
             // The event dispatcher's default constructor.
@@ -45,9 +45,9 @@ namespace bongcloud {
             dispatcher m_dispatcher;
 
             // References to game objects (that can be used by event-handling functions).
-            bongcloud::board& m_board;
-            bongcloud::ai& m_engine;
-            bongcloud::renderer& m_renderer;
+            bcl::board& m_board;
+            bcl::ai& m_engine;
+            bcl::renderer& m_renderer;
 
             // Whether the event loop is still active.
             bool m_running = true;
