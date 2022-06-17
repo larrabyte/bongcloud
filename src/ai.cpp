@@ -2,6 +2,16 @@
 #include "ai.hpp"
 
 #include <fmt/core.h>
+#include <algorithm>
+#include <utility>
+#include <limits>
+
+namespace detail {
+    constexpr ext::array color_coefficients = {
+        +1.0, // piece::color::white
+        -1.0  // piece::color::black
+    };
+}
 
 bcl::ai::ai(const std::size_t s, const bool e) noexcept : layers {s}, enabled {e} {
     if(e) {
@@ -10,19 +20,20 @@ bcl::ai::ai(const std::size_t s, const bool e) noexcept : layers {s}, enabled {e
 }
 
 double bcl::ai::evaluate(bcl::board& board) const noexcept {
-    double evaluation = 0.0;
-
     if(board.checkmate()) {
         // Checkmate is the best outcome!
-        evaluation = std::numeric_limits<double>::infinity();
-        return (board.color() == piece::color::white) ? evaluation : -evaluation;
+        auto maximum = std::numeric_limits<double>::infinity();
+        auto coefficient = detail::color_coefficients[board.color()];
+        return coefficient * maximum;
     }
+
+    double evaluation = 0.0;
 
     for(const auto& piece : board) {
         if(piece) {
-            auto index = ext::to_underlying(piece->variety);
-            auto value = constants::piece_values[index];
-            evaluation += (piece->hue == piece::color::white) ? value : -value;
+            auto value = constants::piece_values[piece->variety];
+            auto coefficient = detail::color_coefficients[piece->hue];
+            evaluation += coefficient * value;
         }
     }
 

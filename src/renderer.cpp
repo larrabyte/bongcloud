@@ -1,7 +1,10 @@
 #include "renderer.hpp"
 #include "extras.hpp"
 
+#include <type_traits>
 #include <fmt/core.h>
+#include <cstdint>
+#include <utility>
 #include <bit>
 
 namespace detail {
@@ -32,7 +35,7 @@ namespace detail {
 
         constexpr auto offset = []() {
             // https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2.
-            auto x = ext::to_underlying(bcl::piece::type::last);
+            piece_type x = ext::to_underlying(bcl::piece::type::last);
             piece_type e = 0;
 
             if(x != 0) {
@@ -71,13 +74,13 @@ bcl::renderer::renderer(const std::size_t resolution, const std::size_t size) no
     fmt::print("[bongcloud] screen resolution set to: {}x{}\n", scaled.width, scaled.height);
     m_window.show();
 
-    std::size_t rounded_size = 1 << std::bit_width(std::size(constants::white_textures));
+    std::size_t rounded_size = 1 << std::bit_width(constants::white_textures.size());
     std::size_t maximum_index = rounded_size * 2;
     m_textures.reserve(maximum_index);
 
     for(std::size_t i = 0; i < maximum_index; ++i) {
-        bool oob_white = i >= std::size(constants::white_textures) && i < rounded_size;
-        bool oob_black = i >= std::size(constants::black_textures) + rounded_size;
+        bool oob_white = i >= constants::white_textures.size() && i < rounded_size;
+        bool oob_black = i >= constants::black_textures.size() + rounded_size;
 
         if(oob_white || oob_black) {
             m_textures.push_back(std::nullopt);
@@ -188,7 +191,7 @@ void bcl::renderer::promote(const std::size_t square, const bcl::board& board) n
     std::size_t h = static_cast<std::size_t>(m_renderer.output_size().height);
     std::size_t x = (square % board.length) * m_resolution;
     std::size_t y = h - (((square / board.length) + 1) * (m_resolution));
-    std::size_t s = std::size(constants::promotion_pieces);
+    std::size_t s = constants::promotion_pieces.size();
 
     // m_renderer.draw_rect() only renders the outline of a square.
     m_renderer.set_color(cen::colors::black);

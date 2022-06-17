@@ -2,6 +2,8 @@
 
 #include <fmt/core.h>
 #include <cstddef>
+#include <future>
+#include <chrono>
 
 bcl::event_dispatcher::event_dispatcher(board& b, ai& e, renderer& r) noexcept :
     m_board {b},

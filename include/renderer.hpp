@@ -68,7 +68,7 @@ namespace bcl {
 
         // A list of paths to the white piece textures.
         // Textures are ordered in the same way as the piece enum.
-        constexpr std::array white_textures = {
+        constexpr ext::array white_textures = {
             "data/wp.bmp",
             "data/wn.bmp",
             "data/wb.bmp",
@@ -79,7 +79,7 @@ namespace bcl {
 
         // A list of paths to the black piece textures.
         // Textures are ordered in the same way as the piece enum.
-        constexpr std::array black_textures = {
+        constexpr ext::array black_textures = {
             "data/bp.bmp",
             "data/bn.bmp",
             "data/bb.bmp",

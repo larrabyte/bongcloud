@@ -3,6 +3,7 @@
 #include "board.hpp"
 
 #include <fmt/core.h>
+#include <cassert>
 
 namespace detail {
     std::size_t absdiff(const std::size_t a, const std::size_t b) noexcept {
@@ -228,23 +229,26 @@ std::optional<bcl::piece::move> bcl::board::pseudolegal(const std::size_t from, 
 
             // The king can also castle.
             if(difference.rank == 0 && difference.file == 2 && !dest) {
-                std::size_t left = (m_color == piece::color::white) ? 0 : length * (length - 1);
-                std::size_t right = (m_color == piece::color::white) ? length - 1 : (length * length) - 1;
+                std::size_t left = corners[m_color];
+                std::size_t right = corners[m_color + 2];
+                std::size_t index;
+                bool allowed;
 
                 // The valid destinations are 2 squares to the right of the left-most square,
                 // or 1 square to the left of the right-most square (depending on color).
-                if(to != left + 2 && to != right - 1) {
+                if(to == left + 2) {
+                    allowed = m_rights[origin->hue].kingside;
+                    index = left;
+                } else if(to == right - 1) {
+                    allowed = m_rights[origin->hue].queenside;
+                    index = right;
+                } else {
                     return std::nullopt;
-                };
-
-                const auto& rights = m_rights[origin->hue];
-                std::size_t index = (to == left + 2) ? left : right;
-                const auto& side = (to == left + 2) ? rights.kingside : rights.queenside;
-                const auto& target = m_internal[index];
+                }
 
                 bool castleable = {
-                    target && target->variety == piece::type::rook &&
-                    !detail::rook(*this, from, index) && side
+                    m_internal[index] && m_internal[index]->variety == piece::type::rook &&
+                    !detail::rook(*this, from, index) && allowed
                 };
 
                 if(castleable) {

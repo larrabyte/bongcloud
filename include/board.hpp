@@ -4,29 +4,18 @@
 #include "pieces.hpp"
 
 #include <centurion.hpp>
+#include <string_view>
 #include <optional>
 #include <cstddef>
 #include <vector>
 
 namespace bcl {
-    // A square is just an optional piece.
     using square = std::optional<piece>;
 
     template<typename T>
-    struct pair {
-        std::array<T, 2> underlying;
-
-        constexpr T& white(void) const noexcept { return underlying[0]; }
-        constexpr T& black(void) const noexcept { return underlying[1]; }
-
-        constexpr T& operator[](const piece::color c) noexcept {
-            return underlying[ext::to_underlying(c)];
-        }
-
-        constexpr const T& operator[](const piece::color c) const noexcept {
-            return underlying[ext::to_underlying(c)];
-        }
-    };
+    // Elements are stored in an array that can be
+    // indexed using the piece::color enumeration class.
+    struct pair : public ext::array<T, 2> {};
 
     struct rights {
         bool kingside;
@@ -60,7 +49,14 @@ namespace bcl {
 
     class board {
         public:
-            board(const std::size_t l, const bool a) noexcept : length {l}, m_internal {l * l}, m_anarchy {a} {}
+            board(const std::size_t l, const bool a) noexcept :
+                length {l},
+
+                // Organised into bottom-left, top-left, bottom-right, top-right.
+                corners {0, length * (length - 1), length - 1, (length * length) - 1},
+
+                m_internal {l * l},
+                m_anarchy {a} {}
 
             // Attempts to move a piece from one square to another.
             bool move(const std::size_t, const std::size_t) noexcept;
@@ -96,7 +92,7 @@ namespace bcl {
 
             // Returns the last move made (may be std::nullopt).
             std::optional<bcl::move> latest(void) const noexcept {
-                return (m_history.size() > 0) ? std::optional(m_history.back().move) : std::nullopt;
+                return (!m_history.empty()) ? std::optional(m_history.back().move) : std::nullopt;
             }
 
             // Returns the color of the player whose turn it is to move.
@@ -133,6 +129,9 @@ namespace bcl {
             // The length of the board.
             const std::size_t length;
 
+            // The index of each corner of the board.
+            const ext::array<std::size_t, 4> corners;
+
         private:
             // Returns the type of move (if pseudolegal) based on piece movement rules.
             std::optional<piece::move> pseudolegal(const std::size_t, const std::size_t) const noexcept;
@@ -150,10 +149,10 @@ namespace bcl {
             bool m_anarchy;
 
             // Whose turn it is to move.
-            piece::color m_color = piece::color::white;
+            piece::color m_color;
 
             // The number of trivial half-moves made.
-            std::size_t m_trivials = 0;
+            std::size_t m_trivials;
     };
 
     namespace constants {

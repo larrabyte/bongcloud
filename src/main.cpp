@@ -7,6 +7,7 @@
 #include <argparse/argparse.hpp>
 #include <centurion.hpp>
 #include <fmt/core.h>
+#include <cstddef>
 #include <future>
 #include <chrono>
 
@@ -126,11 +127,12 @@ int main(int argc, char** argv) {
         if(!dispatcher.popup) {
             if(board.checkmate()) {
                 dispatcher.popup = true;
-                auto index = ext::to_underlying(board.color());
-                auto& titles = bcl::constants::color_titles;
-
                 std::string title = "Checkmate!";
-                std::string message = fmt::format("Game: {} was checkmated.", titles[index]);
+                std::string message = fmt::format(
+                    "Game: {} was checkmated.",
+                    bcl::constants::color_titles[board.color()]
+                );
+
                 cen::message_box::show(title, message);
             }
 

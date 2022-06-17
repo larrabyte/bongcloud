@@ -5,7 +5,10 @@
 #include <centurion.hpp>
 #include <fmt/core.h>
 #include <algorithm>
-#include <cstddef>
+#include <stdexcept>
+#include <charconv>
+#include <cassert>
+#include <cctype>
 
 namespace detail {
     std::size_t perft(bcl::board& board, const std::size_t depth) noexcept {
@@ -380,7 +383,7 @@ void bcl::board::load(const std::string_view string) {
     }
 
     // Next, assign the specified active color.
-    switch(string.at(character++)) {
+    switch((c = string.at(character++))) {
         case 'w': m_color = color::white; break;
         case 'b': m_color = color::black; break;
 
@@ -438,10 +441,6 @@ void bcl::board::load(const std::string_view string) {
 
         m_history.push_back(latest);
     }
-
-    // Advance the character cursor since the previous
-    // switch would have left it on a space character.
-    ++character;
 
     // Handle the half-move clock via string-to-integer conversion.
     // The full-move count is not handled explicitly as we have no use for it.

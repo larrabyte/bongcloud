@@ -2,6 +2,7 @@
 
 #include "extras.hpp"
 
+#include <concepts>
 #include <cstddef>
 #include <array>
 
@@ -48,7 +49,7 @@ namespace bcl {
 
     namespace constants {
         // Defines every legal promotion piece.
-        constexpr std::array promotion_pieces = {
+        constexpr ext::array promotion_pieces = {
             piece::type::queen,
             piece::type::knight,
             piece::type::rook,
@@ -56,7 +57,7 @@ namespace bcl {
         };
 
         // Defines the values for each piece.
-        constexpr std::array piece_values = {
+        constexpr ext::array piece_values = {
             1.0, // piece::type::pawn
             3.0, // piece::type::knight
             3.0, // piece::type::bishop
@@ -66,7 +67,7 @@ namespace bcl {
         };
 
         // Names for each piece color.
-        constexpr std::array color_titles = {
+        constexpr ext::array color_titles = {
             "white", // piece::color::white
             "black"  // piece::color::black
         };
@@ -80,5 +81,26 @@ namespace bcl {
             color_titles.size() == ext::to_underlying(piece::color::last) + 1,
             "each piece color must have an associated name"
         );
+    }
+
+    // Allow for arithmetic operations on enumeration types.
+    template<ext::enumerable A, std::integral B>
+    A operator+(const A a, const B b) noexcept {
+        return static_cast<A>(ext::to_underlying(a) + b);
+    }
+
+    template<ext::enumerable A, std::integral B>
+    A operator-(const A a, const B b) noexcept {
+        return static_cast<A>(ext::to_underlying(a) - b);
+    }
+
+    template<ext::enumerable A, std::integral B>
+    A operator*(const A a, const B b) noexcept {
+        return static_cast<A>(ext::to_underlying(a) * b);
+    }
+
+    template<ext::enumerable A, std::integral B>
+    A operator/(const A a, const B b) noexcept {
+        return static_cast<A>(ext::to_underlying(a) / b);
     }
 }
