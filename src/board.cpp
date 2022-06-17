@@ -126,10 +126,12 @@ bool bcl::board::move(const std::size_t from, const std::size_t to) noexcept {
                 for(std::size_t delta = 1; delta < to - from; ++delta) {
                     auto& trail = m_internal[from + delta - 1];
                     auto& cursor = m_internal[from + delta];
+                    m_kings[origin->hue] = from + delta;
                     cursor = trail;
                     trail = std::nullopt;
 
                     if(this->check()) {
+                        m_kings[origin->hue] = from;
                         origin = cursor;
                         cursor = std::nullopt;
                         return false;
@@ -162,10 +164,12 @@ bool bcl::board::move(const std::size_t from, const std::size_t to) noexcept {
                 for(std::size_t delta = 1; delta < from - to; ++delta) {
                     auto& trail = m_internal[from - delta + 1];
                     auto& cursor = m_internal[from - delta];
+                    m_kings[origin->hue] = from - delta;
                     cursor = trail;
                     trail = std::nullopt;
 
                     if(this->check()) {
+                        m_kings[origin->hue] = from;
                         origin = cursor;
                         cursor = std::nullopt;
                         return false;
@@ -202,7 +206,11 @@ bool bcl::board::move(const std::size_t from, const std::size_t to) noexcept {
         // clearing the origin square and incrementing the move count.
         dest = origin;
         origin = std::nullopt;
-        m_history.push_back(history);
+        m_history.push_back(std::move(history));
+
+        if(dest->variety == piece::type::king) {
+            m_kings[origin->hue] = to;
+        }
 
         // Check that the move just played did not leave the king in check.
         if(this->check()) {
@@ -243,26 +251,12 @@ std::size_t bcl::board::positions(const std::size_t depth) noexcept {
 }
 
 bool bcl::board::check(void) const noexcept {
-    // Attempt to find the index of the specified player's king.
-    std::vector<std::size_t> kings;
+    std::size_t king = m_kings[m_color];
 
     for(std::size_t i = 0; i < length * length; ++i) {
         const auto& piece = m_internal[i];
-        if(piece && piece->hue == m_color && piece->variety == piece::type::king) {
-            kings.push_back(i);
-            break;
-        }
-    }
-
-    assert(!kings.empty());
-
-    // Return true if any king is in check.
-    for(const auto king : kings) {
-        for(std::size_t i = 0; i < length * length; ++i) {
-            const auto& piece = m_internal[i];
-            if(piece && piece->hue != m_color && this->pseudolegal(i, king)) {
-                return true;
-            }
+        if(piece && piece->hue != m_color && this->pseudolegal(i, king)) {
+            return true;
         }
     }
 
@@ -340,6 +334,8 @@ void bcl::board::load(const std::string_view string) {
     char c;
 
     // First, we handle piece placement.
+    pair<bool> royals = {false, false};
+
     while((c = string.at(character++)) != ' ') {
         std::size_t square = (rank * length) + file;
 
@@ -349,13 +345,35 @@ void bcl::board::load(const std::string_view string) {
             case 'N': m_internal[square] = {color::white, type::knight}; break;
             case 'B': m_internal[square] = {color::white, type::bishop}; break;
             case 'Q': m_internal[square] = {color::white, type::queen}; break;
-            case 'K': m_internal[square] = {color::white, type::king}; break;
+
+            case 'K': {
+                if(royals[color::white]) {
+                    throw std::runtime_error("multiple kings are forbidden");
+                }
+
+                m_internal[square] = {color::white, type::king};
+                m_kings[color::white] = square;
+                royals[color::white] = true;
+                break;
+            }
+
             case 'P': m_internal[square] = {color::white, type::pawn}; break;
             case 'r': m_internal[square] = {color::black, type::rook}; break;
             case 'n': m_internal[square] = {color::black, type::knight}; break;
             case 'b': m_internal[square] = {color::black, type::bishop}; break;
             case 'q': m_internal[square] = {color::black, type::queen}; break;
-            case 'k': m_internal[square] = {color::black, type::king}; break;
+
+            case 'k': {
+                if(royals[color::black]) {
+                    throw std::runtime_error("multiple kings are forbidden");
+                }
+
+                m_internal[square] = {color::black, type::king};
+                m_kings[color::black] = square;
+                royals[color::black] = true;
+                break;
+            }
+
             case 'p': m_internal[square] = {color::black, type::pawn}; break;
 
             // Numbers signify the number of squares to skip.
@@ -398,10 +416,7 @@ void bcl::board::load(const std::string_view string) {
     ++character;
 
     // Next, handle castling rights.
-    m_rights[color::white].kingside = false;
-    m_rights[color::white].queenside = false;
-    m_rights[color::black].kingside = false;
-    m_rights[color::black].queenside = false;
+    m_rights = {rights {false, false}, rights {false, false}};
 
     while((c = string.at(character++)) != ' ') {
         switch(c) {
@@ -457,6 +472,10 @@ void bcl::board::undo(void) noexcept {
     // If the move was a promotion, then we don't care about what's on the destination square.
     origin = (last.promotion) ? piece {last.promotion->hue, piece::type::pawn} : dest;
     dest = std::nullopt;
+
+    if(origin->variety == piece::type::king) {
+        m_kings[origin->hue] = last.move.from;
+    }
 
     if(last.capture) {
         // This is separate because of the possibility of en-passant.

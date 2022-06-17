@@ -139,6 +139,9 @@ namespace bcl {
             // The board's internal representation.
             std::vector<square> m_internal;
 
+            // A cache storing the position of checkable pieces.
+            pair<std::size_t> m_kings;
+
             // An array of previously made moves.
             std::vector<record> m_history;
 
