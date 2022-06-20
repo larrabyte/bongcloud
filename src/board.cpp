@@ -195,7 +195,7 @@ bool bcl::board::move(const std::size_t from, const std::size_t to) noexcept {
                 // Instead of placing a promoted piece immediately,
                 // we can use the common piece movement code and just set
                 // the origin square to contain the promoted piece.
-                origin = {origin->hue, piece::type::queen};
+                origin = piece {origin->hue, piece::type::queen};
                 history.promotion = origin;
                 break;
             }
@@ -341,40 +341,40 @@ void bcl::board::load(const std::string_view string) {
 
         switch(c) {
             // Uppercase represents white pieces, lowercase represents black pieces.
-            case 'R': m_internal[square] = {color::white, type::rook}; break;
-            case 'N': m_internal[square] = {color::white, type::knight}; break;
-            case 'B': m_internal[square] = {color::white, type::bishop}; break;
-            case 'Q': m_internal[square] = {color::white, type::queen}; break;
+            case 'R': m_internal[square] = piece {color::white, type::rook}; break;
+            case 'N': m_internal[square] = piece {color::white, type::knight}; break;
+            case 'B': m_internal[square] = piece {color::white, type::bishop}; break;
+            case 'Q': m_internal[square] = piece {color::white, type::queen}; break;
 
             case 'K': {
                 if(royals[color::white]) {
                     throw std::runtime_error("multiple kings are forbidden");
                 }
 
-                m_internal[square] = {color::white, type::king};
+                m_internal[square] = piece {color::white, type::king};
                 m_kings[color::white] = square;
                 royals[color::white] = true;
                 break;
             }
 
-            case 'P': m_internal[square] = {color::white, type::pawn}; break;
-            case 'r': m_internal[square] = {color::black, type::rook}; break;
-            case 'n': m_internal[square] = {color::black, type::knight}; break;
-            case 'b': m_internal[square] = {color::black, type::bishop}; break;
-            case 'q': m_internal[square] = {color::black, type::queen}; break;
+            case 'P': m_internal[square] = piece {color::white, type::pawn}; break;
+            case 'r': m_internal[square] = piece {color::black, type::rook}; break;
+            case 'n': m_internal[square] = piece {color::black, type::knight}; break;
+            case 'b': m_internal[square] = piece {color::black, type::bishop}; break;
+            case 'q': m_internal[square] = piece {color::black, type::queen}; break;
 
             case 'k': {
                 if(royals[color::black]) {
                     throw std::runtime_error("multiple kings are forbidden");
                 }
 
-                m_internal[square] = {color::black, type::king};
+                m_internal[square] = piece {color::black, type::king};
                 m_kings[color::black] = square;
                 royals[color::black] = true;
                 break;
             }
 
-            case 'p': m_internal[square] = {color::black, type::pawn}; break;
+            case 'p': m_internal[square] = piece {color::black, type::pawn}; break;
 
             // Numbers signify the number of squares to skip.
             case '1': case '2': case '3':
