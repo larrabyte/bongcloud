@@ -30,7 +30,7 @@ void bcl::event_dispatcher::on_keyboard_event(const cen::keyboard_event& event) 
                 popup = false;
                 m_board.undo();
 
-                if(m_engine.enabled) {
+                if(m_engine.enabled && !m_board.history().empty()) {
                     m_board.undo();
                 }
             }
