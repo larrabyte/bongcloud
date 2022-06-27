@@ -2,7 +2,7 @@
 A simple and elegant chess GUI written in C++ with [Centurion](https://github.com/albin-johansson/centurion).
 
 ## Dependencies
-Make sure to execute `git clone` with the `--recurse-submodules` flag to install Centurion.
+Make sure to execute `git clone` with the `--recurse-submodules` flag to clone the repository as well as its required submodules.
 ```
 $ git clone --recurse-submodules https://github.com/larrabyte/bongcloud
 ```
@@ -20,3 +20,11 @@ Bongcloud relies on the existence of a `data` folder to load the sprites for eac
 - `r` corresponds to a rook, eg. `br.bmp` corresponds to a black rook.
 - `q` corresponds to a queen, eg. `wq.bmp` corresponds to a white queen.
 - `k` corresponds to a king, eg. `bk.bmp` corresponds to a black king.
+
+## Execution
+Execute the program either via the terminal:
+```
+$ ./bin/bongcloud
+```
+
+Or by double-clicking the program executable. Ensure that the `data` folder is on the same level as the executable itself.
