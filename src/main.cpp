@@ -16,7 +16,7 @@ namespace defaults {
     constexpr std::size_t square_resolution = 64;
     constexpr std::size_t search_depth = 4;
     constexpr bool anarchy = false;
-    constexpr bool bot = false;
+    constexpr bool bot = true;
     constexpr bool perft = false;
 
     // Sadly, constexpr std::string isn't a thing yet.
