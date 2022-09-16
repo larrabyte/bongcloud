@@ -34,13 +34,6 @@ bool bcl::board::move(const std::size_t from, const std::size_t to) noexcept {
     assert(origin.has_value());
     assert(from != to);
 
-    // First, make sure that there are no trivial conditions preventing a move.
-    // This could be either a forced stalemate (50 move rule), attempting to
-    // move an enemy piece or attempting to capture a friendly piece.
-    if(m_trivials >= constants::trivial_force_draw || origin->hue != m_color || (dest && dest->hue == m_color)) {
-        return false;
-    }
-
     if(m_anarchy) {
         // Anarchy mode is limited to normal moves and capturing moves,
         // since regular piece movement rules do not apply.
@@ -57,6 +50,13 @@ bool bcl::board::move(const std::size_t from, const std::size_t to) noexcept {
         origin = std::nullopt;
         m_history.push_back(ffa);
         return true;
+    }
+
+    // First, make sure that there are no trivial conditions preventing a move.
+    // This could be either a forced stalemate (50 move rule), attempting to
+    // move an enemy piece or attempting to capture a friendly piece.
+    if(m_trivials >= constants::trivial_force_draw || origin->hue != m_color || (dest && dest->hue == m_color)) {
+        return false;
     }
 
     // Otherwise, check if the move is pseudolegal and move the pieces accordingly.
